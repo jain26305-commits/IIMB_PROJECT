@@ -1,4 +1,4 @@
-﻿"""
+"""
 Enterprise Demand Forecasting & Inventory Decision Support System
 Using Time Series Analytics — Premium Edition (v2)
 
@@ -295,6 +295,53 @@ def render_decision_card(icon, title, text, source="Master Audit"):
         f'<div class="decision-card-title">{icon} {title} {source_tag(source)}</div>'
         f'<div class="decision-card-text">{text}</div></div>',
         unsafe_allow_html=True)
+
+# ------------------------------------------------------------------------------
+# IMPLEMENTATION + BUSINESS IMPACT LAYER — shared helpers (additive only).
+# These render the Baseline -> Intervention -> KPI -> Outcome story natively
+# using the SAME component classes already defined above (status-card,
+# decision-card, source-tag, badge) — no new visual system is introduced.
+# Every "Not yet measured" / "Requires validation" string below is a fixed
+# label, never a computed or invented business figure.
+# ------------------------------------------------------------------------------
+NOT_YET_MEASURED = "Not yet measured"
+REQUIRES_VALIDATION = "Requires validation"
+
+def render_baseline_flow_card(title, baseline, intervention, kpi, status_label="REQUIRES VALIDATION", status="amber"):
+    """One compact card showing Baseline -> Intervention -> KPI for a function,
+    reusing the existing status-card component (data-status: green/amber/red)."""
+    st.markdown(
+        f'<div class="status-card" data-status="{status}">'
+        f'<strong>{html.escape(str(title))}</strong> &nbsp; {badge_html("attention" if status=="amber" else ("poor" if status=="red" else "excellent"), status_label)}<br>'
+        f'<span class="status-card-desc"><strong>Baseline:</strong> {html.escape(str(baseline))}</span><br>'
+        f'<span class="status-card-desc"><strong>Project-enabled change:</strong> {html.escape(str(intervention))}</span><br>'
+        f'<span class="status-card-action">KPI: {html.escape(str(kpi))}</span>'
+        f'</div>', unsafe_allow_html=True)
+
+def render_impact_tracking_row(container, label, current_value_str, realized_str=NOT_YET_MEASURED):
+    """Renders a single 'Impact Tracking' line: current analytical baseline value
+    (from Master Audit / dashboard-derived) alongside its realized-impact status,
+    which is always a fixed placeholder string until an actual baseline exists."""
+    container.markdown(
+        f'<div class="decision-card">'
+        f'<div class="decision-card-title">{html.escape(str(label))}</div>'
+        f'<div class="decision-card-text">Current: <strong>{html.escape(str(current_value_str))}</strong>'
+        f'&nbsp;|&nbsp; Realized Impact: <strong>{html.escape(str(realized_str))}</strong></div></div>',
+        unsafe_allow_html=True)
+
+def render_function_transformation_card(function, current_process, project_change, kpi, owner, validation_status):
+    """FUNCTION -> CURRENT PROCESS -> PROJECT-ENABLED CHANGE -> KPI -> OWNER -> VALIDATION
+    reusable row used in the 'What Changes In Each Function' component."""
+    st.markdown(
+        f'<div class="decision-card">'
+        f'<div class="decision-card-title">🔧 {html.escape(str(function))}</div>'
+        f'<div class="decision-card-text">'
+        f'<strong>Current process:</strong> {html.escape(str(current_process))}<br>'
+        f'<strong>Project-enabled change:</strong> {html.escape(str(project_change))}<br>'
+        f'<strong>Primary KPI:</strong> {html.escape(str(kpi))} &nbsp;|&nbsp; '
+        f'<strong>Owner:</strong> {html.escape(str(owner))}<br>'
+        f'<strong>Validation status:</strong> {html.escape(str(validation_status))}'
+        f'</div></div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
 # MATHEMATICAL FORENSIC VALIDATION — Safety Stock / Reorder Point
@@ -1439,6 +1486,79 @@ with tab1:
     else:
         st.info("Select a SKU from the sidebar to view its Decision Intelligence cards.")
 
+    # ==========================================================================
+    # ENTERPRISE IMPLEMENTATION CONTROL — additive implementation layer.
+    # Answers "what changes in the company because of this system?" using only
+    # existing Master Audit fields and the portfolio aggregates already
+    # computed above (total_skus, inv_value_sum, wc_sum, carrying/stockout not
+    # yet in scope here, forecast_health_avg, avg_accuracy). No new tab, no
+    # new visual system, no fabricated business outcomes.
+    # ==========================================================================
+    st.markdown("<hr>", unsafe_allow_html=True)
+    st.subheader("🧭 Enterprise Implementation Control")
+    st.markdown(
+        '<div class="section-caption">What changes in the company because of this system — from analytical baseline through to '
+        'measured business impact.</div>', unsafe_allow_html=True)
+
+    ic1, ic2, ic3 = st.columns(3)
+    with ic1:
+        render_status_card("green", "CURRENT STATE", "Analytical decision-support MVP — SKU-level forecasting, inventory policy, "
+                            "segmentation, risk and financial exposure are computed and visible.")
+    with ic2:
+        render_status_card("amber", "PROJECT-ENABLED STATE", "Forecast-driven, SKU-specific inventory and risk prioritisation replacing "
+                            "a one-size-fits-all approach — decision support, not autonomous execution.")
+    with ic3:
+        render_status_card("red", "MEASURED BUSINESS IMPACT", "Post-implementation validation required — realized figures populate only "
+                            "once an actual operating baseline and outcome data exist.")
+
+    st.markdown("<h4 style='color:#475569; margin-top:0.8rem;'>🏗️ What Changes in the Company?</h4>", unsafe_allow_html=True)
+    wc_cols = st.columns(5)
+    wc_items = [
+        ("📈 Forecasting", "SKU-specific model competition (4 candidate models) replaces a single blanket method."),
+        ("📦 Inventory", "Forecast-driven Safety Stock / ROP / EOQ replace generic, manually-set buffers."),
+        ("🚚 Procurement", "Priority-based replenishment attention using ABC-XYZ, forecast risk and EOQ."),
+        ("🏭 Warehouse", "Differentiated stock-protection and pick-face attention by segment, not uniform treatment."),
+        ("💰 Finance", "SKU-level working-capital and shortage-exposure visibility for the first time."),
+    ]
+    for col, (title, desc) in zip(wc_cols, wc_items):
+        col.markdown(f'<div class="flow-card" style="border-top:5px solid var(--c-blue);">'
+                      f'<div class="flow-card-title">{title}</div><div class="flow-card-text">{desc}</div></div>',
+                      unsafe_allow_html=True)
+
+    st.markdown("<h4 style='color:#475569; margin-top:1rem;'>📊 Impact Tracking</h4>", unsafe_allow_html=True)
+    st.markdown(f'<div class="section-caption">"Opportunity" (what the analytics flags as potentially addressable) is not the same as '
+                f'"Impact" (what is actually realized after operational deployment). Every line below is {NOT_YET_MEASURED.lower()} until '
+                f'a real legacy/actual baseline exists. <span class="source-tag tag-illustrative">Requires Validation</span></div>',
+                unsafe_allow_html=True)
+    imp_cols = st.columns(5)
+    for col, label in zip(imp_cols, ["Forecast improvement", "Inventory reduction", "Working capital release",
+                                      "Stockout reduction", "Service improvement"]):
+        col.markdown(f'<div class="decision-card"><div class="decision-card-title">{label}</div>'
+                      f'<div class="decision-card-text"><strong>{NOT_YET_MEASURED}</strong></div></div>', unsafe_allow_html=True)
+
+    st.markdown("<h4 style='color:#475569; margin-top:1rem;'>🗺️ Implementation Roadmap</h4>", unsafe_allow_html=True)
+    roadmap_html = '<div class="story-strip">'
+    roadmap_nodes = ["✅ Current MVP", "🧪 Baseline Validation", "🔗 Operational Integration", "📏 Impact Measurement", "🔁 Continuous Improvement"]
+    for i, node in enumerate(roadmap_nodes):
+        roadmap_html += f'<div class="story-node">{node}</div>'
+        if i < len(roadmap_nodes) - 1:
+            roadmap_html += '<div class="story-arrow">→</div>'
+    roadmap_html += '</div>'
+    st.markdown(roadmap_html, unsafe_allow_html=True)
+
+    st.markdown("<h4 style='color:#475569; margin-top:0.5rem;'>🔁 Closed Loop</h4>", unsafe_allow_html=True)
+    loop_html = '<div class="story-strip">'
+    loop_nodes = ["📥 Data", "🔮 Forecast", "🧭 Action", "📈 Outcome", "📏 Measure", "🔄 Recalibrate"]
+    for i, node in enumerate(loop_nodes):
+        loop_html += f'<div class="story-node">{node}</div>'
+        if i < len(loop_nodes) - 1:
+            loop_html += '<div class="story-arrow">→</div>'
+    loop_html += '</div>'
+    st.markdown(loop_html, unsafe_allow_html=True)
+    st.caption("The current MVP establishes the analytical decision layer (Data → Forecast → Inventory Policy → Functional "
+               "Action → Recommendation). A production implementation would additionally capture actual outcomes and feed "
+               "them back into the next planning cycle — that feedback path is the part still pending operational integration.")
+
 # ==============================================================================
 # TAB 2 — DEMAND & FORECAST INTELLIGENCE
 # Deep demand + model-performance analysis for a selected SKU, plus
@@ -1661,6 +1781,41 @@ with tab2:
     else:
         st.info("ABC_Class and/or Forecast_Risk not available for this view.")
 
+    # --------------------------------------------------------------------
+    # FORECASTING TRANSFORMATION — implementation layer (additive).
+    # --------------------------------------------------------------------
+    st.markdown("<hr>", unsafe_allow_html=True)
+    st.subheader("🔁 Forecasting Transformation")
+    render_baseline_flow_card(
+        "SKU-Level Forecasting",
+        baseline="Current-state process to be validated against legacy practice — forecasting approach prior to this system "
+                 "may have been broad, fragmented, or model-agnostic.",
+        intervention="SKU-level model competition across 4 candidate models (AutoARIMA, Naive, Seasonal Naive, "
+                      "3-Month Moving Average); winner selected by lowest validation sMAPE on the same unseen holdout.",
+        kpi="sMAPE (primary); Accuracy, MAE, RMSE, Bias, Forecast Health, Forecast Risk, Model Reliability (secondary)",
+        status_label="REQUIRES BASELINE", status="amber")
+
+    fk_c1, fk_c2 = st.columns(2)
+    with fk_c1:
+        st.markdown(f'<div class="decision-card"><div class="decision-card-title">📏 Current Evidence '
+                    f'{source_tag("Master Audit")}</div><div class="decision-card-text">'
+                    f'{fmt_num(avg_accuracy, 2, "%") if not is_missing(avg_accuracy) else "N/A"} average validation accuracy '
+                    f'across {total_skus:,} SKUs in the current filter — this is historical holdout validation performance, '
+                    f'not an improvement figure versus the company\'s prior process.</div></div>', unsafe_allow_html=True)
+    with fk_c2:
+        st.markdown(f'<div class="decision-card"><div class="decision-card-title">👤 Forecasting Owner</div>'
+                    f'<div class="decision-card-text">Demand Planning / Supply Planning — reviews high-risk / low-health SKUs '
+                    f'using the Forecast Risk and Model Reliability fields above.</div></div>', unsafe_allow_html=True)
+
+    st.markdown("<h5 style='color:#475569; margin-top:0.6rem;'>Post-Deployment Comparison</h5>", unsafe_allow_html=True)
+    pdc1, pdc2, pdc3 = st.columns(3)
+    render_impact_tracking_row(pdc1, "Legacy Forecast Error", NOT_YET_MEASURED, "—")
+    render_impact_tracking_row(pdc2, "Project Forecast Error", fmt_num(avg_rmse, 2) + " RMSE" if not is_missing(avg_rmse) else NOT_YET_MEASURED, "—")
+    render_impact_tracking_row(pdc3, "Improvement (Legacy − Project)", NOT_YET_MEASURED, "—")
+    st.caption("Forecast improvement = Legacy error − Project error. This cannot be computed without a real legacy baseline, "
+               "so it is not calculated here; the current-project RMSE is shown only as the project-side input once a legacy "
+               "figure becomes available.")
+
 # ==============================================================================
 # TAB 3 — INVENTORY OPTIMIZATION
 # Translate forecasts into inventory decisions for a selected SKU, plus a
@@ -1781,6 +1936,36 @@ with tab3:
             st.plotly_chart(fig_ihs, width='stretch')
         else:
             st.info("Inventory_Health_Score not available.")
+
+    # --------------------------------------------------------------------
+    # INVENTORY TRANSFORMATION + IMPACT TRACKING — implementation layer.
+    # --------------------------------------------------------------------
+    st.markdown("<hr>", unsafe_allow_html=True)
+    st.subheader("🔁 Inventory Transformation")
+    render_baseline_flow_card(
+        "Forecast-Driven Inventory Policy",
+        baseline="Current-state process to be validated — inventory decisions prior to this system may rely on "
+                 "standardised or manually determined buffers rather than SKU-specific, forecast-driven parameters.",
+        intervention="Forecast + RMSE-based Safety Stock + Lead-Time Demand + Reorder Point + EOQ + ABC-XYZ segmentation, "
+                      "computed per SKU (SS = 1.645 × RMSE × √(7/30); ROP = LTD + SS; EOQ = √(2 × Annual Demand × Ordering "
+                      "Cost / Holding Cost per Unit)).",
+        kpi="Safety Stock, Reorder Point, EOQ, Inventory Days, Inventory Turnover, Service Level, Fill Rate, Inventory Health",
+        status_label="ANALYTICALLY READY", status="green")
+
+    st.markdown("<h5 style='color:#475569; margin-top:0.6rem;'>📊 Inventory Impact Tracking</h5>", unsafe_allow_html=True)
+    iit1, iit2 = st.columns(2)
+    with iit1:
+        render_impact_tracking_row(iit1, "Model-implied Inventory Value", fmt_currency(inv_value_sum), "—")
+        actual_inv_str = "Available (Sandbox Upload)" if ACTUAL_INV_COL else "Not available in current Master Audit"
+        render_impact_tracking_row(iit1, "Actual current inventory", actual_inv_str, "—")
+    with iit2:
+        render_impact_tracking_row(iit2, "Potential inventory reduction", "Requires actual inventory baseline + feasibility analysis", "—")
+        render_impact_tracking_row(iit2, "Working-capital release", "—", NOT_YET_MEASURED)
+    render_impact_tracking_row(st, "Carrying-cost / stockout-cost reduction", "—", NOT_YET_MEASURED)
+    st.caption("Model-implied Inventory Value is the analytical figure implied by this project's inventory policy applied to "
+               "current Master Audit fields — it is not an observed accounting inventory balance unless an actual on-hand "
+               "source is connected. The Capital Trap diagnostic in the Risk & Diagnostics tab surfaces potential inventory "
+               "optimisation opportunities on this same basis; it flags candidates for review, not confirmed excess inventory.")
 
 # ==============================================================================
 # TAB 4 — RISK, SEGMENTATION & DIAGNOSTICS
@@ -1920,7 +2105,8 @@ with tab4:
                                   'Forecast_Risk', 'Inventory_Recommendation'] if c in filtered_df.columns]
         trap_df = filtered_df[trap_mask][trap_cols].sort_values('Inventory_Value', ascending=False) if 'Inventory_Value' in trap_cols else filtered_df[trap_mask][trap_cols]
         st.dataframe(trap_df, width='stretch', hide_index=True)
-        st.caption(f"{len(trap_df):,} SKU(s) flagged as potential capital traps in the current filter.")
+        st.caption(f"{len(trap_df):,} SKU(s) flagged as potential inventory optimisation opportunities — requires validation. "
+                   f"These are dashboard-derived candidates for review, not confirmed excess inventory.")
     else:
         st.info("Inventory_Days and/or Mean_Monthly_Demand not available to compute this diagnostic.")
 
@@ -1946,11 +2132,47 @@ with tab4:
         else:
             st.info("Supply Chain Priority field not available.")
 
+    # --------------------------------------------------------------------
+    # IMPLEMENTATION PRIORITY ENGINE — additive analytical prioritisation
+    # lenses built from signals already on this tab. These are lenses for
+    # human review, not autonomous decisions.
+    # --------------------------------------------------------------------
+    st.markdown("<hr>", unsafe_allow_html=True)
+    st.subheader("🧭 Implementation Priority Engine")
+    st.markdown(f'<div class="section-caption">Four analytical prioritisation lenses built from existing ABC, XYZ, Forecast Risk, '
+                f'Bullwhip, RMSE, Inventory Health and Business Risk fields — for analytical attention, not autonomous action. '
+                f'{source_tag("Dashboard Derived")}</div>', unsafe_allow_html=True)
+
+    pz1, pz2 = st.columns(2)
+    with pz1:
+        render_status_card("red", "1. High Value + High Uncertainty", "A-class SKUs combined with Z-class demand variability — "
+                            "immediate analytical attention.", action="Review AZ-segment SKUs in Tab 1 ABC–XYZ matrix")
+        render_status_card("amber", "2. High Forecast Error + High Bullwhip", "Elevated RMSE alongside high Bullwhip Ratio — "
+                            "forecast / supply-chain diagnostic review.", action="See Bullwhip vs. Forecast Error quadrant above")
+    with pz2:
+        render_status_card("amber", "3. High Inventory Days + Low Demand", "Slow-moving, capital-intensive SKUs — potential "
+                            "capital-trap investigation.", action="See Capital Trap diagnostic above")
+        render_status_card("red", "4. High Business Risk + Low Service", "Elevated business risk combined with lower service/fill "
+                            "rate — service protection review.", action="Cross-reference with Tab 3 Service Level / Fill Rate")
+
+    st.markdown("<h5 style='color:#475569; margin-top:0.6rem;'>Implementation Action → KPI</h5>", unsafe_allow_html=True)
+    act_rows = [
+        ("High Bullwhip", "Supplier / order coordination review", "Bullwhip Ratio"),
+        ("High Forecast Risk", "Demand review", "RMSE / Forecast Health"),
+        ("Capital Trap candidate", "Inventory review", "Inventory Days / Inventory Value"),
+        ("A-Z segment", "High-priority review", "Service + capital metrics"),
+    ]
+    act_cols = st.columns(4)
+    for col, (inp, action, kpi) in zip(act_cols, act_rows):
+        col.markdown(f'<div class="decision-card"><div class="decision-card-title">{inp}</div>'
+                      f'<div class="decision-card-text">→ {action}<br>KPI: <strong>{kpi}</strong></div></div>', unsafe_allow_html=True)
 
 # ==============================================================================
 # TAB 5 — FINANCIAL IMPACT, METHODOLOGY & AUDIT
 # ==============================================================================
 with tab5:
+    st.markdown('<div class="section-caption">Analytical baseline — Master Audit. Figures below are model-implied financial '
+                'exposure computed from this project\'s inventory policy, not observed accounting balances.</div>', unsafe_allow_html=True)
     st.subheader("💰 Financial KPIs")
     fk1, fk2, fk3, fk4 = st.columns(4)
     render_metric_card(fk1, "Inventory Value", fmt_currency(inv_value_sum), "Portfolio Sum", extra=source_tag("Master Audit"))
@@ -2000,9 +2222,70 @@ with tab5:
         else:
             st.info("Inventory_Value, Estimated_Carrying_Cost and Stockout_Cost are all required for this chart.")
 
+    # ==========================================================================
+    # ADDRESSABLE VALUE DRIVERS + IMPACT ACCOUNTING + REALIZED IMPACT TRACKING
+    # This is the strongest implementation-layer addition, as required. It
+    # separates A) current modelled exposure (above), B) addressable
+    # opportunity, and C) realized impact — using only existing Master Audit
+    # aggregates already computed earlier in this file. No invented savings,
+    # ROI, or payback figures anywhere in this block.
+    # ==========================================================================
+    st.markdown("<hr>", unsafe_allow_html=True)
+    st.subheader("🎯 Opportunity vs. Impact")
+    st.markdown(
+        '<div class="illustrative-banner">Opportunity ≠ Realized Impact. <strong>Opportunity</strong> is value the analytics '
+        'identifies as potentially addressable. <strong>Impact</strong> is value actually realized after operational '
+        'implementation. Nothing on this dashboard converts one into the other automatically.</div>', unsafe_allow_html=True)
+
+    st.markdown("<h4 style='color:#475569;'>B. Addressable Value Drivers</h4>", unsafe_allow_html=True)
+    st.markdown(f'<div class="section-caption">Current value from Master Audit aggregates; target and realized figures are not '
+                f'fabricated and require a business target / actual outcome respectively. {source_tag("Master Audit")}</div>',
+                unsafe_allow_html=True)
+    value_drivers = [
+        ("Inventory reduction", fmt_currency(inv_value_sum)),
+        ("Working-capital efficiency", fmt_num(wc_eff_avg, 0, "%") if not is_missing(wc_eff_avg) else "N/A"),
+        ("Carrying-cost reduction", fmt_currency(carrying_sum)),
+        ("Stockout-cost reduction", fmt_currency(stockout_sum)),
+        ("Inventory-turnover improvement", fmt_num(turnover_avg, 2) if not is_missing(turnover_avg) else "N/A"),
+        ("Service-level improvement", fmt_num(safe_series(filtered_df, 'Service_Level_Pct', numeric=True).mean(), 1, "%")
+            if 'Service_Level_Pct' in filtered_df.columns else "N/A"),
+    ]
+    vd_rows_html = ('<table class="math-audit-table"><tr><th>Value Driver</th><th>Current Value</th><th>Target</th><th>Realized</th></tr>' +
+                     ''.join(f'<tr><td><strong>{n}</strong></td><td>{v}</td><td>Requires business target</td>'
+                             f'<td>{NOT_YET_MEASURED}</td></tr>' for n, v in value_drivers) + '</table>')
+    st.markdown(vd_rows_html, unsafe_allow_html=True)
+
+    st.markdown("<h4 style='color:#475569; margin-top:1rem;'>Impact Accounting</h4>", unsafe_allow_html=True)
+    st.markdown('<div class="section-caption">Baseline → Intervention → Measured Change → Financial Translation. Measured-change '
+                'and financial-translation cells are intentionally left as fixed placeholders — populating them requires actual '
+                'post-implementation data, which this dashboard does not fabricate.</div>', unsafe_allow_html=True)
+    accounting_rows = [
+        ("Inventory Value", "Inventory policy intervention", NOT_YET_MEASURED, "Working-capital impact — " + NOT_YET_MEASURED),
+        ("Stockout Exposure", "Forecast / service intervention", NOT_YET_MEASURED, "Avoided shortage cost — " + NOT_YET_MEASURED),
+        ("Carrying Cost", "Inventory reduction / rebalancing", NOT_YET_MEASURED, "Carrying-cost change — " + NOT_YET_MEASURED),
+    ]
+    for baseline_item, intervention_item, measured, translation in accounting_rows:
+        st.markdown(
+            f'<div class="decision-card"><div class="decision-card-title">💰 {baseline_item}</div>'
+            f'<div class="decision-card-text">→ {intervention_item} → <strong>{measured}</strong> → {translation}</div></div>',
+            unsafe_allow_html=True)
+
+    st.markdown("<h4 style='color:#475569; margin-top:1rem;'>C. Realized Impact Tracking</h4>", unsafe_allow_html=True)
+    ri_cols = st.columns(4)
+    ri_items = ["Forecast error improvement", "Inventory value reduction", "Working-capital release", "Carrying-cost reduction",
+                "Stockout-cost reduction", "Service-level improvement", "Fill-rate improvement"]
+    for i, item in enumerate(ri_items):
+        col = ri_cols[i % 4]
+        col.markdown(f'<div class="decision-card"><div class="decision-card-title">{item}</div>'
+                      f'<div class="decision-card-text"><strong>{NOT_YET_MEASURED}</strong></div></div>', unsafe_allow_html=True)
+    st.caption("The system establishes the analytical baseline above so these figures can be measured after operational "
+               "implementation — the blanks are intentional, not missing data.")
+
     st.markdown("<hr>", unsafe_allow_html=True)
     st.subheader("🧪 Illustrative Inventory Reduction Scenario")
-    st.markdown('<div class="illustrative-banner">⚠️ Illustrative Scenario — Not a Model Output. Uses the sidebar sandbox slider purely for exploration.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="illustrative-banner">⚠️ ILLUSTRATIVE SCENARIO — NOT A MODEL OUTPUT. A simple linear what-if slider for '
+                'exploration only — this is not the business-impact calculation; see Addressable Value Drivers and Realized Impact '
+                'Tracking above for the analytically grounded figures.</div>', unsafe_allow_html=True)
     if not is_missing(inv_value_sum):
         reduction_pct = st.slider("Illustrative inventory reduction (%)", min_value=0, max_value=40, value=10, step=1, key="illustrative_reduction_pct")
         capital_release = inv_value_sum * (reduction_pct / 100.0)
@@ -2056,6 +2339,63 @@ with tab5:
         cards_html += '</div>'
     cards_html += '</div>'
     st.markdown(cards_html, unsafe_allow_html=True)
+
+    # ==========================================================================
+    # WHAT CHANGES IN EACH FUNCTION + IMPLEMENTATION GOVERNANCE
+    # Reusable FUNCTION -> CURRENT PROCESS -> PROJECT-ENABLED CHANGE -> KPI ->
+    # OWNER -> VALIDATION STATUS component, plus "who owns the next action?"
+    # No individual employee identities are invented anywhere below.
+    # ==========================================================================
+    st.markdown("<hr>", unsafe_allow_html=True)
+    st.subheader("🏢 What Changes in Each Function")
+    render_function_transformation_card(
+        "Forecasting / Planning", "Current-state process to be validated against legacy practice.",
+        "SKU-specific model competition (4 candidates), lowest validation sMAPE selected.",
+        "sMAPE / RMSE / Bias", "Planning / Demand Planning", "Historical holdout complete; legacy comparison pending")
+    render_function_transformation_card(
+        "Procurement", "Current-state process to be validated — replenishment may follow a broad purchasing cadence.",
+        "Forecast + ROP + EOQ + priority-based replenishment review using ABC-XYZ and Forecast Risk.",
+        "Purchase cadence / supplier service / order adherence", "Procurement", "Operational deployment pending")
+    render_function_transformation_card(
+        "Warehouse", "Current-state process to be validated — attention may not be differentiated by demand value/variability.",
+        "ABC-XYZ + Safety Stock / ROP-based inventory attention for stock-protection and pick-face review.",
+        "Inventory Days / Fill Rate / Inventory Health", "Warehouse / Inventory Control", "Operational deployment pending")
+    render_function_transformation_card(
+        "Finance", "Current-state process to be validated.",
+        "SKU-level working-capital and shortage-exposure visibility, previously not available at this granularity.",
+        "Inventory Value / Working Capital / Carrying Cost / Stockout Exposure", "Finance", "Actual baseline reconciliation pending")
+    render_function_transformation_card(
+        "Management", "Current-state process to be validated — review may previously cover the full portfolio uniformly.",
+        "Exception-based portfolio prioritisation using Forecast Health, Forecast Risk, ABC-XYZ, Bullwhip, and Business Risk.",
+        "High-risk exception closure / business outcome metrics", "Leadership / S&OP", "Operational adoption pending")
+
+    st.markdown("<h4 style='color:#475569; margin-top:1rem;'>Who Owns the Next Action?</h4>", unsafe_allow_html=True)
+    gov_cols = st.columns(5)
+    gov_items = [
+        ("Forecast / Demand Planning", "Forecast metrics (sMAPE, RMSE, Bias)"),
+        ("Procurement", "Replenishment / supplier action"),
+        ("Warehouse / Inventory Control", "Stock position / buffer action"),
+        ("Finance", "Capital + cost measurement"),
+        ("Management / S&OP", "Exception escalation + cross-functional decision"),
+    ]
+    for col, (owner, scope) in zip(gov_cols, gov_items):
+        col.markdown(f'<div class="flow-card" style="border-top:5px solid var(--c-slate-700);">'
+                      f'<div class="flow-card-title">{owner}</div><div class="flow-card-text">{scope}</div></div>', unsafe_allow_html=True)
+
+    st.markdown("<h4 style='color:#475569; margin-top:1rem;'>Implementation Status</h4>", unsafe_allow_html=True)
+    st.markdown(f'<div class="section-caption">Reported pathway outputs from the executed model-competition pipeline total 1,365 '
+                f'SKUs; the difference versus the full tracked population is not independently reconciled here. '
+                f'{source_tag("Master Audit")}</div>', unsafe_allow_html=True)
+    stat_cols = st.columns(3)
+    with stat_cols[0]:
+        render_status_card("green", "CURRENT MVP", "Analytical decision support: SKU-level forecasting, model competition, "
+                            "Safety Stock, ROP, EOQ, ABC-XYZ, Bullwhip, financial exposure, rule-based recommendations, dashboard.")
+    with stat_cols[1]:
+        render_status_card("amber", "NEXT PHASE", "Operational integration: connect ERP/WMS/procurement data, validate actual "
+                            "inventory balances, establish legacy forecast + business KPI baselines, deploy exception workflows.")
+    with stat_cols[2]:
+        render_status_card("red", "FUTURE STATE", "Closed-loop, continuously monitored planning: forecast drift detection, "
+                            "data-quality monitoring, model governance, workflow integration, closed-loop actual-vs-plan learning.")
 
     st.markdown("<hr>", unsafe_allow_html=True)
     st.subheader("📚 Methodology & Traceability")
