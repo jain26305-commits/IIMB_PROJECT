@@ -15,7 +15,6 @@ warnings.filterwarnings("ignore")
 import sys
 import types
 import os
-from pathlib import Path
 import numpy as np
 
 # --- NumPy 2.0+ compatibility shims (kept from the original build) ---
@@ -1383,11 +1382,16 @@ with tab1:
     if HAS_ABC_XYZ and total_skus > 0:
         abc_order = ['A', 'B', 'C']
         xyz_order = ['X', 'Y', 'Z']
-        matrix = pd.DataFrame(0, index=abc_order, columns=xyz_order)
-        for _, r in filtered_df.iterrows():
-            code = str(r.get('ABC_XYZ_Class', ''))
-            if len(code) == 2 and code[0] in abc_order and code[1] in xyz_order:
-                matrix.loc[code[0], code[1]] += 1
+        # Vectorized rebuild of the same ABC x XYZ count matrix (Performance Fix,
+        # Sept 2026): the original per-row Python loop over the full filtered
+        # dataset ran on every script rerun; this produces an identical matrix
+        # via a single pandas crosstab, with any code not matching the expected
+        # 2-character ABC/XYZ pattern excluded exactly as the loop's own
+        # length/membership checks did.
+        codes = filtered_df['ABC_XYZ_Class'].astype(str)
+        valid_code = codes.str.len().eq(2) & codes.str[0].isin(abc_order) & codes.str[1].isin(xyz_order)
+        valid_codes = codes[valid_code]
+        matrix = pd.crosstab(valid_codes.str[0], valid_codes.str[1]).reindex(index=abc_order, columns=xyz_order, fill_value=0)
         fig_matrix = px.imshow(matrix, text_auto=True, color_continuous_scale=[[0, '#F1F5F9'], [1, '#1E3A8A']],
                                 labels=dict(x="XYZ (Demand Stability)", y="ABC (Value)", color="SKU Count"))
         fig_matrix.update_layout(margin=dict(l=10, r=10, t=20, b=10))
@@ -1803,9 +1807,9 @@ with tab2:
                     f'across {total_skus:,} SKUs in the current filter — this is historical holdout validation performance, '
                     f'not an improvement figure versus the company\'s prior process.</div></div>', unsafe_allow_html=True)
     with fk_c2:
-        st.markdown(f'<div class="decision-card"><div class="decision-card-title">👤 Forecasting Owner</div>'
-                    f'<div class="decision-card-text">Demand Planning / Supply Planning — reviews high-risk / low-health SKUs '
-                    f'using the Forecast Risk and Model Reliability fields above.</div></div>', unsafe_allow_html=True)
+        st.markdown('<div class="decision-card"><div class="decision-card-title">👤 Forecasting Owner</div>'
+                    '<div class="decision-card-text">Demand Planning / Supply Planning — reviews high-risk / low-health SKUs '
+                    'using the Forecast Risk and Model Reliability fields above.</div></div>', unsafe_allow_html=True)
 
     st.markdown("<h5 style='color:#475569; margin-top:0.6rem;'>Post-Deployment Comparison</h5>", unsafe_allow_html=True)
     pdc1, pdc2, pdc3 = st.columns(3)
@@ -2098,9 +2102,10 @@ with tab4:
     bottom quartile of the current filter — i.e., capital tied up with comparatively weak sell-through. Approximated from Master Audit fields
     since an observed actual-inventory figure isn't part of this export. {source_tag("Dashboard Derived")}</div>""", unsafe_allow_html=True)
     if 'Inventory_Days' in filtered_df.columns and 'Mean_Monthly_Demand' in filtered_df.columns and total_skus > 3:
-        days_q75 = safe_series(filtered_df, 'Inventory_Days', numeric=True).quantile(0.75)
+        inventory_days_series = safe_series(filtered_df, 'Inventory_Days', numeric=True)
+        days_q75 = inventory_days_series.quantile(0.75)
         demand_q25 = mean_monthly_series.quantile(0.25)
-        trap_mask = (safe_series(filtered_df, 'Inventory_Days', numeric=True) >= days_q75) & (mean_monthly_series <= demand_q25)
+        trap_mask = (inventory_days_series >= days_q75) & (mean_monthly_series <= demand_q25)
         trap_cols = [c for c in ['SKU', 'ABC_XYZ_Class', 'Mean_Monthly_Demand', 'Inventory_Days', 'Inventory_Value',
                                   'Forecast_Risk', 'Inventory_Recommendation'] if c in filtered_df.columns]
         trap_df = filtered_df[trap_mask][trap_cols].sort_values('Inventory_Value', ascending=False) if 'Inventory_Value' in trap_cols else filtered_df[trap_mask][trap_cols]
