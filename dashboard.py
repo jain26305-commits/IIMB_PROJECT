@@ -3,7 +3,7 @@ Enterprise Demand Forecasting & Inventory Decision Support System
 Using Time Series Analytics — Premium Edition (v2)
 
 Architecture: PRESERVE -> CORRECT -> ENHANCE -> ANIMATE -> POLISH
-Author: Kaushik Jain 
+Author: Kaushik Jain
 
 Data source of truth: Enterprise_Supply_Chain_Master_Audit.xlsx (Executive_Summary sheet)
 This file is READ-ONLY at runtime. Nothing here ever writes back to the source workbook.
@@ -49,7 +49,7 @@ from openpyxl.utils import get_column_letter
 # Optional / heavy dependencies made resilient: the app must never crash on boot
 # just because an optional modelling package isn't installed in a given environment.
 try:
-    from sklearn.metrics import mean_absolute_error
+    from sklearn.metrics import mean_absolute_error, mean_squared_error
 except Exception:
     mean_absolute_error, mean_squared_error = None, None
 
@@ -382,32 +382,6 @@ def run_portfolio_math_audit(source_df):
     }
     return summary, detail
 
-@st.cache_data(show_spinner=False)
-def generate_excel_report(export_df):
-    """Builds the styled Filtered Audit Report workbook in memory for download.
-    Hoisted to module level (Performance Fix, Sept 2026): defining a
-    @st.cache_data-wrapped function inside a tab body redefined and
-    re-registered it on every single script rerun; a module-level definition
-    is created once per session and cached correctly by argument content."""
-    buffer = io.BytesIO()
-    with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
-        export_df.to_excel(writer, index=False, sheet_name='Filtered_Audit')
-        ws = writer.sheets['Filtered_Audit']
-        header_fill = PatternFill(start_color="1E3A8A", end_color="1E3A8A", fill_type="solid")
-        header_font = Font(color="FFFFFF", bold=True)
-        for cell in ws[1]:
-            cell.fill = header_fill
-            cell.font = header_font
-            cell.alignment = Alignment(horizontal="center", vertical="center")
-        for i, col in enumerate(export_df.columns, 1):
-            try:
-                max_len = max(export_df[col].astype(str).map(len).max(), len(str(col))) + 2
-            except Exception:
-                max_len = len(str(col)) + 2
-            ws.column_dimensions[get_column_letter(i)].width = min(max_len, 40)
-    buffer.seek(0)
-    return buffer
-
 # ==============================================================================
 # SECTION 2. SPLASH / INTRO SCREEN  (preserved — product identity, do not remove)
 # ==============================================================================
@@ -611,13 +585,13 @@ st.markdown("""
         to { opacity: 1; transform: translateY(0) scale(1); }
     }
     @keyframes tabPanelReveal {
-        from { opacity: 0; filter: blur(3px); transform: translateY(6px); }
-        to { opacity: 1; filter: blur(0px); transform: translateY(0); }
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
     }
-    @keyframes pulseCriticalRing {
-        0% { box-shadow: 0 0 0 6px rgba(153, 27, 27, 0.22); }
-        50% { box-shadow: 0 0 0 6px rgba(153, 27, 27, 0.05); }
-        100% { box-shadow: 0 0 0 6px rgba(153, 27, 27, 0.22); }
+    @keyframes pulseCritical {
+        0% { box-shadow: 0 0 0 0 rgba(153, 27, 27, 0.35); }
+        70% { box-shadow: 0 0 0 8px rgba(153, 27, 27, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(153, 27, 27, 0); }
     }
     @keyframes fadeInUp {
         from { opacity: 0; transform: translateY(20px); }
@@ -707,18 +681,14 @@ st.markdown("""
         0% { transform: translateX(-120%) skewX(-15deg); }
         100% { transform: translateX(220%) skewX(-15deg); }
     }
-    @keyframes softBreathe {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.92; }
-    }
 
     /* Whole-app ambient backdrop: a static, subtle gradient wash behind the
        content, layered on top of the forced light base color above — never
-       black, in any browser or OS theme. Static (not animated) on purpose:
-       an animated full-viewport gradient with background-attachment:fixed
-       forces continuous repaints and was the single biggest performance
-       cost on the page; a still gradient looks identical at a glance and
-       costs nothing after first paint. */
+       black, in any browser or OS theme. Static (not animated): an
+       animated full-viewport gradient with background-attachment:fixed
+       forces continuous repaints on every frame and was the single biggest
+       performance cost on the page; a still gradient looks identical at a
+       glance and costs nothing after first paint. */
     .stApp {
         background-image: radial-gradient(circle at 15% 10%, rgba(14,165,233,0.05), transparent 45%),
                            radial-gradient(circle at 85% 90%, rgba(30,58,138,0.05), transparent 45%);
@@ -751,7 +721,7 @@ st.markdown("""
     [data-testid="stSidebar"] {
         background: linear-gradient(180deg, var(--c-slate-50), var(--c-slate-100));
         border-right: 1px solid var(--c-slate-200);
-        transition: all var(--dur-fast) ease;
+        transition: background-color var(--dur-fast) ease;
     }
 
     div[data-testid="stMetricValue"] {
@@ -785,7 +755,7 @@ st.markdown("""
         border: 1px solid var(--c-slate-200);
         border-left: 5px solid var(--c-blue);
         box-shadow: var(--shadow-resting);
-        transition: all var(--dur-med) var(--ease-spring);
+        transition: transform var(--dur-med) var(--ease-spring), box-shadow var(--dur-med) ease, border-color var(--dur-med) ease;
         animation: chartReveal var(--dur-slow) var(--ease-standard) both;
         position: relative;
         overflow: hidden;
@@ -797,7 +767,8 @@ st.markdown("""
     }
     /* Cinematic sheen: a soft light streak that glides across the card on
        hover only, like light catching glass. Absolutely positioned overlay —
-       adds no size and shifts no sibling or child content. */
+       adds no size and shifts no sibling or child content. Runs once per
+       hover rather than looping, so it costs nothing while idle. */
     .metric-card::after {
         content: ""; position: absolute; top: 0; left: 0; width: 40%; height: 100%;
         background: linear-gradient(100deg, transparent, rgba(255,255,255,0.35), transparent);
@@ -825,7 +796,7 @@ st.markdown("""
         text-shadow: 0 1px 0 rgba(255,255,255,0.6);
     }
     .metric-card-subtitle { font-size: 0.85rem; color: var(--c-slate-500); font-weight: 600; }
-    .metric-card.pulse-critical { animation: chartReveal var(--dur-slow) var(--ease-standard) both, pulseCriticalRing 3s ease-in-out infinite; }
+    .metric-card.pulse-critical { animation: chartReveal var(--dur-slow) var(--ease-standard) both, pulseCritical 2.4s infinite; }
 
     /* ---------- Badge — one canonical naming scheme via data-status ---------- */
     .badge { padding: 4px 10px; border-radius: var(--radius-pill); font-size: 0.75rem; font-weight: 700; display: inline-block; }
@@ -844,13 +815,15 @@ st.markdown("""
 
     /* ---------- Square metric (mini KPI tile — Tab 2 / Tab 3 side panels) ---------- */
     .metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.8rem; margin-top: 0.5rem; }
+    .metrics-grid--3 { grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 640px) { .metrics-grid--3 { grid-template-columns: repeat(1, 1fr); } }
     .square-metric {
         background: radial-gradient(120% 120% at 20% 0%, #ffffff, var(--c-slate-50) 70%);
         aspect-ratio: 1 / 1; border-radius: var(--radius-xl);
         border: 1px solid var(--c-slate-200); border-top: 4px solid var(--c-blue);
         box-shadow: var(--shadow-resting);
         animation: chartReveal var(--dur-slow) var(--ease-standard) both;
-        transition: all var(--dur-med) var(--ease-spring);
+        transition: transform var(--dur-med) var(--ease-spring), box-shadow var(--dur-med) ease, border-color var(--dur-med) ease;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
         text-align: center; padding: 0.8rem;
         position: relative; overflow: hidden;
@@ -873,7 +846,7 @@ st.markdown("""
 
     /* ---------- Status card (advisor / diagnostic recommendations — one class, data-status modifier) ---------- */
     .status-card { border-radius: var(--radius-lg); padding: 1rem; margin-bottom: 0.8rem;
-        transition: all var(--dur-fast) ease; border: 1px solid; box-shadow: var(--shadow-resting); }
+        transition: transform var(--dur-fast) ease, box-shadow var(--dur-fast) ease; border: 1px solid; box-shadow: var(--shadow-resting); }
     .status-card:hover { transform: translateX(4px) translateY(-2px); box-shadow: var(--shadow-hover); }
     .status-card[data-status="green"] { background: var(--c-success-bg); border-left: 5px solid var(--c-success); border-color: var(--c-success-border); }
     .status-card[data-status="amber"] { background: var(--c-warning-bg); border-left: 5px solid var(--c-warning); border-color: var(--c-warning-border); }
@@ -885,7 +858,7 @@ st.markdown("""
     .decision-card { background: linear-gradient(160deg, #fff, var(--c-slate-50) 120%);
         border: 1px solid var(--c-slate-200); border-left: 5px solid var(--c-navy);
         border-radius: var(--radius-lg); padding: 0.9rem 1.1rem; margin-bottom: 0.7rem;
-        transition: all var(--dur-fast) ease; box-shadow: var(--shadow-resting);
+        transition: transform var(--dur-fast) ease, box-shadow var(--dur-fast) ease; box-shadow: var(--shadow-resting);
         position: relative; overflow: hidden; }
     .decision-card::after {
         content: ""; position: absolute; top: 0; left: 0; width: 35%; height: 100%;
@@ -902,7 +875,7 @@ st.markdown("""
     @media (max-width: 1200px) { .matrix-grid-container { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 768px)  { .matrix-grid-container { grid-template-columns: 1fr; } }
     .flow-card { background: linear-gradient(165deg, #FFFFFF, var(--c-slate-50) 130%); border: 1px solid #CBD5E1; border-radius: var(--radius-md); padding: 1rem;
-        text-align: left; box-shadow: var(--shadow-resting); height: 100%; transition: all var(--dur-med) ease;
+        text-align: left; box-shadow: var(--shadow-resting); height: 100%; transition: transform var(--dur-med) ease, box-shadow var(--dur-med) ease;
         animation: chartReveal var(--dur-slow) var(--ease-standard) both;
         position: relative; overflow: hidden; }
     .flow-card::after {
@@ -928,13 +901,13 @@ st.markdown("""
     .story-node { flex: 1; min-width: 92px; text-align: center; padding: 0.6rem 0.3rem; border-radius: var(--radius-md);
         background: linear-gradient(165deg, #FFFFFF, var(--c-slate-50)); border: 1px solid var(--c-slate-200); font-size: 0.72rem; font-weight: 800; color: var(--c-slate-700);
         box-shadow: var(--shadow-resting);
-        animation: chartReveal var(--dur-slow) var(--ease-standard) both; transition: all var(--dur-fast) ease; }
+        animation: chartReveal var(--dur-slow) var(--ease-standard) both; transition: transform var(--dur-fast) ease, box-shadow var(--dur-fast) ease, color var(--dur-fast) ease; }
     .story-node:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); border-color: var(--c-blue); color: var(--c-navy); }
     .story-arrow { color: var(--c-slate-500); font-size: 1.1rem; flex: 0 0 auto; }
     @media (max-width: 900px) { .story-strip { flex-wrap: wrap; } .story-arrow { display: none; } }
 
 
-    div[data-testid="stDataFrame"] { transition: all var(--dur-med) ease; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--c-slate-200); }
+    div[data-testid="stDataFrame"] { transition: transform var(--dur-med) ease, box-shadow var(--dur-med) ease; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--c-slate-200); }
     div[data-testid="stDataFrame"]:hover { transform: scale(1.003) translateY(-2px); box-shadow: var(--shadow-hover); }
 
     [data-testid="stPlotlyChart"], .stPlotlyChart {
@@ -951,7 +924,7 @@ st.markdown("""
     .stButton > button, .stDownloadButton > button {
         background: linear-gradient(135deg, var(--c-blue), var(--c-blue-light));
         color: white; font-weight: 700; border: none; border-radius: var(--radius-sm);
-        padding: 0.5rem 1rem; transition: all var(--dur-med) var(--ease-standard) !important; letter-spacing: 0.5px;
+        padding: 0.5rem 1rem; transition: transform var(--dur-med) var(--ease-standard), box-shadow var(--dur-med) var(--ease-standard), background var(--dur-med) var(--ease-standard) !important; letter-spacing: 0.5px;
         box-shadow: 0 4px 12px rgba(14, 165, 233, 0.22);
         position: relative; overflow: hidden;
     }
@@ -968,24 +941,23 @@ st.markdown("""
         background: linear-gradient(135deg, var(--c-navy), #1E40AF);
     }
     .stButton > button:active, .stDownloadButton > button:active {
-        transform: translateY(0) scale(0.98); transition: all 0.08s ease !important;
+        transform: translateY(0) scale(0.98); transition: transform 0.08s ease !important;
     }
 
-    /* ---------- Tabs: active-state glow (new — closes a gap flagged in the design audit) ---------- */
+    /* ---------- Tabs: active-state glow ---------- */
     div[data-testid="stTabs"] [data-baseweb="tab-list"] { display: flex !important; width: 100% !important; justify-content: center !important; gap: 8px; }
     div[data-testid="stTabs"] [data-baseweb="tab"] {
         flex-grow: 1 !important; text-align: center !important; justify-content: center !important;
         font-size: 0.95rem !important; border-radius: var(--radius-md) var(--radius-md) 0 0 !important;
-        transition: all var(--dur-fast) ease !important;
+        transition: background-color var(--dur-fast) ease, transform var(--dur-fast) ease !important;
     }
     div[data-testid="stTabs"] [data-baseweb="tab"]:hover { background-color: rgba(14, 165, 233, 0.08); transform: translateY(-1px); }
     div[data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"] {
         box-shadow: inset 0 -3px 0 var(--c-blue); color: var(--c-navy) !important; font-weight: 800 !important;
-        animation: softBreathe 3s ease-in-out infinite;
     }
-    div[data-testid="stTabs"] [data-baseweb="tab-panel"] { animation: tabPanelReveal 0.28s var(--ease-standard) both; }
+    div[data-testid="stTabs"] [data-baseweb="tab-panel"] { animation: tabPanelReveal 0.22s var(--ease-standard) both; }
 
-    /* ---------- Accessibility: keyboard focus states (new) ---------- */
+    /* ---------- Accessibility: keyboard focus states ---------- */
     .stButton > button:focus-visible, .stDownloadButton > button:focus-visible,
     div[data-testid="stTabs"] [data-baseweb="tab"]:focus-visible,
     [data-baseweb="select"]:focus-within, input:focus-visible {
@@ -993,33 +965,31 @@ st.markdown("""
     }
 
     .main-dashboard-title {
-        color: var(--c-navy); font-weight: 900; font-size: clamp(2.2rem, 4.5vw, 4rem);
+        color: var(--c-navy); font-weight: 900; font-size: clamp(2.1rem, 4vw, 3.4rem);
         margin: 0 auto 0.5rem auto; max-width: 1200px; word-wrap: break-word; line-height: 1.25;
-        text-align: center !important; animation: floatElement 4s infinite ease-in-out; display: block;
-        text-shadow: 0 6px 32px rgba(14,165,233,0.12);
+        text-align: center !important; display: block;
     }
 
     .section-caption { font-size: 0.82rem; color: var(--c-slate-500); font-style: italic; margin-top: -0.4rem; margin-bottom: 0.6rem; }
     .illustrative-banner {
         background: var(--c-warning-bg); border: 1px dashed var(--c-warning); color: var(--c-warning-text);
         border-radius: var(--radius-md); padding: 0.6rem 1rem; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.8rem;
-        box-shadow: var(--shadow-resting); transition: box-shadow var(--dur-med) ease;
+        box-shadow: var(--shadow-resting);
     }
 
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
 
-    /* ---------- Accessibility: respect reduced-motion preference globally (new) ---------- */
+    /* ---------- Accessibility: respect reduced-motion preference globally ---------- */
     @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
-        .main-dashboard-title, .square-metric, .metric-card, .metric-card.pulse-critical { animation: none !important; text-shadow: none !important; }
+        .square-metric, .metric-card, .metric-card.pulse-critical { animation: none !important; text-shadow: none !important; }
         .metric-card--ribbon:hover, .square-metric:hover, .flow-card:hover,
         [data-testid="stPlotlyChart"]:hover, div[data-testid="stDataFrame"]:hover,
         .stButton > button:hover, .status-card:hover, .decision-card:hover { transform: none !important; }
         .stApp { animation: none !important; }
         .metric-card::after, .square-metric::after, .flow-card::after, .decision-card::after,
         .stButton > button::after, .stDownloadButton > button::after { display: none !important; }
-        div[data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"] { animation: none !important; }
         .square-metric:hover .square-metric-value { transform: none !important; }
     }
 </style>
@@ -1029,7 +999,7 @@ st.markdown("""
     <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin-bottom: 1rem; text-align: center; padding: 0 1rem;">
         <h1 class="main-dashboard-title">Enterprise Demand Forecasting & Inventory Decision Support System Using Time Series Analytics</h1>
     </div>
-    <hr style="border: 0; height: 2px; background-image: linear-gradient(to right, rgba(0,0,0,0), #1E3A8A 25%, #38BDF8 50%, #1E3A8A 75%, rgba(0,0,0,0)); margin-top: 0; margin-bottom: 2rem;">
+    <hr style="border: 0; height: 2px; background: linear-gradient(to right, rgba(0,0,0,0), #1E3A8A 25%, #38BDF8 50%, #1E3A8A 75%, rgba(0,0,0,0)); margin-top: 0; margin-bottom: 2rem;">
 """, unsafe_allow_html=True)
 
 # ==============================================================================
@@ -1094,9 +1064,6 @@ def load_and_clean_data(file_bytes, file_name):
 uploaded_file = None
 file_bytes = None
 file_name = "default"
-# No file-uploader widget is exposed in this deployment; load_and_clean_data
-# still accepts an uploaded file (CSV/XLSX) so this call is a no-op path to
-# the same Master Audit / demo-bootstrap loading used everywhere else.
 df, DATA_SOURCE_LABEL = load_and_clean_data(file_bytes, file_name)
 
 # ------------------------------------------------------------------------------
@@ -1178,6 +1145,11 @@ if sku_list and st.session_state.shared_sku not in sku_list:
     st.session_state.sidebar_sku = sku_list[0]
     st.session_state.tab2_sku = sku_list[0]
     st.session_state.tab3_sku = sku_list[0]
+elif not sku_list:
+    # Empty-filter guard: with zero SKUs left after the ABC/XYZ filter, every
+    # downstream selectbox below is skipped rather than instantiated against
+    # an empty options list, so no widget is left pointing at a stale SKU.
+    st.session_state.shared_sku = None
 
 # Pending cross-tab SKU jump (e.g. "🎯 Jump to SKU" in Top Priority Decisions).
 # Streamlit forbids writing st.session_state.sidebar_sku / tab2_sku / tab3_sku
@@ -1199,7 +1171,10 @@ def sync_from(key):
     for k in ['sidebar_sku', 'tab2_sku', 'tab3_sku']:
         st.session_state[k] = val
 
-sku_container.selectbox("Global SKU Selector", sku_list, key="sidebar_sku", on_change=lambda: sync_from('sidebar_sku'))
+if sku_list:
+    sku_container.selectbox("Global SKU Selector", sku_list, key="sidebar_sku", on_change=lambda: sync_from('sidebar_sku'))
+else:
+    sku_container.info("No SKUs match the current ABC/XYZ filter.")
 
 # ------------------------------------------------------------------------------
 # Portfolio-level numeric series used across multiple tabs (computed once)
@@ -1435,11 +1410,8 @@ with tab1:
         st.info("No Executive_Recommendation data available for the current selection.")
 
     # ------------------------------------------------------------------------
-    # DECISION INTELLIGENCE — moved here from Tab 5 (Structural Fix, Sept 2026).
-    # It previously lived at the bottom of Tab 5 ("Financial Impact,
-    # Methodology & Audit"), disconnected from "Top Priority Decisions" above,
-    # so the "Jump to SKU" action had nowhere in Tab 1 to actually land the
-    # user on. It now sits directly beneath the decisions that reference it.
+    # DECISION INTELLIGENCE — sits directly beneath the decisions that
+    # reference it, so the "Jump to SKU" action above has somewhere to land.
     # ------------------------------------------------------------------------
     st.markdown("<hr>", unsafe_allow_html=True)
     dt_title = st.session_state.shared_sku if st.session_state.shared_sku else "No SKU Selected"
@@ -1464,29 +1436,38 @@ with tab1:
         st.info("Select a SKU from the sidebar to view its Decision Intelligence cards.")
 
     # ==========================================================================
-    # IMPLEMENTATION SUMMARY — evidence-lean. Kept only what is directly
-    # supported by Master Audit fields and existing dashboard logic: what the
-    # project enables, not invented current-state/baseline/target claims.
+    # WHAT THIS PROJECT ENABLES — compact, evidence-only implementation
+    # summary. Every line maps to a capability the code actually produces
+    # from Master Audit fields. No baseline, owner, target, status or
+    # "not yet measured" placeholder is shown here: none of those are
+    # evidenced, so per the evidence-audit rule they are not fabricated.
     # ==========================================================================
     st.markdown("<hr>", unsafe_allow_html=True)
     st.subheader("🧭 What This Project Enables")
-    st.markdown(
-        '<div class="section-caption">Decision-support capabilities this system provides today, built directly from Master Audit outputs.</div>',
-        unsafe_allow_html=True)
+    st.markdown('<div class="section-caption">Capabilities the analytics genuinely deliver today, drawn directly from Master Audit outputs.</div>', unsafe_allow_html=True)
 
-    wc_cols = st.columns(5)
+    wc_cols = st.columns(3)
     wc_items = [
-        ("📈 Forecasting", "SKU-level model competition across 4 candidate models, selected by validation sMAPE."),
-        ("📦 Inventory", "Forecast-driven Safety Stock, Reorder Point and EOQ computed per SKU."),
-        ("🚚 Procurement", "Replenishment attention prioritised by ABC-XYZ, Forecast Risk and EOQ."),
-        ("🏭 Warehouse", "Stock-protection and review priority differentiated by segment."),
-        ("💰 Finance", "SKU-level inventory value, working capital and shortage-exposure visibility."),
+        ("📈 Forecasting", "SKU-level validated forecasting and model-selection outputs."),
+        ("📦 Inventory", "Forecast-driven Safety Stock, ROP and EOQ recommendations."),
+        ("🧩 Segmentation", "ABC–XYZ differentiated inventory control."),
     ]
     for col, (title, desc) in zip(wc_cols, wc_items):
         col.markdown(f'<div class="flow-card" style="border-top:5px solid var(--c-blue);">'
                       f'<div class="flow-card-title">{title}</div><div class="flow-card-text">{desc}</div></div>',
                       unsafe_allow_html=True)
-    st.caption("Realised financial and operational impact requires post-deployment measurement and is not claimed here.")
+    wc_cols2 = st.columns(3)
+    wc_items2 = [
+        ("⚠️ Risk", "Forecast-risk, RMSE and Bullwhip-based exception visibility."),
+        ("💰 Finance", "Inventory Value, Working Capital, Carrying Cost and Stockout exposure visibility."),
+        ("🧭 Decision Support", "Rule-based recommendations linked directly to the analytical outputs above."),
+    ]
+    for col, (title, desc) in zip(wc_cols2, wc_items2):
+        col.markdown(f'<div class="flow-card" style="border-top:5px solid var(--c-blue);">'
+                      f'<div class="flow-card-title">{title}</div><div class="flow-card-text">{desc}</div></div>',
+                      unsafe_allow_html=True)
+    st.caption("Realised business impact (savings, inventory reduction, forecast improvement) requires post-deployment "
+               "measurement against an actual operating baseline — that measurement is not part of this analytical layer.")
 
 # ==============================================================================
 # TAB 2 — DEMAND & FORECAST INTELLIGENCE
@@ -1498,7 +1479,8 @@ with tab2:
     with header_col1:
         st.subheader("Forecast Diagnostics & Model Performance")
     with header_col2:
-        st.selectbox("🎯 Isolate SKU", sku_list, key="tab2_sku", on_change=lambda: sync_from('tab2_sku'))
+        if sku_list:
+            st.selectbox("🎯 Isolate SKU", sku_list, key="tab2_sku", on_change=lambda: sync_from('tab2_sku'))
 
     sku_row = None
     if st.session_state.shared_sku and total_skus > 0:
@@ -1562,7 +1544,7 @@ with tab2:
                         fig.add_trace(go.Scatter(x=months, y=preds, name='Forecast', mode='lines+markers',
                                                   line=dict(color='#F43F5E', width=3, dash='dash'), marker=dict(size=8, symbol='diamond', color='#E11D48')))
                         fig.update_layout(title="Forecast Validation — Test Period", plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
-                                           hovermode='x unified', transition=dict(duration=500, easing='cubic-in-out'),
+                                           hovermode='x unified',
                                            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
                                            xaxis=dict(showgrid=False), yaxis=dict(showgrid=True, gridcolor='#F1F5F9'),
                                            margin=dict(l=20, r=20, t=40, b=20))
@@ -1596,11 +1578,10 @@ with tab2:
             # forecast confidence for a SKU, so it is used here instead, correctly tagged.
             conf_val = safe_val(sku_row, 'Accuracy_Pct')
             conf_source = "Master Audit" if 'Accuracy_Pct' in filtered_df.columns else "Dashboard Derived"
-            mini_html = ('<div class="metrics-grid">'
+            mini_html = ('<div class="metrics-grid metrics-grid--3">'
                 + render_square_metric("Next Forecast", fmt_int(safe_val(sku_row, 'Forecast_Next_Month')), "Projected")
                 + render_square_metric("Demand Amp.", fmt_num(safe_val(sku_row, 'Bullwhip_Ratio', 1.0), 2), "Bullwhip Ratio")
                 + render_square_metric("Forecast Conf.", fmt_num(conf_val, 1, '%'), f"Accuracy {source_tag(conf_source)}")
-                + render_square_metric("Stability", fmt_num(safe_val(sku_row, 'Demand_Stability_Score'), 1), "Demand Stability")
                 + '</div>')
             st.markdown(mini_html, unsafe_allow_html=True)
 
@@ -1628,15 +1609,7 @@ with tab2:
         st.info("Select a SKU from the sidebar or the selector above to view its forecast diagnostics.")
 
     # --------------------------------------------------------------------
-    # 24-MONTH HISTORICAL DEMAND — genuinely distinct from the Test Period
-    # above. Uses the raw monthly workbook (read-only) when supplied via the
-    # sidebar sandbox; otherwise shows an explicit unlock message rather than
-    # letting the Test Period or an annual aggregate stand in for it.
-    # --------------------------------------------------------------------
-    st.markdown("<hr>", unsafe_allow_html=True)
-    # --------------------------------------------------------------------
-    # Portfolio-level forecast quality (moved here from old Tab 4 — this is
-    # where the master prompt's Tab 2 spec asks for accuracy/error context)
+    # Portfolio-level forecast quality
     # --------------------------------------------------------------------
     st.markdown("<hr>", unsafe_allow_html=True)
     st.subheader("🎯 Portfolio Forecast Quality")
@@ -1680,6 +1653,8 @@ with tab2:
             st.caption(f"Portfolio average Accuracy_Pct (Master Audit) across {total_skus:,} SKUs in view.")
         else:
             st.info("Accuracy_Pct not available in this data source — gauge cannot be computed.")
+    else:
+        st.info("No SKUs in the current filter — adjust the ABC/XYZ selection in the sidebar to see portfolio forecast quality.")
 
     st.markdown("<hr>", unsafe_allow_html=True)
     st.subheader("📐 Portfolio-Level Demand Statistics")
@@ -1704,28 +1679,29 @@ with tab2:
     if 'ABC_Class' in filtered_df.columns and 'Forecast_Risk' in filtered_df.columns and total_skus > 0:
         risk_matrix = pd.crosstab(filtered_df['ABC_Class'], filtered_df['Forecast_Risk'])
         fig_riskhm = px.imshow(risk_matrix, text_auto=True, color_continuous_scale=[[0, '#F1F5F9'], [1, '#991B1B']],
-                                labels=dict(x="Forecast Risk", y="ABC Class", color="SKU Count"),
-                                title="SKU Count — Forecast Risk × ABC Class")
-        fig_riskhm.update_layout(margin=dict(l=10, r=10, t=40, b=10))
+                                labels=dict(x="Forecast Risk", y="ABC Class", color="SKU Count"))
+        fig_riskhm.update_layout(margin=dict(l=10, r=10, t=20, b=10))
         st.plotly_chart(fig_riskhm, width='stretch')
     else:
         st.info("ABC_Class and/or Forecast_Risk not available for this view.")
 
     # --------------------------------------------------------------------
-    # FORECASTING TRANSFORMATION — evidence-lean: what the project enables,
-    # using only Master Audit metrics actually present in this filter.
+    # FORECASTING — what the project enables (evidence-only).
     # --------------------------------------------------------------------
     st.markdown("<hr>", unsafe_allow_html=True)
-    st.subheader("🔁 Forecasting Transformation")
+    st.subheader("🔁 What the Forecasting Layer Enables")
     st.markdown(
-        '<div class="section-caption">The project introduces a validation-driven forecasting process: SKU-level competition '
-        'across 4 candidate models (AutoARIMA, Naive, Seasonal Naive, 3-Month Moving Average), with the winner selected by '
-        'lowest validation sMAPE on the same unseen holdout for every SKU.</div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="decision-card"><div class="decision-card-title">📏 Current Evidence '
-                f'{source_tag("Master Audit")}</div><div class="decision-card-text">'
-                f'{fmt_num(avg_accuracy, 2, "%") if not is_missing(avg_accuracy) else "N/A"} average validation accuracy '
-                f'across {total_skus:,} SKUs in the current filter — this is historical holdout validation performance, '
-                f'not an improvement figure versus a prior process.</div></div>', unsafe_allow_html=True)
+        '<div class="decision-card"><div class="decision-card-title">📏 Validation-Driven Forecasting '
+        f'{source_tag("Master Audit")}</div><div class="decision-card-text">'
+        'Historical demand diagnostics feed a SKU-level model competition (AutoARIMA, Naive, Seasonal Naive, '
+        '3-Month Moving Average); the winning model is selected by lowest validation sMAPE on unseen holdout data, '
+        'producing the per-SKU forecast, accuracy and risk outputs shown above.</div></div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="decision-card"><div class="decision-card-title">📊 Current Portfolio Evidence '
+        f'{source_tag("Master Audit")}</div><div class="decision-card-text">'
+        f'{fmt_num(avg_accuracy, 2, "%") if not is_missing(avg_accuracy) else "N/A"} average validation accuracy across '
+        f'{total_skus:,} SKUs in the current filter — this is holdout validation performance, not an improvement figure '
+        f'versus any prior forecasting process.</div></div>', unsafe_allow_html=True)
 
 # ==============================================================================
 # TAB 3 — INVENTORY OPTIMIZATION
@@ -1737,7 +1713,8 @@ with tab3:
     with h3c1:
         st.subheader("Inventory Parameters & Replenishment")
     with h3c2:
-        st.selectbox("🎯 Isolate SKU", sku_list, key="tab3_sku", on_change=lambda: sync_from('tab3_sku'))
+        if sku_list:
+            st.selectbox("🎯 Isolate SKU", sku_list, key="tab3_sku", on_change=lambda: sync_from('tab3_sku'))
 
     sku_row3 = None
     if st.session_state.shared_sku and total_skus > 0:
@@ -1816,7 +1793,6 @@ with tab3:
                         "historical demand variance (dead stock / constant demand) or when the forecast model achieved a near-zero RMSE "
                         "on a very low-volume, intermittent-demand SKU, so the computed buffer legitimately rounds to zero.")
 
-        st.markdown("<hr>", unsafe_allow_html=True)
     st.markdown("<hr>", unsafe_allow_html=True)
     st.subheader("🔁 Portfolio Replenishment View")
     repl_cols = [c for c in ['SKU', 'ABC_XYZ_Class', 'ABC_Class', 'Safety_Stock', 'Reorder_Point', 'EOQ',
@@ -1849,30 +1825,26 @@ with tab3:
             st.info("Inventory_Health_Score not available.")
 
     # --------------------------------------------------------------------
-    # INVENTORY TRANSFORMATION — evidence-lean. Keeps the formula chain
-    # (genuinely computed) and the model-implied vs. actual inventory
-    # distinction (required); drops invented baseline/impact placeholders.
+    # INVENTORY — what the project enables (evidence-only).
     # --------------------------------------------------------------------
     st.markdown("<hr>", unsafe_allow_html=True)
-    st.subheader("🔁 Inventory Transformation")
+    st.subheader("🔁 What the Inventory Layer Enables")
     st.markdown(
-        '<div class="section-caption">Forecast → forecast uncertainty (RMSE) → Safety Stock → Lead-Time Demand → Reorder '
-        'Point → EOQ → ABC-XYZ policy, computed per SKU: SS = 1.645 × RMSE × √(7/30); ROP = LTD + SS; '
-        'EOQ = √(2 × Annual Demand × Ordering Cost / Holding Cost per Unit).</div>', unsafe_allow_html=True)
-
-    it_c1, it_c2 = st.columns(2)
-    with it_c1:
-        st.markdown(f'<div class="decision-card"><div class="decision-card-title">Model-Implied Inventory Value '
-                    f'{source_tag("Master Audit")}</div><div class="decision-card-text">{fmt_currency(inv_value_sum)} — the '
-                    f'analytical value implied by this project\'s inventory policy, not an observed accounting balance.'
-                    f'</div></div>', unsafe_allow_html=True)
-    with it_c2:
-        actual_inv_str = "Available (Sandbox Upload)" if ACTUAL_INV_COL else "Not available in current Master Audit"
-        st.markdown(f'<div class="decision-card"><div class="decision-card-title">Actual Physical Inventory</div>'
-                    f'<div class="decision-card-text">{actual_inv_str} — model-implied value ≠ observed on-hand inventory '
-                    f'until an actual source is connected.</div></div>', unsafe_allow_html=True)
-    st.caption("The Capital Trap diagnostic in the Risk & Diagnostics tab surfaces potential inventory optimisation "
-               "candidates on this same model-implied basis — a signal for review, not confirmed excess inventory.")
+        '<div class="decision-card"><div class="decision-card-title">📦 Forecast-Driven Inventory Policy '
+        f'{source_tag("Master Audit")}</div><div class="decision-card-text">'
+        'Forecast + RMSE-based Safety Stock, Lead-Time Demand, Reorder Point, EOQ and ABC–XYZ segmentation are computed per '
+        'SKU (SS = 1.645 × RMSE × √(7/30); ROP = LTD + SS; EOQ = √(2 × Annual Demand × Ordering Cost ÷ Holding Cost per Unit)), '
+        'producing the Safety Stock, Reorder Point, EOQ, Inventory Days, Turnover, Service Level, Fill Rate and Inventory '
+        'Health figures above.</div></div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="decision-card"><div class="decision-card-title">📊 Model-Implied vs. Actual Inventory '
+        f'{source_tag("Master Audit")}</div><div class="decision-card-text">'
+        f'Model-implied Inventory Value across the current filter is <strong>{fmt_currency(inv_value_sum)}</strong> — the analytical '
+        f'figure implied by applying this policy to Master Audit fields, not an observed accounting balance. '
+        f'{"An actual on-hand inventory column is available in this data source." if ACTUAL_INV_COL else "No actual/observed on-hand inventory column is present in this data source, so it is not shown as if it were."}'
+        f'</div></div>', unsafe_allow_html=True)
+    st.caption("Any inventory reduction or working-capital release is a modelled implication of this policy, not a measured "
+               "outcome — realising it requires comparison against an actual physical inventory baseline.")
 
 # ==============================================================================
 # TAB 4 — RISK, SEGMENTATION & DIAGNOSTICS
@@ -1890,15 +1862,14 @@ with tab4:
         scatter_df['_bw'] = bullwhip_series
         scatter_df['_rmse'] = rmse_series
 
-        # Vectorized quadrant labeling (Performance Fix, Sept 2026): replaces a
-        # per-row .apply() over the full filtered portfolio on every rerun with
-        # a single np.select — identical labels, no row-wise Python calls.
-        bw_high = scatter_df['_bw'] > med_bw
-        rmse_high = scatter_df['_rmse'] > med_rmse
-        scatter_df['Diagnostic Quadrant'] = np.select(
-            [~bw_high & ~rmse_high, ~bw_high & rmse_high, bw_high & ~rmse_high, bw_high & rmse_high],
-            ["Stable", "Forecast Issue", "Supply Chain Distortion", "Critical"],
-            default="Stable")
+        def quad_label(row):
+            bw_high = row['_bw'] > med_bw
+            rmse_high = row['_rmse'] > med_rmse
+            if not bw_high and not rmse_high: return "Stable"
+            if not bw_high and rmse_high: return "Forecast Issue"
+            if bw_high and not rmse_high: return "Supply Chain Distortion"
+            return "Critical"
+        scatter_df['Diagnostic Quadrant'] = scatter_df.apply(quad_label, axis=1)
 
         fig_scatter = px.scatter(scatter_df, x='_bw', y='_rmse', color='Diagnostic Quadrant',
                                   color_discrete_map={"Stable": "#10B981", "Forecast Issue": "#F59E0B",
@@ -1925,6 +1896,8 @@ with tab4:
                                   color_discrete_sequence=['#1E3A8A', '#0EA5E9', '#94A3B8'], title="ABC Class Distribution")
             fig_abc_bar.update_layout(plot_bgcolor='white', showlegend=False, margin=dict(l=20, r=20, t=40, b=20))
             st.plotly_chart(fig_abc_bar, width='stretch')
+        else:
+            st.info("ABC_Class not available.")
     with seg2:
         if HAS_XYZ and total_skus > 0:
             xyz_bar = filtered_df['XYZ_Class'].value_counts().reset_index()
@@ -1949,9 +1922,8 @@ with tab4:
             if a in abc_order and x in xyz_order:
                 risk_intensity.loc[a, x] = v
         fig_intensity = px.imshow(risk_intensity, text_auto='.1f', color_continuous_scale=[[0, '#D1FAE5'], [0.5, '#FEF3C7'], [1, '#991B1B']],
-                                   labels=dict(x="XYZ", y="ABC", color="Avg RMSE"),
-                                   title="Average RMSE by ABC × XYZ Segment")
-        fig_intensity.update_layout(margin=dict(l=10, r=10, t=40, b=10))
+                                   labels=dict(x="XYZ", y="ABC", color="Avg RMSE"))
+        fig_intensity.update_layout(margin=dict(l=10, r=10, t=20, b=10))
         st.plotly_chart(fig_intensity, width='stretch')
     else:
         st.info("ABC_XYZ_Class and/or RMSE not available for this view.")
@@ -1973,9 +1945,9 @@ with tab4:
         st.markdown(f'<div class="section-caption">Based on 24-month total Outwards from the raw historical workbook — the full tracked period. {source_tag("Historical Raw Data")}</div>', unsafe_allow_html=True)
         hist_totals = raw_history_df[raw_history_df['SKU'].isin(filtered_df['SKU'])].groupby('SKU', as_index=False)['Outwards'].sum()
         hist_totals = hist_totals.rename(columns={'Outwards': 'Total_24M_Outwards'}).sort_values('Total_24M_Outwards', ascending=False).reset_index(drop=True)
-        grand_total = hist_totals['Total_24M_Outwards'].sum()
-        if len(hist_totals) > 0 and grand_total > 0:
-            hist_totals['Cumulative %'] = hist_totals['Total_24M_Outwards'].cumsum() / grand_total * 100
+        outwards_total = hist_totals['Total_24M_Outwards'].sum()
+        if outwards_total and outwards_total > 0:
+            hist_totals['Cumulative %'] = hist_totals['Total_24M_Outwards'].cumsum() / outwards_total * 100
             top_n = hist_totals.head(30)
             fig_pareto = make_subplots(specs=[[{"secondary_y": True}]])
             fig_pareto.add_trace(go.Bar(x=top_n['SKU'], y=top_n['Total_24M_Outwards'], name='24M Total Outwards', marker_color='#0EA5E9'), secondary_y=False)
@@ -1987,13 +1959,13 @@ with tab4:
             a_class_count = (hist_totals['Cumulative %'] <= 80).sum() + 1
             st.caption(f"Approximately {a_class_count:,} of {len(hist_totals):,} SKUs (by 24-month Outwards) drive 80% of total portfolio demand.")
         else:
-            st.info("No historical Outwards volume in the current filter to build a Pareto view.")
+            st.info("Total 24-month Outwards is zero for the current filter — Pareto ranking is not meaningful.")
     elif 'Annual_Demand' in filtered_df.columns and total_skus > 0:
         st.markdown(f'<div class="section-caption">Based on Annual_Demand — the full tracked period available in the Master Audit. Upload the raw 24-month workbook to base this on true monthly Outwards instead. {source_tag("Master Audit")}</div>', unsafe_allow_html=True)
         pareto_df = filtered_df[['SKU', 'Annual_Demand']].dropna().sort_values('Annual_Demand', ascending=False).reset_index(drop=True)
-        grand_total = pareto_df['Annual_Demand'].sum()
-        if len(pareto_df) > 0 and grand_total > 0:
-            pareto_df['Cumulative %'] = pareto_df['Annual_Demand'].cumsum() / grand_total * 100
+        annual_total = pareto_df['Annual_Demand'].sum()
+        if len(pareto_df) > 0 and annual_total and annual_total > 0:
+            pareto_df['Cumulative %'] = pareto_df['Annual_Demand'].cumsum() / annual_total * 100
             top_n = pareto_df.head(30)
             fig_pareto = make_subplots(specs=[[{"secondary_y": True}]])
             fig_pareto.add_trace(go.Bar(x=top_n['SKU'], y=top_n['Annual_Demand'], name='Annual Demand', marker_color='#0EA5E9'), secondary_y=False)
@@ -2005,7 +1977,7 @@ with tab4:
             a_class_count = (pareto_df['Cumulative %'] <= 80).sum() + 1
             st.caption(f"Approximately {a_class_count:,} of {len(pareto_df):,} SKUs (by Annual_Demand) drive 80% of total portfolio demand.")
         else:
-            st.info("No Annual_Demand volume in the current filter to build a Pareto view.")
+            st.info("Annual_Demand is unavailable or zero for the current filter — Pareto ranking is not meaningful.")
     else:
         st.info("Neither the raw 24-month workbook nor Annual_Demand is available for the primary Pareto view.")
 
@@ -2051,15 +2023,15 @@ with tab4:
             st.info("Supply Chain Priority field not available.")
 
     # --------------------------------------------------------------------
-    # IMPLEMENTATION PRIORITY ENGINE — additive analytical prioritisation
-    # lenses built from signals already on this tab. These are lenses for
-    # human review, not autonomous decisions.
+    # IMPLEMENTATION PRIORITY LENS — built entirely from existing, evidenced
+    # fields (ABC, XYZ, Forecast Risk, Bullwhip, RMSE, Inventory Health,
+    # Business Risk). Clearly labeled Dashboard Derived: a prioritisation
+    # lens for human review, not a company-approved classification.
     # --------------------------------------------------------------------
     st.markdown("<hr>", unsafe_allow_html=True)
-    st.subheader("🧭 Implementation Priority Engine")
-    st.markdown(f'<div class="section-caption">Four analytical prioritisation lenses built from existing ABC, XYZ, Forecast Risk, '
-                f'Bullwhip, RMSE, Inventory Health and Business Risk fields — for analytical attention, not autonomous action. '
-                f'{source_tag("Dashboard Derived")}</div>', unsafe_allow_html=True)
+    st.subheader("🧭 Where Should Management Investigate First?")
+    st.markdown(f'<div class="section-caption">Four prioritisation lenses built from existing ABC, XYZ, Forecast Risk, Bullwhip, RMSE, '
+                f'Inventory Health and Business Risk fields already shown on this tab. {source_tag("Dashboard Derived")}</div>', unsafe_allow_html=True)
 
     pz1, pz2 = st.columns(2)
     with pz1:
@@ -2072,18 +2044,6 @@ with tab4:
                             "capital-trap investigation.", action="See Capital Trap diagnostic above")
         render_status_card("red", "4. High Business Risk + Low Service", "Elevated business risk combined with lower service/fill "
                             "rate — service protection review.", action="Cross-reference with Tab 3 Service Level / Fill Rate")
-
-    st.markdown("<h5 style='color:#475569; margin-top:0.6rem;'>Implementation Action → KPI</h5>", unsafe_allow_html=True)
-    act_rows = [
-        ("High Bullwhip", "Supplier / order coordination review", "Bullwhip Ratio"),
-        ("High Forecast Risk", "Demand review", "RMSE / Forecast Health"),
-        ("Capital Trap candidate", "Inventory review", "Inventory Days / Inventory Value"),
-        ("A-Z segment", "High-priority review", "Service + capital metrics"),
-    ]
-    act_cols = st.columns(4)
-    for col, (inp, action, kpi) in zip(act_cols, act_rows):
-        col.markdown(f'<div class="decision-card"><div class="decision-card-title">{inp}</div>'
-                      f'<div class="decision-card-text">→ {action}<br>KPI: <strong>{kpi}</strong></div></div>', unsafe_allow_html=True)
 
 # ==============================================================================
 # TAB 5 — FINANCIAL IMPACT, METHODOLOGY & AUDIT
@@ -2113,11 +2073,11 @@ with tab5:
     tcol1, tcol2 = st.columns(2)
     with tcol1:
         st.subheader("🗺️ Inventory Capital Allocation by ABC Hierarchy")
-        if 'Inventory_Value' in filtered_df.columns and 'ABC_Class' in filtered_df.columns and total_skus > 0:
-            tree_df = filtered_df[['ABC_Class', 'SKU', 'Inventory_Value']].dropna()
+        tree_df = filtered_df[['ABC_Class', 'SKU', 'Inventory_Value']].dropna() if ('Inventory_Value' in filtered_df.columns and 'ABC_Class' in filtered_df.columns) else pd.DataFrame()
+        if len(tree_df) > 0:
             fig_tree = px.treemap(tree_df, path=[px.Constant("Portfolio"), 'ABC_Class', 'SKU'], values='Inventory_Value',
                                    color='ABC_Class', color_discrete_map={'A': '#1E3A8A', 'B': '#0EA5E9', 'C': '#94A3B8', '(?)': '#E2E8F0'})
-            fig_tree.update_layout(title="Inventory Value Share by ABC Class", margin=dict(l=10, r=10, t=40, b=10))
+            fig_tree.update_layout(margin=dict(l=10, r=10, t=30, b=10))
             st.plotly_chart(fig_tree, width='stretch')
             st.caption(f"Tile size = Inventory_Value (Master Audit). {source_tag('Master Audit')}", unsafe_allow_html=True)
         else:
@@ -2141,24 +2101,20 @@ with tab5:
             st.info("Inventory_Value, Estimated_Carrying_Cost and Stockout_Cost are all required for this chart.")
 
     # ==========================================================================
-    # ==========================================================================
-    # FINANCIAL IMPLEMENTATION STATEMENT — evidence-lean. The Financial KPIs
-    # above already carry the real Master Audit figures; this section states
-    # what they represent and what remains unmeasured, without an elaborate
-    # Baseline/Target/Realized table of placeholders.
+    # REALISED FINANCIAL IMPACT — a single honest statement rather than an
+    # elaborate Baseline | Target | Realised table with no evidence behind it.
     # ==========================================================================
     st.markdown("<hr>", unsafe_allow_html=True)
-    st.subheader("🎯 Opportunity vs. Impact")
     st.markdown(
-        '<div class="illustrative-banner">Opportunity ≠ Realized Impact. <strong>Opportunity</strong> is value the analytics '
-        'identifies as potentially addressable — Inventory Value, Working Capital, Carrying Cost and Stockout Cost above are '
-        'the financial dimensions this project enables management to monitor. <strong>Realised impact</strong> requires '
-        'post-deployment measurement and finance validation, and is not claimed here.</div>', unsafe_allow_html=True)
+        '<div class="illustrative-banner">These are the financial dimensions the project enables management to monitor '
+        '(Inventory Value, Working Capital, Carrying Cost, Stockout Exposure, Turnover, Financial Health, Working-Capital '
+        'Efficiency). <strong>Realised financial impact requires post-deployment measurement and finance validation</strong> — '
+        'it is not calculated here.</div>', unsafe_allow_html=True)
 
     st.markdown("<hr>", unsafe_allow_html=True)
     st.subheader("🧪 Illustrative Inventory Reduction Scenario")
-    st.markdown('<div class="illustrative-banner">⚠️ ILLUSTRATIVE SCENARIO — NOT A MODEL OUTPUT, NOT A REALISED SAVING, NOT A '
-                'FEASIBILITY RESULT. A simple linear what-if slider for exploration only.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="illustrative-banner">⚠️ ILLUSTRATIVE SCENARIO — NOT A MODEL OUTPUT, NOT A REALISED SAVING, NOT A FEASIBILITY '
+                'RESULT. A simple linear what-if slider for exploration only.</div>', unsafe_allow_html=True)
     if not is_missing(inv_value_sum):
         reduction_pct = st.slider("Illustrative inventory reduction (%)", min_value=0, max_value=40, value=10, step=1, key="illustrative_reduction_pct")
         capital_release = inv_value_sum * (reduction_pct / 100.0)
@@ -2213,17 +2169,11 @@ with tab5:
     cards_html += '</div>'
     st.markdown(cards_html, unsafe_allow_html=True)
 
-    # ==========================================================================
-    # ==========================================================================
-    # No fabricated Current-State / Owner / Status governance table — those
-    # fields are not evidenced. The genuine scope disclosure (pipeline
-    # coverage) is folded into the Methodology expander below instead.
-    # ==========================================================================
     st.markdown("<hr>", unsafe_allow_html=True)
     st.subheader("📚 Methodology & Traceability")
     with st.expander("How this dashboard is built — read before presenting", expanded=True):
         methodology_text = "**Data:** Master Audit export (Enterprise_Supply_Chain_Master_Audit.xlsx, Executive_Summary sheet), " + f"{len(df):,}" + " SKUs. Month-level historical raw data was not part of this export, so all demand statistics here are either per-SKU aggregates (Mean_Monthly_Demand, Annual_Demand) or portfolio-level distributions of those aggregates.\n\n"
-        methodology_text += "**Forecasting:** Forecast outputs (Forecast_Next_Month, Accuracy_Pct, MAE, RMSE, Bias, CV, Health_P_Value) are taken directly from the model / Master Audit. This dashboard does not re-run or re-fit any forecasting model. Reported pathway outputs from the executed model-competition pipeline total 1,365 SKUs; the difference versus the full tracked population is not independently reconciled here.\n\n"
+        methodology_text += "**Forecasting:** Forecast outputs (Forecast_Next_Month, Accuracy_Pct, MAE, RMSE, Bias, CV, Health_P_Value) are taken directly from the model / Master Audit. This dashboard does not re-run or re-fit any forecasting model.\n\n"
         methodology_text += "**Validation:** Where per-SKU test-period arrays are present in the source file, an actual-vs-predicted trajectory with a confidence band is shown. Where they are not (the case for the current Master Audit export), only the aggregate validation statistics are shown, and this is stated explicitly on-screen.\n\n"
         methodology_text += "**Inventory Optimization:** Safety Stock, Reorder Point and EOQ are read directly from the Master Audit. No inventory numbers are invented — where an actual/observed on-hand figure isn't available, only the model recommendation is shown. The underlying formula (reverse-engineered from the source notebook and verified against all SKUs — see the Inventory Mathematics QA Report below) is: Safety Stock = 1.645 × RMSE × √(Lead Time ÷ 30); Reorder Point = (Forecast Next Month ÷ 30 × Lead Time) + Safety Stock. **Note:** this is a single-uncertainty-term model driven by forecast error (RMSE); lead time itself is treated as a fixed 7-day constant, not a random variable with its own standard deviation. A fuller two-term formulation (combining separate demand-variance and lead-time-variance terms) is sometimes used as a reference methodology, but it is not what this specific pipeline computes — the dashboard validates against what the model actually implements, not against an assumption of what it should implement.\n\n"
         methodology_text += "**Segmentation:** ABC (value contribution) and XYZ (demand stability) classes, and their combination, come directly from the Master Audit.\n\n"
@@ -2302,14 +2252,38 @@ Forecast_Next_Month across the entire population — this is not a broken pipeli
     st.dataframe(audit_view, width='stretch', hide_index=True, height=350)
     st.caption(f"{len(audit_view):,} of {len(df):,} total SKUs shown. Every column above is read directly from {DATA_SOURCE_LABEL}; the source file itself is never modified by this dashboard.")
 
-    try:
-        excel_buffer = generate_excel_report(audit_view)
-        st.download_button("⬇️ Download Filtered Audit Report (.xlsx)", data=excel_buffer,
-                            file_name="Filtered_Supply_Chain_Audit.xlsx",
-                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                            key="download_audit_report")
-    except Exception as e:
-        st.warning(f"Could not generate the export file ({e}).")
+    @st.cache_data(show_spinner=False)
+    def generate_excel_report(export_df):
+        buffer = io.BytesIO()
+        with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+            export_df.to_excel(writer, index=False, sheet_name='Filtered_Audit')
+            ws = writer.sheets['Filtered_Audit']
+            header_fill = PatternFill(start_color="1E3A8A", end_color="1E3A8A", fill_type="solid")
+            header_font = Font(color="FFFFFF", bold=True)
+            for cell in ws[1]:
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+            for i, col in enumerate(export_df.columns, 1):
+                try:
+                    max_len = max(export_df[col].astype(str).map(len).max(), len(str(col))) + 2
+                except Exception:
+                    max_len = len(str(col)) + 2
+                ws.column_dimensions[get_column_letter(i)].width = min(max_len, 40)
+        buffer.seek(0)
+        return buffer
+
+    if len(audit_view) > 0:
+        try:
+            excel_buffer = generate_excel_report(audit_view)
+            st.download_button("⬇️ Download Filtered Audit Report (.xlsx)", data=excel_buffer,
+                                file_name="Filtered_Supply_Chain_Audit.xlsx",
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                key="download_audit_report")
+        except Exception as e:
+            st.warning(f"Could not generate the export file ({e}).")
+    else:
+        st.info("No rows in the current filtered/searched view to export.")
 
 # ==============================================================================
 # FOOTER
