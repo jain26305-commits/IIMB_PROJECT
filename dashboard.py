@@ -3,7 +3,7 @@ Enterprise Demand Forecasting & Inventory Decision Support System
 Using Time Series Analytics — Premium Edition (v2)
 
 Architecture: PRESERVE -> CORRECT -> ENHANCE -> ANIMATE -> POLISH
-Author: Kaushik Jain
+Author: Kaushik Jain 
 
 Data source of truth: Enterprise_Supply_Chain_Master_Audit.xlsx (Executive_Summary sheet)
 This file is READ-ONLY at runtime. Nothing here ever writes back to the source workbook.
