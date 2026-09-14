@@ -567,12 +567,36 @@ st.markdown("""
         --shadow-hover-strong: 0 2px 8px rgba(14,165,233,0.12), 0 28px 56px rgba(14,165,233,0.22);
         --shadow-ambient-soft: 0 30px 60px -20px rgba(15,23,42,0.25);
 
+        /* Claymorphism layer — soft dual-tone "embossed" shadow (a light
+           highlight from the top-left, a soft dark falloff to the
+           bottom-right, plus a faint inner rim light) layered on top of the
+           elevation scale above. This is what gives every surface its
+           puffy, tactile, cinematic-lit "clay" feel. Static box-shadow
+           values only — no animation cost while idle. */
+        --clay-radius: 22px;
+        --clay-radius-sm: 16px;
+        --clay-shadow: 10px 10px 24px rgba(30,41,59,0.10), -8px -8px 18px rgba(255,255,255,0.9), inset 0 1px 0 rgba(255,255,255,0.7);
+        --clay-shadow-hover: 16px 16px 36px rgba(30,41,59,0.14), -10px -10px 24px rgba(255,255,255,0.95), inset 0 1px 0 rgba(255,255,255,0.8);
+        --clay-shadow-pressed: inset 6px 6px 12px rgba(30,41,59,0.10), inset -5px -5px 12px rgba(255,255,255,0.75);
+        --glow-blue: 0 0 0 1px rgba(14,165,233,0.18), 0 14px 44px rgba(14,165,233,0.28);
+        --glow-navy: 0 0 0 1px rgba(30,58,138,0.16), 0 14px 44px rgba(30,58,138,0.22);
+
         /* Motion scale */
         --ease-standard: cubic-bezier(0.4,0,0.2,1);
         --ease-spring: cubic-bezier(0.175,0.885,0.32,1.275);
         --dur-fast: 0.15s;
         --dur-med: 0.25s;
         --dur-slow: 0.35s;
+    }
+
+    /* Cinematic ambient glow — opacity/transform only (GPU-compositor
+       animations that never trigger layout or paint), so this can loop
+       forever without the repaint cost that was previously removed from
+       the full-viewport background-position sweep. Used behind the hero
+       title and section headers for a subtle "lit stage" breathing glow. */
+    @keyframes ambientGlow {
+        0%, 100% { opacity: 0.55; transform: scale(1); }
+        50% { opacity: 0.9; transform: scale(1.05); }
     }
 
     @keyframes floatElement {
@@ -720,7 +744,8 @@ st.markdown("""
 
     [data-testid="stSidebar"] {
         background: linear-gradient(180deg, var(--c-slate-50), var(--c-slate-100));
-        border-right: 1px solid var(--c-slate-200);
+        border-right: none;
+        box-shadow: inset -1px 0 0 rgba(226,232,240,0.9), 6px 0 24px rgba(15,23,42,0.04);
         transition: background-color var(--dur-fast) ease;
     }
 
@@ -735,26 +760,26 @@ st.markdown("""
     div[data-testid="stMetricDelta"] { color: var(--c-slate-600) !important; }
     div[data-testid="stMetric"] {
         background: linear-gradient(155deg, #ffffff 0%, var(--c-slate-50) 100%);
-        border: 1px solid var(--c-slate-200);
-        border-radius: var(--radius-lg);
-        padding: 0.7rem 0.9rem;
-        box-shadow: var(--shadow-resting);
+        border: none;
+        border-radius: var(--clay-radius-sm);
+        padding: 0.8rem 1rem;
+        box-shadow: var(--clay-shadow);
         transition: transform var(--dur-med) var(--ease-spring), box-shadow var(--dur-med) ease;
     }
     div[data-testid="stMetric"]:hover {
-        transform: translateY(-3px);
-        box-shadow: var(--shadow-hover);
+        transform: translateY(-4px);
+        box-shadow: var(--clay-shadow-hover), var(--glow-blue);
     }
 
     /* ---------- Metric card (consolidated: ribbon + square variants share one token base) ---------- */
     .metric-card {
         background:
-            radial-gradient(140% 100% at 0% 0%, rgba(14,165,233,0.05), transparent 55%),
+            radial-gradient(140% 100% at 0% 0%, rgba(14,165,233,0.06), transparent 55%),
             linear-gradient(155deg, #ffffff 0%, var(--c-slate-50) 100%);
-        border-radius: var(--radius-xl);
-        border: 1px solid var(--c-slate-200);
+        border-radius: var(--clay-radius);
+        border: none;
         border-left: 5px solid var(--c-blue);
-        box-shadow: var(--shadow-resting);
+        box-shadow: var(--clay-shadow);
         transition: transform var(--dur-med) var(--ease-spring), box-shadow var(--dur-med) ease, border-color var(--dur-med) ease;
         animation: chartReveal var(--dur-slow) var(--ease-standard) both;
         position: relative;
@@ -783,8 +808,8 @@ st.markdown("""
         justify-content: space-between;
     }
     .metric-card--ribbon:hover {
-        transform: translateY(-6px) scale(1.01);
-        box-shadow: var(--shadow-hover);
+        transform: translateY(-7px) scale(1.015);
+        box-shadow: var(--clay-shadow-hover), var(--glow-blue);
         border-left: 5px solid var(--c-navy);
     }
     .metric-card-title {
@@ -799,7 +824,8 @@ st.markdown("""
     .metric-card.pulse-critical { animation: chartReveal var(--dur-slow) var(--ease-standard) both, pulseCritical 2.4s infinite; }
 
     /* ---------- Badge — one canonical naming scheme via data-status ---------- */
-    .badge { padding: 4px 10px; border-radius: var(--radius-pill); font-size: 0.75rem; font-weight: 700; display: inline-block; }
+    .badge { padding: 4px 12px; border-radius: var(--radius-pill); font-size: 0.75rem; font-weight: 700; display: inline-block;
+        box-shadow: inset 0 1px 2px rgba(255,255,255,0.6), inset 0 -1px 2px rgba(15,23,42,0.06); }
     .badge[data-status="excellent"] { background-color: var(--c-success-bg); color: var(--c-success-text); }
     .badge[data-status="good"]      { background-color: var(--c-warning-bg); color: var(--c-warning-text); }
     .badge[data-status="attention"] { background-color: var(--c-danger-border); color: var(--c-danger-text); }
@@ -813,19 +839,26 @@ st.markdown("""
     .tag-derived { background: var(--c-slate-100); color: var(--c-slate-600); }
     .tag-illustrative { background: var(--c-warning-bg); color: var(--c-warning-text); }
 
-    /* ---------- Square metric (mini KPI tile — Tab 2 / Tab 3 side panels) ---------- */
-    .metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.8rem; margin-top: 0.5rem; }
+    /* ---------- Square metric (mini KPI tile — Tab 2 / Tab 3 side panels) ----------
+       BUG FIX: this tile previously used `aspect-ratio: 1/1` (height locked to
+       width) with `overflow: hidden`. In a narrower 3- or 4-column grid the
+       forced-square height shrank below what a two-line label + big value +
+       badge actually needs, so the top of the label and the source-tag badge
+       at the bottom were silently clipped. Replaced with a flexible
+       min-height so the box always grows to fit its content instead. */
+    .metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.9rem; margin-top: 0.5rem; }
     .metrics-grid--3 { grid-template-columns: repeat(3, 1fr); }
-    @media (max-width: 640px) { .metrics-grid--3 { grid-template-columns: repeat(1, 1fr); } }
+    @media (max-width: 640px) { .metrics-grid--3, .metrics-grid { grid-template-columns: repeat(1, 1fr); } }
     .square-metric {
         background: radial-gradient(120% 120% at 20% 0%, #ffffff, var(--c-slate-50) 70%);
-        aspect-ratio: 1 / 1; border-radius: var(--radius-xl);
-        border: 1px solid var(--c-slate-200); border-top: 4px solid var(--c-blue);
-        box-shadow: var(--shadow-resting);
+        min-height: 150px; width: 100%; box-sizing: border-box;
+        border-radius: var(--clay-radius);
+        border: none; border-top: 4px solid var(--c-blue);
+        box-shadow: var(--clay-shadow);
         animation: chartReveal var(--dur-slow) var(--ease-standard) both;
         transition: transform var(--dur-med) var(--ease-spring), box-shadow var(--dur-med) ease, border-color var(--dur-med) ease;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
-        text-align: center; padding: 0.8rem;
+        text-align: center; padding: 1rem 0.7rem;
         position: relative; overflow: hidden;
     }
     .square-metric::after {
@@ -835,30 +868,31 @@ st.markdown("""
     }
     .square-metric:hover::after { opacity: 1; animation: cardSheen 1s ease forwards; }
     .square-metric:hover {
-        transform: scale(1.06) translateY(-3px); box-shadow: var(--shadow-hover-strong);
+        transform: scale(1.05) translateY(-4px); box-shadow: var(--clay-shadow-hover), var(--glow-blue);
         border-top: 4px solid var(--c-navy); z-index: 10;
     }
     .square-metric:hover .square-metric-value { transform: scale(1.08); }
-    .square-metric-label { font-size: 1.05rem; color: var(--c-slate-600); font-weight: 800; margin-bottom: 0.4rem; line-height: 1.1; }
-    .square-metric-value { font-size: 1.9rem; color: var(--c-navy); font-weight: 900; line-height: 1.2; text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+    .square-metric-label { font-size: 0.92rem; color: var(--c-slate-600); font-weight: 800; margin-bottom: 0.35rem;
+        line-height: 1.25; overflow-wrap: break-word; hyphens: auto; }
+    .square-metric-value { font-size: 1.7rem; color: var(--c-navy); font-weight: 900; line-height: 1.25; text-shadow: 0 1px 0 rgba(255,255,255,0.5);
         display: inline-block; transition: transform var(--dur-med) var(--ease-spring); }
-    .square-metric-delta { font-size: 0.85rem; color: var(--c-slate-500); margin-top: 0.3rem; }
+    .square-metric-delta { font-size: 0.8rem; color: var(--c-slate-500); margin-top: 0.4rem; line-height: 1.4; overflow-wrap: break-word; }
 
     /* ---------- Status card (advisor / diagnostic recommendations — one class, data-status modifier) ---------- */
-    .status-card { border-radius: var(--radius-lg); padding: 1rem; margin-bottom: 0.8rem;
-        transition: transform var(--dur-fast) ease, box-shadow var(--dur-fast) ease; border: 1px solid; box-shadow: var(--shadow-resting); }
-    .status-card:hover { transform: translateX(4px) translateY(-2px); box-shadow: var(--shadow-hover); }
-    .status-card[data-status="green"] { background: var(--c-success-bg); border-left: 5px solid var(--c-success); border-color: var(--c-success-border); }
-    .status-card[data-status="amber"] { background: var(--c-warning-bg); border-left: 5px solid var(--c-warning); border-color: var(--c-warning-border); }
-    .status-card[data-status="red"]   { background: var(--c-danger-bg);  border-left: 5px solid var(--c-danger);  border-color: var(--c-danger-border); }
+    .status-card { border-radius: var(--clay-radius-sm); padding: 1.1rem 1.2rem; margin-bottom: 0.9rem;
+        transition: transform var(--dur-fast) ease, box-shadow var(--dur-fast) ease; border: none; box-shadow: var(--clay-shadow); }
+    .status-card:hover { transform: translateX(4px) translateY(-3px); box-shadow: var(--clay-shadow-hover); }
+    .status-card[data-status="green"] { background: linear-gradient(160deg, var(--c-success-bg), #ffffff 130%); border-left: 6px solid var(--c-success); }
+    .status-card[data-status="amber"] { background: linear-gradient(160deg, var(--c-warning-bg), #ffffff 130%); border-left: 6px solid var(--c-warning); }
+    .status-card[data-status="red"]   { background: linear-gradient(160deg, var(--c-danger-bg), #ffffff 130%);  border-left: 6px solid var(--c-danger); }
     .status-card-desc { font-size: 0.9rem; color: var(--c-slate-700); }
     .status-card-action { font-size: 0.8rem; font-weight: bold; color: var(--c-navy); }
 
     /* ---------- Decision Intelligence card ---------- */
     .decision-card { background: linear-gradient(160deg, #fff, var(--c-slate-50) 120%);
-        border: 1px solid var(--c-slate-200); border-left: 5px solid var(--c-navy);
-        border-radius: var(--radius-lg); padding: 0.9rem 1.1rem; margin-bottom: 0.7rem;
-        transition: transform var(--dur-fast) ease, box-shadow var(--dur-fast) ease; box-shadow: var(--shadow-resting);
+        border: none; border-left: 6px solid var(--c-navy);
+        border-radius: var(--clay-radius-sm); padding: 1rem 1.2rem; margin-bottom: 0.8rem;
+        transition: transform var(--dur-fast) ease, box-shadow var(--dur-fast) ease; box-shadow: var(--clay-shadow);
         position: relative; overflow: hidden; }
     .decision-card::after {
         content: ""; position: absolute; top: 0; left: 0; width: 35%; height: 100%;
@@ -866,16 +900,16 @@ st.markdown("""
         opacity: 0; pointer-events: none;
     }
     .decision-card:hover::after { opacity: 1; animation: cardSheen 1s ease forwards; }
-    .decision-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-3px); }
+    .decision-card:hover { box-shadow: var(--clay-shadow-hover), var(--glow-navy); transform: translateY(-4px); }
     .decision-card-title { font-size: 0.85rem; font-weight: 800; color: var(--c-navy); margin-bottom: 0.25rem; }
     .decision-card-text { font-size: 0.92rem; color: var(--c-slate-700); line-height: 1.4; }
 
     /* ---------- Value-chain flow cards (stage palette, not a random rainbow) ---------- */
-    .matrix-grid-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 1rem; }
+    .matrix-grid-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.1rem; margin-top: 1rem; }
     @media (max-width: 1200px) { .matrix-grid-container { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 768px)  { .matrix-grid-container { grid-template-columns: 1fr; } }
-    .flow-card { background: linear-gradient(165deg, #FFFFFF, var(--c-slate-50) 130%); border: 1px solid #CBD5E1; border-radius: var(--radius-md); padding: 1rem;
-        text-align: left; box-shadow: var(--shadow-resting); height: 100%; transition: transform var(--dur-med) ease, box-shadow var(--dur-med) ease;
+    .flow-card { background: linear-gradient(165deg, #FFFFFF, var(--c-slate-50) 130%); border: none; border-radius: var(--clay-radius-sm); padding: 1.1rem;
+        text-align: left; box-shadow: var(--clay-shadow); height: 100%; transition: transform var(--dur-med) ease, box-shadow var(--dur-med) ease;
         animation: chartReveal var(--dur-slow) var(--ease-standard) both;
         position: relative; overflow: hidden; }
     .flow-card::after {
@@ -884,7 +918,7 @@ st.markdown("""
         opacity: 0; pointer-events: none;
     }
     .flow-card:hover::after { opacity: 1; animation: cardSheen 1s ease forwards; }
-    .flow-card:hover { transform: translateY(-4px) scale(1.015); box-shadow: var(--shadow-hover); }
+    .flow-card:hover { transform: translateY(-5px) scale(1.02); box-shadow: var(--clay-shadow-hover), var(--glow-blue); }
     .flow-card-title { font-size: 1rem; font-weight: 900; color: var(--c-slate-900); margin-bottom: 0.5rem; }
     .flow-card-text { font-size: 0.85rem; color: var(--c-slate-700); font-weight: 600; margin-bottom: 0.25rem; line-height: 1.35; }
 
@@ -896,36 +930,37 @@ st.markdown("""
     .math-status-review { color: var(--c-warning-text); font-weight: 800; }
 
 
-    .story-strip { display: flex; align-items: center; justify-content: space-between; gap: 4px; margin: 0.5rem 0 1.5rem 0;
-        overflow-x: auto; padding-bottom: 4px; }
-    .story-node { flex: 1; min-width: 92px; text-align: center; padding: 0.6rem 0.3rem; border-radius: var(--radius-md);
-        background: linear-gradient(165deg, #FFFFFF, var(--c-slate-50)); border: 1px solid var(--c-slate-200); font-size: 0.72rem; font-weight: 800; color: var(--c-slate-700);
-        box-shadow: var(--shadow-resting);
+    .story-strip { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin: 0.5rem 0 1.5rem 0;
+        overflow-x: auto; padding: 6px 2px 10px; }
+    .story-node { flex: 1; min-width: 92px; text-align: center; padding: 0.7rem 0.4rem; border-radius: var(--clay-radius-sm);
+        background: linear-gradient(165deg, #FFFFFF, var(--c-slate-50)); border: none; font-size: 0.72rem; font-weight: 800; color: var(--c-slate-700);
+        box-shadow: var(--clay-shadow);
         animation: chartReveal var(--dur-slow) var(--ease-standard) both; transition: transform var(--dur-fast) ease, box-shadow var(--dur-fast) ease, color var(--dur-fast) ease; }
-    .story-node:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); border-color: var(--c-blue); color: var(--c-navy); }
-    .story-arrow { color: var(--c-slate-500); font-size: 1.1rem; flex: 0 0 auto; }
+    .story-node:hover { transform: translateY(-4px) scale(1.03); box-shadow: var(--clay-shadow-hover), var(--glow-blue); color: var(--c-navy); }
+    .story-arrow { color: var(--c-slate-400); font-size: 1.2rem; flex: 0 0 auto; }
     @media (max-width: 900px) { .story-strip { flex-wrap: wrap; } .story-arrow { display: none; } }
 
 
-    div[data-testid="stDataFrame"] { transition: transform var(--dur-med) ease, box-shadow var(--dur-med) ease; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--c-slate-200); }
-    div[data-testid="stDataFrame"]:hover { transform: scale(1.003) translateY(-2px); box-shadow: var(--shadow-hover); }
+    div[data-testid="stDataFrame"] { transition: transform var(--dur-med) ease, box-shadow var(--dur-med) ease; border-radius: var(--clay-radius-sm); overflow: hidden; border: none; box-shadow: var(--clay-shadow); }
+    div[data-testid="stDataFrame"]:hover { transform: scale(1.003) translateY(-3px); box-shadow: var(--clay-shadow-hover); }
 
     [data-testid="stPlotlyChart"], .stPlotlyChart {
         transition: transform var(--dur-med) var(--ease-spring), box-shadow var(--dur-med) ease !important;
-        border-radius: var(--radius-xl); background: transparent;
+        border-radius: var(--clay-radius); background: transparent;
+        box-shadow: var(--clay-shadow);
         animation: chartReveal var(--dur-slow) var(--ease-standard) both;
     }
     [data-testid="stPlotlyChart"]:hover, .stPlotlyChart:hover {
-        transform: translateY(-6px) !important; box-shadow: var(--shadow-hover-strong) !important; z-index: 5;
+        transform: translateY(-7px) !important; box-shadow: var(--clay-shadow-hover), var(--glow-navy) !important; z-index: 5;
     }
     iframe { overflow: hidden !important; }
 
-    /* ---------- Buttons ---------- */
+    /* ---------- Buttons — clay body + cinematic color glow on hover ---------- */
     .stButton > button, .stDownloadButton > button {
         background: linear-gradient(135deg, var(--c-blue), var(--c-blue-light));
-        color: white; font-weight: 700; border: none; border-radius: var(--radius-sm);
-        padding: 0.5rem 1rem; transition: transform var(--dur-med) var(--ease-standard), box-shadow var(--dur-med) var(--ease-standard), background var(--dur-med) var(--ease-standard) !important; letter-spacing: 0.5px;
-        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.22);
+        color: white; font-weight: 700; border: none; border-radius: var(--clay-radius-sm);
+        padding: 0.55rem 1.1rem; transition: transform var(--dur-med) var(--ease-standard), box-shadow var(--dur-med) var(--ease-standard), background var(--dur-med) var(--ease-standard) !important; letter-spacing: 0.5px;
+        box-shadow: 6px 6px 16px rgba(14,165,233,0.28), -4px -4px 12px rgba(255,255,255,0.5), inset 0 1px 0 rgba(255,255,255,0.35);
         position: relative; overflow: hidden;
     }
     .stButton > button::after, .stDownloadButton > button::after {
@@ -937,23 +972,28 @@ st.markdown("""
         opacity: 1; animation: cardSheen 0.9s ease forwards;
     }
     .stButton > button:hover, .stDownloadButton > button:hover {
-        transform: translateY(-2px) scale(1.02); box-shadow: 0 10px 24px rgba(14, 165, 233, 0.38) !important;
+        transform: translateY(-3px) scale(1.02); box-shadow: 0 14px 32px rgba(14, 165, 233, 0.42), var(--glow-blue) !important;
         background: linear-gradient(135deg, var(--c-navy), #1E40AF);
     }
     .stButton > button:active, .stDownloadButton > button:active {
         transform: translateY(0) scale(0.98); transition: transform 0.08s ease !important;
     }
 
-    /* ---------- Tabs: active-state glow ---------- */
-    div[data-testid="stTabs"] [data-baseweb="tab-list"] { display: flex !important; width: 100% !important; justify-content: center !important; gap: 8px; }
+    /* ---------- Tabs: cinematic active-state glow ---------- */
+    div[data-testid="stTabs"] [data-baseweb="tab-list"] {
+        display: flex !important; width: 100% !important; justify-content: center !important; gap: 8px;
+        background: linear-gradient(155deg, #ffffff, var(--c-slate-50)); border-radius: var(--clay-radius-sm);
+        box-shadow: var(--clay-shadow); padding: 6px; margin-bottom: 0.4rem;
+    }
     div[data-testid="stTabs"] [data-baseweb="tab"] {
         flex-grow: 1 !important; text-align: center !important; justify-content: center !important;
-        font-size: 0.95rem !important; border-radius: var(--radius-md) var(--radius-md) 0 0 !important;
-        transition: background-color var(--dur-fast) ease, transform var(--dur-fast) ease !important;
+        font-size: 0.95rem !important; border-radius: var(--radius-md) !important;
+        transition: background-color var(--dur-fast) ease, transform var(--dur-fast) ease, box-shadow var(--dur-fast) ease !important;
     }
     div[data-testid="stTabs"] [data-baseweb="tab"]:hover { background-color: rgba(14, 165, 233, 0.08); transform: translateY(-1px); }
     div[data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"] {
-        box-shadow: inset 0 -3px 0 var(--c-blue); color: var(--c-navy) !important; font-weight: 800 !important;
+        background: linear-gradient(135deg, var(--c-blue-pale), #ffffff) !important;
+        box-shadow: inset 0 -3px 0 var(--c-blue), var(--glow-blue); color: var(--c-navy) !important; font-weight: 800 !important;
     }
     div[data-testid="stTabs"] [data-baseweb="tab-panel"] { animation: tabPanelReveal 0.22s var(--ease-standard) both; }
 
@@ -972,10 +1012,22 @@ st.markdown("""
 
     .section-caption { font-size: 0.82rem; color: var(--c-slate-500); font-style: italic; margin-top: -0.4rem; margin-bottom: 0.6rem; }
     .illustrative-banner {
-        background: var(--c-warning-bg); border: 1px dashed var(--c-warning); color: var(--c-warning-text);
-        border-radius: var(--radius-md); padding: 0.6rem 1rem; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.8rem;
-        box-shadow: var(--shadow-resting);
+        background: linear-gradient(160deg, var(--c-warning-bg), #ffffff 140%); border: 1px dashed var(--c-warning); color: var(--c-warning-text);
+        border-radius: var(--clay-radius-sm); padding: 0.75rem 1.1rem; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.9rem;
+        box-shadow: var(--clay-shadow);
     }
+
+    /* Cinematic hero glow — a soft radial light breathing behind the title.
+       Opacity + transform(scale) only, so it's compositor-only and can loop
+       indefinitely without the layout/paint repaint cost that was removed
+       from the old full-viewport background-position sweep. */
+    .hero-glow {
+        position: absolute; top: 50%; left: 50%; width: 640px; height: 320px;
+        transform: translate(-50%, -50%); border-radius: 50%;
+        background: radial-gradient(closest-side, rgba(14,165,233,0.16), rgba(30,58,138,0.08) 60%, transparent 80%);
+        animation: ambientGlow 6s ease-in-out infinite; pointer-events: none; z-index: 0;
+    }
+    .hero-wrap { position: relative; }
 
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
@@ -983,11 +1035,12 @@ st.markdown("""
     /* ---------- Accessibility: respect reduced-motion preference globally ---------- */
     @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
-        .square-metric, .metric-card, .metric-card.pulse-critical { animation: none !important; text-shadow: none !important; }
+        .square-metric, .metric-card, .metric-card.pulse-critical,
+        .flow-card, .story-node, [data-testid="stPlotlyChart"] { animation: none !important; text-shadow: none !important; }
         .metric-card--ribbon:hover, .square-metric:hover, .flow-card:hover,
-        [data-testid="stPlotlyChart"]:hover, div[data-testid="stDataFrame"]:hover,
-        .stButton > button:hover, .status-card:hover, .decision-card:hover { transform: none !important; }
-        .stApp { animation: none !important; }
+        [data-testid="stPlotlyChart"]:hover, div[data-testid="stDataFrame"]:hover, div[data-testid="stMetric"]:hover,
+        .stButton > button:hover, .status-card:hover, .decision-card:hover, .story-node:hover { transform: none !important; }
+        .stApp, .hero-glow { animation: none !important; }
         .metric-card::after, .square-metric::after, .flow-card::after, .decision-card::after,
         .stButton > button::after, .stDownloadButton > button::after { display: none !important; }
         .square-metric:hover .square-metric-value { transform: none !important; }
@@ -996,8 +1049,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown("""
-    <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin-bottom: 1rem; text-align: center; padding: 0 1rem;">
-        <h1 class="main-dashboard-title">Enterprise Demand Forecasting & Inventory Decision Support System Using Time Series Analytics</h1>
+    <div class="hero-wrap" style="display: flex; justify-content: center; align-items: center; width: 100%; margin-bottom: 1rem; text-align: center; padding: 0 1rem;">
+        <div class="hero-glow"></div>
+        <h1 class="main-dashboard-title" style="position:relative; z-index:1;">Enterprise Demand Forecasting & Inventory Decision Support System Using Time Series Analytics</h1>
     </div>
     <hr style="border: 0; height: 2px; background: linear-gradient(to right, rgba(0,0,0,0), #1E3A8A 25%, #38BDF8 50%, #1E3A8A 75%, rgba(0,0,0,0)); margin-top: 0; margin-bottom: 2rem;">
 """, unsafe_allow_html=True)
