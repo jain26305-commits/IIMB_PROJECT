@@ -296,53 +296,6 @@ def render_decision_card(icon, title, text, source="Master Audit"):
         unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# IMPLEMENTATION + BUSINESS IMPACT LAYER — shared helpers (additive only).
-# These render the Baseline -> Intervention -> KPI -> Outcome story natively
-# using the SAME component classes already defined above (status-card,
-# decision-card, source-tag, badge) — no new visual system is introduced.
-# Every "Not yet measured" / "Requires validation" string below is a fixed
-# label, never a computed or invented business figure.
-# ------------------------------------------------------------------------------
-NOT_YET_MEASURED = "Not yet measured"
-REQUIRES_VALIDATION = "Requires validation"
-
-def render_baseline_flow_card(title, baseline, intervention, kpi, status_label="REQUIRES VALIDATION", status="amber"):
-    """One compact card showing Baseline -> Intervention -> KPI for a function,
-    reusing the existing status-card component (data-status: green/amber/red)."""
-    st.markdown(
-        f'<div class="status-card" data-status="{status}">'
-        f'<strong>{html.escape(str(title))}</strong> &nbsp; {badge_html("attention" if status=="amber" else ("poor" if status=="red" else "excellent"), status_label)}<br>'
-        f'<span class="status-card-desc"><strong>Baseline:</strong> {html.escape(str(baseline))}</span><br>'
-        f'<span class="status-card-desc"><strong>Project-enabled change:</strong> {html.escape(str(intervention))}</span><br>'
-        f'<span class="status-card-action">KPI: {html.escape(str(kpi))}</span>'
-        f'</div>', unsafe_allow_html=True)
-
-def render_impact_tracking_row(container, label, current_value_str, realized_str=NOT_YET_MEASURED):
-    """Renders a single 'Impact Tracking' line: current analytical baseline value
-    (from Master Audit / dashboard-derived) alongside its realized-impact status,
-    which is always a fixed placeholder string until an actual baseline exists."""
-    container.markdown(
-        f'<div class="decision-card">'
-        f'<div class="decision-card-title">{html.escape(str(label))}</div>'
-        f'<div class="decision-card-text">Current: <strong>{html.escape(str(current_value_str))}</strong>'
-        f'&nbsp;|&nbsp; Realized Impact: <strong>{html.escape(str(realized_str))}</strong></div></div>',
-        unsafe_allow_html=True)
-
-def render_function_transformation_card(function, current_process, project_change, kpi, owner, validation_status):
-    """FUNCTION -> CURRENT PROCESS -> PROJECT-ENABLED CHANGE -> KPI -> OWNER -> VALIDATION
-    reusable row used in the 'What Changes In Each Function' component."""
-    st.markdown(
-        f'<div class="decision-card">'
-        f'<div class="decision-card-title">🔧 {html.escape(str(function))}</div>'
-        f'<div class="decision-card-text">'
-        f'<strong>Current process:</strong> {html.escape(str(current_process))}<br>'
-        f'<strong>Project-enabled change:</strong> {html.escape(str(project_change))}<br>'
-        f'<strong>Primary KPI:</strong> {html.escape(str(kpi))} &nbsp;|&nbsp; '
-        f'<strong>Owner:</strong> {html.escape(str(owner))}<br>'
-        f'<strong>Validation status:</strong> {html.escape(str(validation_status))}'
-        f'</div></div>', unsafe_allow_html=True)
-
-# ------------------------------------------------------------------------------
 # MATHEMATICAL FORENSIC VALIDATION — Safety Stock / Reorder Point
 # ------------------------------------------------------------------------------
 # Ground-truth formula extracted directly from the source notebook
@@ -428,6 +381,32 @@ def run_portfolio_math_audit(source_df):
         'rop_material_mismatch': int((detail['ROP_Variance'] > 1).sum()),
     }
     return summary, detail
+
+@st.cache_data(show_spinner=False)
+def generate_excel_report(export_df):
+    """Builds the styled Filtered Audit Report workbook in memory for download.
+    Hoisted to module level (Performance Fix, Sept 2026): defining a
+    @st.cache_data-wrapped function inside a tab body redefined and
+    re-registered it on every single script rerun; a module-level definition
+    is created once per session and cached correctly by argument content."""
+    buffer = io.BytesIO()
+    with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+        export_df.to_excel(writer, index=False, sheet_name='Filtered_Audit')
+        ws = writer.sheets['Filtered_Audit']
+        header_fill = PatternFill(start_color="1E3A8A", end_color="1E3A8A", fill_type="solid")
+        header_font = Font(color="FFFFFF", bold=True)
+        for cell in ws[1]:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+        for i, col in enumerate(export_df.columns, 1):
+            try:
+                max_len = max(export_df[col].astype(str).map(len).max(), len(str(col))) + 2
+            except Exception:
+                max_len = len(str(col)) + 2
+            ws.column_dimensions[get_column_letter(i)].width = min(max_len, 40)
+    buffer.seek(0)
+    return buffer
 
 # ==============================================================================
 # SECTION 2. SPLASH / INTRO SCREEN  (preserved — product identity, do not remove)
@@ -635,10 +614,10 @@ st.markdown("""
         from { opacity: 0; filter: blur(3px); transform: translateY(6px); }
         to { opacity: 1; filter: blur(0px); transform: translateY(0); }
     }
-    @keyframes pulseCritical {
-        0% { box-shadow: 0 0 0 0 rgba(153, 27, 27, 0.35); }
-        70% { box-shadow: 0 0 0 8px rgba(153, 27, 27, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(153, 27, 27, 0); }
+    @keyframes pulseCriticalRing {
+        0% { box-shadow: 0 0 0 6px rgba(153, 27, 27, 0.22); }
+        50% { box-shadow: 0 0 0 6px rgba(153, 27, 27, 0.05); }
+        100% { box-shadow: 0 0 0 6px rgba(153, 27, 27, 0.22); }
     }
     @keyframes fadeInUp {
         from { opacity: 0; transform: translateY(20px); }
@@ -729,8 +708,8 @@ st.markdown("""
         100% { transform: translateX(220%) skewX(-15deg); }
     }
     @keyframes softBreathe {
-        0%, 100% { filter: brightness(1); }
-        50% { filter: brightness(1.015); }
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.92; }
     }
 
     /* Whole-app ambient backdrop: a static, subtle gradient wash behind the
@@ -846,7 +825,7 @@ st.markdown("""
         text-shadow: 0 1px 0 rgba(255,255,255,0.6);
     }
     .metric-card-subtitle { font-size: 0.85rem; color: var(--c-slate-500); font-weight: 600; }
-    .metric-card.pulse-critical { animation: chartReveal var(--dur-slow) var(--ease-standard) both, pulseCritical 2.4s infinite; }
+    .metric-card.pulse-critical { animation: chartReveal var(--dur-slow) var(--ease-standard) both, pulseCriticalRing 3s ease-in-out infinite; }
 
     /* ---------- Badge — one canonical naming scheme via data-status ---------- */
     .badge { padding: 4px 10px; border-radius: var(--radius-pill); font-size: 0.75rem; font-weight: 700; display: inline-block; }
@@ -1016,11 +995,8 @@ st.markdown("""
     .main-dashboard-title {
         color: var(--c-navy); font-weight: 900; font-size: clamp(2.2rem, 4.5vw, 4rem);
         margin: 0 auto 0.5rem auto; max-width: 1200px; word-wrap: break-word; line-height: 1.25;
-        text-align: center !important; animation: floatElement 4s infinite ease-in-out, titleGlow 4s infinite ease-in-out; display: block;
-    }
-    @keyframes titleGlow {
-        0%, 100% { text-shadow: 0 0 0 rgba(14,165,233,0); }
-        50% { text-shadow: 0 6px 32px rgba(14,165,233,0.18); }
+        text-align: center !important; animation: floatElement 4s infinite ease-in-out; display: block;
+        text-shadow: 0 6px 32px rgba(14,165,233,0.12);
     }
 
     .section-caption { font-size: 0.82rem; color: var(--c-slate-500); font-style: italic; margin-top: -0.4rem; margin-bottom: 0.6rem; }
@@ -1053,13 +1029,7 @@ st.markdown("""
     <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin-bottom: 1rem; text-align: center; padding: 0 1rem;">
         <h1 class="main-dashboard-title">Enterprise Demand Forecasting & Inventory Decision Support System Using Time Series Analytics</h1>
     </div>
-    <style>
-        @keyframes heroDividerShimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
-    </style>
-    <hr style="border: 0; height: 2px; background-image: linear-gradient(to right, rgba(0,0,0,0), #1E3A8A 25%, #38BDF8 50%, #1E3A8A 75%, rgba(0,0,0,0)); background-size: 200% 100%; animation: heroDividerShimmer 6s linear infinite; margin-top: 0; margin-bottom: 2rem;">
+    <hr style="border: 0; height: 2px; background-image: linear-gradient(to right, rgba(0,0,0,0), #1E3A8A 25%, #38BDF8 50%, #1E3A8A 75%, rgba(0,0,0,0)); margin-top: 0; margin-bottom: 2rem;">
 """, unsafe_allow_html=True)
 
 # ==============================================================================
@@ -1124,6 +1094,9 @@ def load_and_clean_data(file_bytes, file_name):
 uploaded_file = None
 file_bytes = None
 file_name = "default"
+# No file-uploader widget is exposed in this deployment; load_and_clean_data
+# still accepts an uploaded file (CSV/XLSX) so this call is a no-op path to
+# the same Master Audit / demo-bootstrap loading used everywhere else.
 df, DATA_SOURCE_LABEL = load_and_clean_data(file_bytes, file_name)
 
 # ------------------------------------------------------------------------------
@@ -1491,77 +1464,29 @@ with tab1:
         st.info("Select a SKU from the sidebar to view its Decision Intelligence cards.")
 
     # ==========================================================================
-    # ENTERPRISE IMPLEMENTATION CONTROL — additive implementation layer.
-    # Answers "what changes in the company because of this system?" using only
-    # existing Master Audit fields and the portfolio aggregates already
-    # computed above (total_skus, inv_value_sum, wc_sum, carrying/stockout not
-    # yet in scope here, forecast_health_avg, avg_accuracy). No new tab, no
-    # new visual system, no fabricated business outcomes.
+    # IMPLEMENTATION SUMMARY — evidence-lean. Kept only what is directly
+    # supported by Master Audit fields and existing dashboard logic: what the
+    # project enables, not invented current-state/baseline/target claims.
     # ==========================================================================
     st.markdown("<hr>", unsafe_allow_html=True)
-    st.subheader("🧭 Enterprise Implementation Control")
+    st.subheader("🧭 What This Project Enables")
     st.markdown(
-        '<div class="section-caption">What changes in the company because of this system — from analytical baseline through to '
-        'measured business impact.</div>', unsafe_allow_html=True)
+        '<div class="section-caption">Decision-support capabilities this system provides today, built directly from Master Audit outputs.</div>',
+        unsafe_allow_html=True)
 
-    ic1, ic2, ic3 = st.columns(3)
-    with ic1:
-        render_status_card("green", "CURRENT STATE", "Analytical decision-support MVP — SKU-level forecasting, inventory policy, "
-                            "segmentation, risk and financial exposure are computed and visible.")
-    with ic2:
-        render_status_card("amber", "PROJECT-ENABLED STATE", "Forecast-driven, SKU-specific inventory and risk prioritisation replacing "
-                            "a one-size-fits-all approach — decision support, not autonomous execution.")
-    with ic3:
-        render_status_card("red", "MEASURED BUSINESS IMPACT", "Post-implementation validation required — realized figures populate only "
-                            "once an actual operating baseline and outcome data exist.")
-
-    st.markdown("<h4 style='color:#475569; margin-top:0.8rem;'>🏗️ What Changes in the Company?</h4>", unsafe_allow_html=True)
     wc_cols = st.columns(5)
     wc_items = [
-        ("📈 Forecasting", "SKU-specific model competition (4 candidate models) replaces a single blanket method."),
-        ("📦 Inventory", "Forecast-driven Safety Stock / ROP / EOQ replace generic, manually-set buffers."),
-        ("🚚 Procurement", "Priority-based replenishment attention using ABC-XYZ, forecast risk and EOQ."),
-        ("🏭 Warehouse", "Differentiated stock-protection and pick-face attention by segment, not uniform treatment."),
-        ("💰 Finance", "SKU-level working-capital and shortage-exposure visibility for the first time."),
+        ("📈 Forecasting", "SKU-level model competition across 4 candidate models, selected by validation sMAPE."),
+        ("📦 Inventory", "Forecast-driven Safety Stock, Reorder Point and EOQ computed per SKU."),
+        ("🚚 Procurement", "Replenishment attention prioritised by ABC-XYZ, Forecast Risk and EOQ."),
+        ("🏭 Warehouse", "Stock-protection and review priority differentiated by segment."),
+        ("💰 Finance", "SKU-level inventory value, working capital and shortage-exposure visibility."),
     ]
     for col, (title, desc) in zip(wc_cols, wc_items):
         col.markdown(f'<div class="flow-card" style="border-top:5px solid var(--c-blue);">'
                       f'<div class="flow-card-title">{title}</div><div class="flow-card-text">{desc}</div></div>',
                       unsafe_allow_html=True)
-
-    st.markdown("<h4 style='color:#475569; margin-top:1rem;'>📊 Impact Tracking</h4>", unsafe_allow_html=True)
-    st.markdown(f'<div class="section-caption">"Opportunity" (what the analytics flags as potentially addressable) is not the same as '
-                f'"Impact" (what is actually realized after operational deployment). Every line below is {NOT_YET_MEASURED.lower()} until '
-                f'a real legacy/actual baseline exists. <span class="source-tag tag-illustrative">Requires Validation</span></div>',
-                unsafe_allow_html=True)
-    imp_cols = st.columns(5)
-    for col, label in zip(imp_cols, ["Forecast improvement", "Inventory reduction", "Working capital release",
-                                      "Stockout reduction", "Service improvement"]):
-        col.markdown(f'<div class="decision-card"><div class="decision-card-title">{label}</div>'
-                      f'<div class="decision-card-text"><strong>{NOT_YET_MEASURED}</strong></div></div>', unsafe_allow_html=True)
-
-    st.markdown("<h4 style='color:#475569; margin-top:1rem;'>🗺️ Implementation Roadmap</h4>", unsafe_allow_html=True)
-    roadmap_html = '<div class="story-strip">'
-    roadmap_nodes = ["✅ Current MVP", "🧪 Baseline Validation", "🔗 Operational Integration", "📏 Impact Measurement", "🔁 Continuous Improvement"]
-    for i, node in enumerate(roadmap_nodes):
-        roadmap_html += f'<div class="story-node">{node}</div>'
-        if i < len(roadmap_nodes) - 1:
-            roadmap_html += '<div class="story-arrow">→</div>'
-    roadmap_html += '</div>'
-    st.markdown(roadmap_html, unsafe_allow_html=True)
-
-    st.markdown("<h4 style='color:#475569; margin-top:0.5rem;'>🔁 Closed Loop</h4>", unsafe_allow_html=True)
-    loop_html = '<div class="story-strip">'
-    loop_nodes = ["📥 Data", "🔮 Forecast", "🧭 Action", "📈 Outcome", "📏 Measure", "🔄 Recalibrate"]
-    for i, node in enumerate(loop_nodes):
-        loop_html += f'<div class="story-node">{node}</div>'
-        if i < len(loop_nodes) - 1:
-            loop_html += '<div class="story-arrow">→</div>'
-    loop_html += '</div>'
-    st.markdown(loop_html, unsafe_allow_html=True)
-    st.caption("The current MVP establishes the analytical decision layer (Data → Forecast → Inventory Policy → Functional "
-               "Action → Recommendation). A production implementation would additionally capture actual outcomes and feed "
-               "them back into the next planning cycle — that feedback path is the part still pending operational integration.")
+    st.caption("Realised financial and operational impact requires post-deployment measurement and is not claimed here.")
 
 # ==============================================================================
 # TAB 2 — DEMAND & FORECAST INTELLIGENCE
@@ -1779,46 +1704,28 @@ with tab2:
     if 'ABC_Class' in filtered_df.columns and 'Forecast_Risk' in filtered_df.columns and total_skus > 0:
         risk_matrix = pd.crosstab(filtered_df['ABC_Class'], filtered_df['Forecast_Risk'])
         fig_riskhm = px.imshow(risk_matrix, text_auto=True, color_continuous_scale=[[0, '#F1F5F9'], [1, '#991B1B']],
-                                labels=dict(x="Forecast Risk", y="ABC Class", color="SKU Count"))
-        fig_riskhm.update_layout(margin=dict(l=10, r=10, t=20, b=10))
+                                labels=dict(x="Forecast Risk", y="ABC Class", color="SKU Count"),
+                                title="SKU Count — Forecast Risk × ABC Class")
+        fig_riskhm.update_layout(margin=dict(l=10, r=10, t=40, b=10))
         st.plotly_chart(fig_riskhm, width='stretch')
     else:
         st.info("ABC_Class and/or Forecast_Risk not available for this view.")
 
     # --------------------------------------------------------------------
-    # FORECASTING TRANSFORMATION — implementation layer (additive).
+    # FORECASTING TRANSFORMATION — evidence-lean: what the project enables,
+    # using only Master Audit metrics actually present in this filter.
     # --------------------------------------------------------------------
     st.markdown("<hr>", unsafe_allow_html=True)
     st.subheader("🔁 Forecasting Transformation")
-    render_baseline_flow_card(
-        "SKU-Level Forecasting",
-        baseline="Current-state process to be validated against legacy practice — forecasting approach prior to this system "
-                 "may have been broad, fragmented, or model-agnostic.",
-        intervention="SKU-level model competition across 4 candidate models (AutoARIMA, Naive, Seasonal Naive, "
-                      "3-Month Moving Average); winner selected by lowest validation sMAPE on the same unseen holdout.",
-        kpi="sMAPE (primary); Accuracy, MAE, RMSE, Bias, Forecast Health, Forecast Risk, Model Reliability (secondary)",
-        status_label="REQUIRES BASELINE", status="amber")
-
-    fk_c1, fk_c2 = st.columns(2)
-    with fk_c1:
-        st.markdown(f'<div class="decision-card"><div class="decision-card-title">📏 Current Evidence '
-                    f'{source_tag("Master Audit")}</div><div class="decision-card-text">'
-                    f'{fmt_num(avg_accuracy, 2, "%") if not is_missing(avg_accuracy) else "N/A"} average validation accuracy '
-                    f'across {total_skus:,} SKUs in the current filter — this is historical holdout validation performance, '
-                    f'not an improvement figure versus the company\'s prior process.</div></div>', unsafe_allow_html=True)
-    with fk_c2:
-        st.markdown('<div class="decision-card"><div class="decision-card-title">👤 Forecasting Owner</div>'
-                    '<div class="decision-card-text">Demand Planning / Supply Planning — reviews high-risk / low-health SKUs '
-                    'using the Forecast Risk and Model Reliability fields above.</div></div>', unsafe_allow_html=True)
-
-    st.markdown("<h5 style='color:#475569; margin-top:0.6rem;'>Post-Deployment Comparison</h5>", unsafe_allow_html=True)
-    pdc1, pdc2, pdc3 = st.columns(3)
-    render_impact_tracking_row(pdc1, "Legacy Forecast Error", NOT_YET_MEASURED, "—")
-    render_impact_tracking_row(pdc2, "Project Forecast Error", fmt_num(avg_rmse, 2) + " RMSE" if not is_missing(avg_rmse) else NOT_YET_MEASURED, "—")
-    render_impact_tracking_row(pdc3, "Improvement (Legacy − Project)", NOT_YET_MEASURED, "—")
-    st.caption("Forecast improvement = Legacy error − Project error. This cannot be computed without a real legacy baseline, "
-               "so it is not calculated here; the current-project RMSE is shown only as the project-side input once a legacy "
-               "figure becomes available.")
+    st.markdown(
+        '<div class="section-caption">The project introduces a validation-driven forecasting process: SKU-level competition '
+        'across 4 candidate models (AutoARIMA, Naive, Seasonal Naive, 3-Month Moving Average), with the winner selected by '
+        'lowest validation sMAPE on the same unseen holdout for every SKU.</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="decision-card"><div class="decision-card-title">📏 Current Evidence '
+                f'{source_tag("Master Audit")}</div><div class="decision-card-text">'
+                f'{fmt_num(avg_accuracy, 2, "%") if not is_missing(avg_accuracy) else "N/A"} average validation accuracy '
+                f'across {total_skus:,} SKUs in the current filter — this is historical holdout validation performance, '
+                f'not an improvement figure versus a prior process.</div></div>', unsafe_allow_html=True)
 
 # ==============================================================================
 # TAB 3 — INVENTORY OPTIMIZATION
@@ -1942,34 +1849,30 @@ with tab3:
             st.info("Inventory_Health_Score not available.")
 
     # --------------------------------------------------------------------
-    # INVENTORY TRANSFORMATION + IMPACT TRACKING — implementation layer.
+    # INVENTORY TRANSFORMATION — evidence-lean. Keeps the formula chain
+    # (genuinely computed) and the model-implied vs. actual inventory
+    # distinction (required); drops invented baseline/impact placeholders.
     # --------------------------------------------------------------------
     st.markdown("<hr>", unsafe_allow_html=True)
     st.subheader("🔁 Inventory Transformation")
-    render_baseline_flow_card(
-        "Forecast-Driven Inventory Policy",
-        baseline="Current-state process to be validated — inventory decisions prior to this system may rely on "
-                 "standardised or manually determined buffers rather than SKU-specific, forecast-driven parameters.",
-        intervention="Forecast + RMSE-based Safety Stock + Lead-Time Demand + Reorder Point + EOQ + ABC-XYZ segmentation, "
-                      "computed per SKU (SS = 1.645 × RMSE × √(7/30); ROP = LTD + SS; EOQ = √(2 × Annual Demand × Ordering "
-                      "Cost / Holding Cost per Unit)).",
-        kpi="Safety Stock, Reorder Point, EOQ, Inventory Days, Inventory Turnover, Service Level, Fill Rate, Inventory Health",
-        status_label="ANALYTICALLY READY", status="green")
+    st.markdown(
+        '<div class="section-caption">Forecast → forecast uncertainty (RMSE) → Safety Stock → Lead-Time Demand → Reorder '
+        'Point → EOQ → ABC-XYZ policy, computed per SKU: SS = 1.645 × RMSE × √(7/30); ROP = LTD + SS; '
+        'EOQ = √(2 × Annual Demand × Ordering Cost / Holding Cost per Unit).</div>', unsafe_allow_html=True)
 
-    st.markdown("<h5 style='color:#475569; margin-top:0.6rem;'>📊 Inventory Impact Tracking</h5>", unsafe_allow_html=True)
-    iit1, iit2 = st.columns(2)
-    with iit1:
-        render_impact_tracking_row(iit1, "Model-implied Inventory Value", fmt_currency(inv_value_sum), "—")
+    it_c1, it_c2 = st.columns(2)
+    with it_c1:
+        st.markdown(f'<div class="decision-card"><div class="decision-card-title">Model-Implied Inventory Value '
+                    f'{source_tag("Master Audit")}</div><div class="decision-card-text">{fmt_currency(inv_value_sum)} — the '
+                    f'analytical value implied by this project\'s inventory policy, not an observed accounting balance.'
+                    f'</div></div>', unsafe_allow_html=True)
+    with it_c2:
         actual_inv_str = "Available (Sandbox Upload)" if ACTUAL_INV_COL else "Not available in current Master Audit"
-        render_impact_tracking_row(iit1, "Actual current inventory", actual_inv_str, "—")
-    with iit2:
-        render_impact_tracking_row(iit2, "Potential inventory reduction", "Requires actual inventory baseline + feasibility analysis", "—")
-        render_impact_tracking_row(iit2, "Working-capital release", "—", NOT_YET_MEASURED)
-    render_impact_tracking_row(st, "Carrying-cost / stockout-cost reduction", "—", NOT_YET_MEASURED)
-    st.caption("Model-implied Inventory Value is the analytical figure implied by this project's inventory policy applied to "
-               "current Master Audit fields — it is not an observed accounting inventory balance unless an actual on-hand "
-               "source is connected. The Capital Trap diagnostic in the Risk & Diagnostics tab surfaces potential inventory "
-               "optimisation opportunities on this same basis; it flags candidates for review, not confirmed excess inventory.")
+        st.markdown(f'<div class="decision-card"><div class="decision-card-title">Actual Physical Inventory</div>'
+                    f'<div class="decision-card-text">{actual_inv_str} — model-implied value ≠ observed on-hand inventory '
+                    f'until an actual source is connected.</div></div>', unsafe_allow_html=True)
+    st.caption("The Capital Trap diagnostic in the Risk & Diagnostics tab surfaces potential inventory optimisation "
+               "candidates on this same model-implied basis — a signal for review, not confirmed excess inventory.")
 
 # ==============================================================================
 # TAB 4 — RISK, SEGMENTATION & DIAGNOSTICS
@@ -1987,14 +1890,15 @@ with tab4:
         scatter_df['_bw'] = bullwhip_series
         scatter_df['_rmse'] = rmse_series
 
-        def quad_label(row):
-            bw_high = row['_bw'] > med_bw
-            rmse_high = row['_rmse'] > med_rmse
-            if not bw_high and not rmse_high: return "Stable"
-            if not bw_high and rmse_high: return "Forecast Issue"
-            if bw_high and not rmse_high: return "Supply Chain Distortion"
-            return "Critical"
-        scatter_df['Diagnostic Quadrant'] = scatter_df.apply(quad_label, axis=1)
+        # Vectorized quadrant labeling (Performance Fix, Sept 2026): replaces a
+        # per-row .apply() over the full filtered portfolio on every rerun with
+        # a single np.select — identical labels, no row-wise Python calls.
+        bw_high = scatter_df['_bw'] > med_bw
+        rmse_high = scatter_df['_rmse'] > med_rmse
+        scatter_df['Diagnostic Quadrant'] = np.select(
+            [~bw_high & ~rmse_high, ~bw_high & rmse_high, bw_high & ~rmse_high, bw_high & rmse_high],
+            ["Stable", "Forecast Issue", "Supply Chain Distortion", "Critical"],
+            default="Stable")
 
         fig_scatter = px.scatter(scatter_df, x='_bw', y='_rmse', color='Diagnostic Quadrant',
                                   color_discrete_map={"Stable": "#10B981", "Forecast Issue": "#F59E0B",
@@ -2045,8 +1949,9 @@ with tab4:
             if a in abc_order and x in xyz_order:
                 risk_intensity.loc[a, x] = v
         fig_intensity = px.imshow(risk_intensity, text_auto='.1f', color_continuous_scale=[[0, '#D1FAE5'], [0.5, '#FEF3C7'], [1, '#991B1B']],
-                                   labels=dict(x="XYZ", y="ABC", color="Avg RMSE"))
-        fig_intensity.update_layout(margin=dict(l=10, r=10, t=20, b=10))
+                                   labels=dict(x="XYZ", y="ABC", color="Avg RMSE"),
+                                   title="Average RMSE by ABC × XYZ Segment")
+        fig_intensity.update_layout(margin=dict(l=10, r=10, t=40, b=10))
         st.plotly_chart(fig_intensity, width='stretch')
     else:
         st.info("ABC_XYZ_Class and/or RMSE not available for this view.")
@@ -2068,31 +1973,39 @@ with tab4:
         st.markdown(f'<div class="section-caption">Based on 24-month total Outwards from the raw historical workbook — the full tracked period. {source_tag("Historical Raw Data")}</div>', unsafe_allow_html=True)
         hist_totals = raw_history_df[raw_history_df['SKU'].isin(filtered_df['SKU'])].groupby('SKU', as_index=False)['Outwards'].sum()
         hist_totals = hist_totals.rename(columns={'Outwards': 'Total_24M_Outwards'}).sort_values('Total_24M_Outwards', ascending=False).reset_index(drop=True)
-        hist_totals['Cumulative %'] = hist_totals['Total_24M_Outwards'].cumsum() / hist_totals['Total_24M_Outwards'].sum() * 100
-        top_n = hist_totals.head(30)
-        fig_pareto = make_subplots(specs=[[{"secondary_y": True}]])
-        fig_pareto.add_trace(go.Bar(x=top_n['SKU'], y=top_n['Total_24M_Outwards'], name='24M Total Outwards', marker_color='#0EA5E9'), secondary_y=False)
-        fig_pareto.add_trace(go.Scatter(x=top_n['SKU'], y=top_n['Cumulative %'], name='Cumulative %', line=dict(color='#F43F5E', width=3)), secondary_y=True)
-        fig_pareto.add_hline(y=80, line_dash="dot", line_color="#991B1B", secondary_y=True, annotation_text="80% threshold")
-        fig_pareto.update_layout(title="Top 30 SKUs — Pareto (24-Month Historical Outwards)", plot_bgcolor='white',
-                                  margin=dict(l=20, r=20, t=40, b=80), xaxis_tickangle=-60)
-        st.plotly_chart(fig_pareto, width='stretch')
-        a_class_count = (hist_totals['Cumulative %'] <= 80).sum() + 1
-        st.caption(f"Approximately {a_class_count:,} of {len(hist_totals):,} SKUs (by 24-month Outwards) drive 80% of total portfolio demand.")
+        grand_total = hist_totals['Total_24M_Outwards'].sum()
+        if len(hist_totals) > 0 and grand_total > 0:
+            hist_totals['Cumulative %'] = hist_totals['Total_24M_Outwards'].cumsum() / grand_total * 100
+            top_n = hist_totals.head(30)
+            fig_pareto = make_subplots(specs=[[{"secondary_y": True}]])
+            fig_pareto.add_trace(go.Bar(x=top_n['SKU'], y=top_n['Total_24M_Outwards'], name='24M Total Outwards', marker_color='#0EA5E9'), secondary_y=False)
+            fig_pareto.add_trace(go.Scatter(x=top_n['SKU'], y=top_n['Cumulative %'], name='Cumulative %', line=dict(color='#F43F5E', width=3)), secondary_y=True)
+            fig_pareto.add_hline(y=80, line_dash="dot", line_color="#991B1B", secondary_y=True, annotation_text="80% threshold")
+            fig_pareto.update_layout(title="Top 30 SKUs — Pareto (24-Month Historical Outwards)", plot_bgcolor='white',
+                                      margin=dict(l=20, r=20, t=40, b=80), xaxis_tickangle=-60)
+            st.plotly_chart(fig_pareto, width='stretch')
+            a_class_count = (hist_totals['Cumulative %'] <= 80).sum() + 1
+            st.caption(f"Approximately {a_class_count:,} of {len(hist_totals):,} SKUs (by 24-month Outwards) drive 80% of total portfolio demand.")
+        else:
+            st.info("No historical Outwards volume in the current filter to build a Pareto view.")
     elif 'Annual_Demand' in filtered_df.columns and total_skus > 0:
         st.markdown(f'<div class="section-caption">Based on Annual_Demand — the full tracked period available in the Master Audit. Upload the raw 24-month workbook to base this on true monthly Outwards instead. {source_tag("Master Audit")}</div>', unsafe_allow_html=True)
         pareto_df = filtered_df[['SKU', 'Annual_Demand']].dropna().sort_values('Annual_Demand', ascending=False).reset_index(drop=True)
-        pareto_df['Cumulative %'] = pareto_df['Annual_Demand'].cumsum() / pareto_df['Annual_Demand'].sum() * 100
-        top_n = pareto_df.head(30)
-        fig_pareto = make_subplots(specs=[[{"secondary_y": True}]])
-        fig_pareto.add_trace(go.Bar(x=top_n['SKU'], y=top_n['Annual_Demand'], name='Annual Demand', marker_color='#0EA5E9'), secondary_y=False)
-        fig_pareto.add_trace(go.Scatter(x=top_n['SKU'], y=top_n['Cumulative %'], name='Cumulative %', line=dict(color='#F43F5E', width=3)), secondary_y=True)
-        fig_pareto.add_hline(y=80, line_dash="dot", line_color="#991B1B", secondary_y=True, annotation_text="80% threshold")
-        fig_pareto.update_layout(title="Top 30 SKUs — Pareto (Annual Demand, Master Audit)", plot_bgcolor='white',
-                                  margin=dict(l=20, r=20, t=40, b=80), xaxis_tickangle=-60)
-        st.plotly_chart(fig_pareto, width='stretch')
-        a_class_count = (pareto_df['Cumulative %'] <= 80).sum() + 1
-        st.caption(f"Approximately {a_class_count:,} of {len(pareto_df):,} SKUs (by Annual_Demand) drive 80% of total portfolio demand.")
+        grand_total = pareto_df['Annual_Demand'].sum()
+        if len(pareto_df) > 0 and grand_total > 0:
+            pareto_df['Cumulative %'] = pareto_df['Annual_Demand'].cumsum() / grand_total * 100
+            top_n = pareto_df.head(30)
+            fig_pareto = make_subplots(specs=[[{"secondary_y": True}]])
+            fig_pareto.add_trace(go.Bar(x=top_n['SKU'], y=top_n['Annual_Demand'], name='Annual Demand', marker_color='#0EA5E9'), secondary_y=False)
+            fig_pareto.add_trace(go.Scatter(x=top_n['SKU'], y=top_n['Cumulative %'], name='Cumulative %', line=dict(color='#F43F5E', width=3)), secondary_y=True)
+            fig_pareto.add_hline(y=80, line_dash="dot", line_color="#991B1B", secondary_y=True, annotation_text="80% threshold")
+            fig_pareto.update_layout(title="Top 30 SKUs — Pareto (Annual Demand, Master Audit)", plot_bgcolor='white',
+                                      margin=dict(l=20, r=20, t=40, b=80), xaxis_tickangle=-60)
+            st.plotly_chart(fig_pareto, width='stretch')
+            a_class_count = (pareto_df['Cumulative %'] <= 80).sum() + 1
+            st.caption(f"Approximately {a_class_count:,} of {len(pareto_df):,} SKUs (by Annual_Demand) drive 80% of total portfolio demand.")
+        else:
+            st.info("No Annual_Demand volume in the current filter to build a Pareto view.")
     else:
         st.info("Neither the raw 24-month workbook nor Annual_Demand is available for the primary Pareto view.")
 
@@ -2204,7 +2117,7 @@ with tab5:
             tree_df = filtered_df[['ABC_Class', 'SKU', 'Inventory_Value']].dropna()
             fig_tree = px.treemap(tree_df, path=[px.Constant("Portfolio"), 'ABC_Class', 'SKU'], values='Inventory_Value',
                                    color='ABC_Class', color_discrete_map={'A': '#1E3A8A', 'B': '#0EA5E9', 'C': '#94A3B8', '(?)': '#E2E8F0'})
-            fig_tree.update_layout(margin=dict(l=10, r=10, t=30, b=10))
+            fig_tree.update_layout(title="Inventory Value Share by ABC Class", margin=dict(l=10, r=10, t=40, b=10))
             st.plotly_chart(fig_tree, width='stretch')
             st.caption(f"Tile size = Inventory_Value (Master Audit). {source_tag('Master Audit')}", unsafe_allow_html=True)
         else:
@@ -2228,69 +2141,24 @@ with tab5:
             st.info("Inventory_Value, Estimated_Carrying_Cost and Stockout_Cost are all required for this chart.")
 
     # ==========================================================================
-    # ADDRESSABLE VALUE DRIVERS + IMPACT ACCOUNTING + REALIZED IMPACT TRACKING
-    # This is the strongest implementation-layer addition, as required. It
-    # separates A) current modelled exposure (above), B) addressable
-    # opportunity, and C) realized impact — using only existing Master Audit
-    # aggregates already computed earlier in this file. No invented savings,
-    # ROI, or payback figures anywhere in this block.
+    # ==========================================================================
+    # FINANCIAL IMPLEMENTATION STATEMENT — evidence-lean. The Financial KPIs
+    # above already carry the real Master Audit figures; this section states
+    # what they represent and what remains unmeasured, without an elaborate
+    # Baseline/Target/Realized table of placeholders.
     # ==========================================================================
     st.markdown("<hr>", unsafe_allow_html=True)
     st.subheader("🎯 Opportunity vs. Impact")
     st.markdown(
         '<div class="illustrative-banner">Opportunity ≠ Realized Impact. <strong>Opportunity</strong> is value the analytics '
-        'identifies as potentially addressable. <strong>Impact</strong> is value actually realized after operational '
-        'implementation. Nothing on this dashboard converts one into the other automatically.</div>', unsafe_allow_html=True)
-
-    st.markdown("<h4 style='color:#475569;'>B. Addressable Value Drivers</h4>", unsafe_allow_html=True)
-    st.markdown(f'<div class="section-caption">Current value from Master Audit aggregates; target and realized figures are not '
-                f'fabricated and require a business target / actual outcome respectively. {source_tag("Master Audit")}</div>',
-                unsafe_allow_html=True)
-    value_drivers = [
-        ("Inventory reduction", fmt_currency(inv_value_sum)),
-        ("Working-capital efficiency", fmt_num(wc_eff_avg, 0, "%") if not is_missing(wc_eff_avg) else "N/A"),
-        ("Carrying-cost reduction", fmt_currency(carrying_sum)),
-        ("Stockout-cost reduction", fmt_currency(stockout_sum)),
-        ("Inventory-turnover improvement", fmt_num(turnover_avg, 2) if not is_missing(turnover_avg) else "N/A"),
-        ("Service-level improvement", fmt_num(safe_series(filtered_df, 'Service_Level_Pct', numeric=True).mean(), 1, "%")
-            if 'Service_Level_Pct' in filtered_df.columns else "N/A"),
-    ]
-    vd_rows_html = ('<table class="math-audit-table"><tr><th>Value Driver</th><th>Current Value</th><th>Target</th><th>Realized</th></tr>' +
-                     ''.join(f'<tr><td><strong>{n}</strong></td><td>{v}</td><td>Requires business target</td>'
-                             f'<td>{NOT_YET_MEASURED}</td></tr>' for n, v in value_drivers) + '</table>')
-    st.markdown(vd_rows_html, unsafe_allow_html=True)
-
-    st.markdown("<h4 style='color:#475569; margin-top:1rem;'>Impact Accounting</h4>", unsafe_allow_html=True)
-    st.markdown('<div class="section-caption">Baseline → Intervention → Measured Change → Financial Translation. Measured-change '
-                'and financial-translation cells are intentionally left as fixed placeholders — populating them requires actual '
-                'post-implementation data, which this dashboard does not fabricate.</div>', unsafe_allow_html=True)
-    accounting_rows = [
-        ("Inventory Value", "Inventory policy intervention", NOT_YET_MEASURED, "Working-capital impact — " + NOT_YET_MEASURED),
-        ("Stockout Exposure", "Forecast / service intervention", NOT_YET_MEASURED, "Avoided shortage cost — " + NOT_YET_MEASURED),
-        ("Carrying Cost", "Inventory reduction / rebalancing", NOT_YET_MEASURED, "Carrying-cost change — " + NOT_YET_MEASURED),
-    ]
-    for baseline_item, intervention_item, measured, translation in accounting_rows:
-        st.markdown(
-            f'<div class="decision-card"><div class="decision-card-title">💰 {baseline_item}</div>'
-            f'<div class="decision-card-text">→ {intervention_item} → <strong>{measured}</strong> → {translation}</div></div>',
-            unsafe_allow_html=True)
-
-    st.markdown("<h4 style='color:#475569; margin-top:1rem;'>C. Realized Impact Tracking</h4>", unsafe_allow_html=True)
-    ri_cols = st.columns(4)
-    ri_items = ["Forecast error improvement", "Inventory value reduction", "Working-capital release", "Carrying-cost reduction",
-                "Stockout-cost reduction", "Service-level improvement", "Fill-rate improvement"]
-    for i, item in enumerate(ri_items):
-        col = ri_cols[i % 4]
-        col.markdown(f'<div class="decision-card"><div class="decision-card-title">{item}</div>'
-                      f'<div class="decision-card-text"><strong>{NOT_YET_MEASURED}</strong></div></div>', unsafe_allow_html=True)
-    st.caption("The system establishes the analytical baseline above so these figures can be measured after operational "
-               "implementation — the blanks are intentional, not missing data.")
+        'identifies as potentially addressable — Inventory Value, Working Capital, Carrying Cost and Stockout Cost above are '
+        'the financial dimensions this project enables management to monitor. <strong>Realised impact</strong> requires '
+        'post-deployment measurement and finance validation, and is not claimed here.</div>', unsafe_allow_html=True)
 
     st.markdown("<hr>", unsafe_allow_html=True)
     st.subheader("🧪 Illustrative Inventory Reduction Scenario")
-    st.markdown('<div class="illustrative-banner">⚠️ ILLUSTRATIVE SCENARIO — NOT A MODEL OUTPUT. A simple linear what-if slider for '
-                'exploration only — this is not the business-impact calculation; see Addressable Value Drivers and Realized Impact '
-                'Tracking above for the analytically grounded figures.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="illustrative-banner">⚠️ ILLUSTRATIVE SCENARIO — NOT A MODEL OUTPUT, NOT A REALISED SAVING, NOT A '
+                'FEASIBILITY RESULT. A simple linear what-if slider for exploration only.</div>', unsafe_allow_html=True)
     if not is_missing(inv_value_sum):
         reduction_pct = st.slider("Illustrative inventory reduction (%)", min_value=0, max_value=40, value=10, step=1, key="illustrative_reduction_pct")
         capital_release = inv_value_sum * (reduction_pct / 100.0)
@@ -2346,67 +2214,16 @@ with tab5:
     st.markdown(cards_html, unsafe_allow_html=True)
 
     # ==========================================================================
-    # WHAT CHANGES IN EACH FUNCTION + IMPLEMENTATION GOVERNANCE
-    # Reusable FUNCTION -> CURRENT PROCESS -> PROJECT-ENABLED CHANGE -> KPI ->
-    # OWNER -> VALIDATION STATUS component, plus "who owns the next action?"
-    # No individual employee identities are invented anywhere below.
     # ==========================================================================
-    st.markdown("<hr>", unsafe_allow_html=True)
-    st.subheader("🏢 What Changes in Each Function")
-    render_function_transformation_card(
-        "Forecasting / Planning", "Current-state process to be validated against legacy practice.",
-        "SKU-specific model competition (4 candidates), lowest validation sMAPE selected.",
-        "sMAPE / RMSE / Bias", "Planning / Demand Planning", "Historical holdout complete; legacy comparison pending")
-    render_function_transformation_card(
-        "Procurement", "Current-state process to be validated — replenishment may follow a broad purchasing cadence.",
-        "Forecast + ROP + EOQ + priority-based replenishment review using ABC-XYZ and Forecast Risk.",
-        "Purchase cadence / supplier service / order adherence", "Procurement", "Operational deployment pending")
-    render_function_transformation_card(
-        "Warehouse", "Current-state process to be validated — attention may not be differentiated by demand value/variability.",
-        "ABC-XYZ + Safety Stock / ROP-based inventory attention for stock-protection and pick-face review.",
-        "Inventory Days / Fill Rate / Inventory Health", "Warehouse / Inventory Control", "Operational deployment pending")
-    render_function_transformation_card(
-        "Finance", "Current-state process to be validated.",
-        "SKU-level working-capital and shortage-exposure visibility, previously not available at this granularity.",
-        "Inventory Value / Working Capital / Carrying Cost / Stockout Exposure", "Finance", "Actual baseline reconciliation pending")
-    render_function_transformation_card(
-        "Management", "Current-state process to be validated — review may previously cover the full portfolio uniformly.",
-        "Exception-based portfolio prioritisation using Forecast Health, Forecast Risk, ABC-XYZ, Bullwhip, and Business Risk.",
-        "High-risk exception closure / business outcome metrics", "Leadership / S&OP", "Operational adoption pending")
-
-    st.markdown("<h4 style='color:#475569; margin-top:1rem;'>Who Owns the Next Action?</h4>", unsafe_allow_html=True)
-    gov_cols = st.columns(5)
-    gov_items = [
-        ("Forecast / Demand Planning", "Forecast metrics (sMAPE, RMSE, Bias)"),
-        ("Procurement", "Replenishment / supplier action"),
-        ("Warehouse / Inventory Control", "Stock position / buffer action"),
-        ("Finance", "Capital + cost measurement"),
-        ("Management / S&OP", "Exception escalation + cross-functional decision"),
-    ]
-    for col, (owner, scope) in zip(gov_cols, gov_items):
-        col.markdown(f'<div class="flow-card" style="border-top:5px solid var(--c-slate-700);">'
-                      f'<div class="flow-card-title">{owner}</div><div class="flow-card-text">{scope}</div></div>', unsafe_allow_html=True)
-
-    st.markdown("<h4 style='color:#475569; margin-top:1rem;'>Implementation Status</h4>", unsafe_allow_html=True)
-    st.markdown(f'<div class="section-caption">Reported pathway outputs from the executed model-competition pipeline total 1,365 '
-                f'SKUs; the difference versus the full tracked population is not independently reconciled here. '
-                f'{source_tag("Master Audit")}</div>', unsafe_allow_html=True)
-    stat_cols = st.columns(3)
-    with stat_cols[0]:
-        render_status_card("green", "CURRENT MVP", "Analytical decision support: SKU-level forecasting, model competition, "
-                            "Safety Stock, ROP, EOQ, ABC-XYZ, Bullwhip, financial exposure, rule-based recommendations, dashboard.")
-    with stat_cols[1]:
-        render_status_card("amber", "NEXT PHASE", "Operational integration: connect ERP/WMS/procurement data, validate actual "
-                            "inventory balances, establish legacy forecast + business KPI baselines, deploy exception workflows.")
-    with stat_cols[2]:
-        render_status_card("red", "FUTURE STATE", "Closed-loop, continuously monitored planning: forecast drift detection, "
-                            "data-quality monitoring, model governance, workflow integration, closed-loop actual-vs-plan learning.")
-
+    # No fabricated Current-State / Owner / Status governance table — those
+    # fields are not evidenced. The genuine scope disclosure (pipeline
+    # coverage) is folded into the Methodology expander below instead.
+    # ==========================================================================
     st.markdown("<hr>", unsafe_allow_html=True)
     st.subheader("📚 Methodology & Traceability")
     with st.expander("How this dashboard is built — read before presenting", expanded=True):
         methodology_text = "**Data:** Master Audit export (Enterprise_Supply_Chain_Master_Audit.xlsx, Executive_Summary sheet), " + f"{len(df):,}" + " SKUs. Month-level historical raw data was not part of this export, so all demand statistics here are either per-SKU aggregates (Mean_Monthly_Demand, Annual_Demand) or portfolio-level distributions of those aggregates.\n\n"
-        methodology_text += "**Forecasting:** Forecast outputs (Forecast_Next_Month, Accuracy_Pct, MAE, RMSE, Bias, CV, Health_P_Value) are taken directly from the model / Master Audit. This dashboard does not re-run or re-fit any forecasting model.\n\n"
+        methodology_text += "**Forecasting:** Forecast outputs (Forecast_Next_Month, Accuracy_Pct, MAE, RMSE, Bias, CV, Health_P_Value) are taken directly from the model / Master Audit. This dashboard does not re-run or re-fit any forecasting model. Reported pathway outputs from the executed model-competition pipeline total 1,365 SKUs; the difference versus the full tracked population is not independently reconciled here.\n\n"
         methodology_text += "**Validation:** Where per-SKU test-period arrays are present in the source file, an actual-vs-predicted trajectory with a confidence band is shown. Where they are not (the case for the current Master Audit export), only the aggregate validation statistics are shown, and this is stated explicitly on-screen.\n\n"
         methodology_text += "**Inventory Optimization:** Safety Stock, Reorder Point and EOQ are read directly from the Master Audit. No inventory numbers are invented — where an actual/observed on-hand figure isn't available, only the model recommendation is shown. The underlying formula (reverse-engineered from the source notebook and verified against all SKUs — see the Inventory Mathematics QA Report below) is: Safety Stock = 1.645 × RMSE × √(Lead Time ÷ 30); Reorder Point = (Forecast Next Month ÷ 30 × Lead Time) + Safety Stock. **Note:** this is a single-uncertainty-term model driven by forecast error (RMSE); lead time itself is treated as a fixed 7-day constant, not a random variable with its own standard deviation. A fuller two-term formulation (combining separate demand-variance and lead-time-variance terms) is sometimes used as a reference methodology, but it is not what this specific pipeline computes — the dashboard validates against what the model actually implements, not against an assumption of what it should implement.\n\n"
         methodology_text += "**Segmentation:** ABC (value contribution) and XYZ (demand stability) classes, and their combination, come directly from the Master Audit.\n\n"
@@ -2484,27 +2301,6 @@ Forecast_Next_Month across the entire population — this is not a broken pipeli
         audit_view = audit_view[audit_view['SKU'].astype(str).str.contains(search_term, case=False, na=False)]
     st.dataframe(audit_view, width='stretch', hide_index=True, height=350)
     st.caption(f"{len(audit_view):,} of {len(df):,} total SKUs shown. Every column above is read directly from {DATA_SOURCE_LABEL}; the source file itself is never modified by this dashboard.")
-
-    @st.cache_data(show_spinner=False)
-    def generate_excel_report(export_df):
-        buffer = io.BytesIO()
-        with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
-            export_df.to_excel(writer, index=False, sheet_name='Filtered_Audit')
-            ws = writer.sheets['Filtered_Audit']
-            header_fill = PatternFill(start_color="1E3A8A", end_color="1E3A8A", fill_type="solid")
-            header_font = Font(color="FFFFFF", bold=True)
-            for cell in ws[1]:
-                cell.fill = header_fill
-                cell.font = header_font
-                cell.alignment = Alignment(horizontal="center", vertical="center")
-            for i, col in enumerate(export_df.columns, 1):
-                try:
-                    max_len = max(export_df[col].astype(str).map(len).max(), len(str(col))) + 2
-                except Exception:
-                    max_len = len(str(col)) + 2
-                ws.column_dimensions[get_column_letter(i)].width = min(max_len, 40)
-        buffer.seek(0)
-        return buffer
 
     try:
         excel_buffer = generate_excel_report(audit_view)
