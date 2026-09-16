@@ -297,15 +297,17 @@ def score_to_status(score, thresholds=(80, 60, 40)):
     if score >= lo: return "attention"
     return "poor"
 
-def render_metric_card(container, title, value, subtitle="", *, variant="ribbon", pulse=False, extra=""):
+def render_metric_card(container, title, value, subtitle="", *, variant="ribbon", pulse=False, extra="", extra_class=""):
     # Flattened to a single unindented line (Data Integrity Fix, Sept 2026):
     # any HTML string with 4+ leading spaces per line risks being parsed as a
     # markdown code fence — see the note on render_square_metric below for the
     # visible symptom this caused elsewhere. Flat markup is immune regardless
     # of how it's later combined with other strings.
     pulse_cls = "pulse-critical" if pulse else ""
+    extra_cls = str(extra_class).strip()
+    card_classes = f"metric-card metric-card--{variant} {pulse_cls} {extra_cls}".strip()
     container.markdown(
-        f'<div class="metric-card metric-card--{variant} {pulse_cls}">'
+        f'<div class="{card_classes}">'
         f'<div class="metric-card-title">{title}</div>'
         f'<div class="metric-card-value">{value}</div>'
         f'<div class="metric-card-subtitle">{subtitle}{extra}</div></div>',
@@ -1078,6 +1080,77 @@ st.markdown("""
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
 
+    /* ==========================================================================
+       CINEMATIC FLASH LAYER — presentation only
+       Exact theme/layout preserved. Motion is compositor-friendly (transform +
+       opacity) and never animates background-position or layout dimensions.
+       ========================================================================== */
+    .stApp { position: relative; overflow-x: hidden; }
+    .block-container { position: relative; z-index: 1; }
+    .stApp::before {
+        content: ""; position: fixed; inset: -20% -10%; pointer-events: none; z-index: 0;
+        background:
+            radial-gradient(36% 28% at 12% 18%, rgba(56,189,248,0.085), transparent 72%),
+            radial-gradient(30% 26% at 88% 12%, rgba(30,58,138,0.075), transparent 72%),
+            radial-gradient(34% 30% at 76% 86%, rgba(14,165,233,0.055), transparent 72%);
+        opacity: 0.9; transform: translate3d(0,0,0) scale(1);
+        animation: cinematicAmbient 18s ease-in-out infinite alternate; will-change: transform, opacity;
+    }
+    @keyframes cinematicAmbient {
+        from { transform: translate3d(-0.5%, -0.3%, 0) scale(1); opacity: 0.78; }
+        to   { transform: translate3d(0.5%, 0.35%, 0) scale(1.025); opacity: 0.96; }
+    }
+    .hero-wrap { isolation: isolate; overflow: hidden; border-radius: 18px; }
+    .hero-wrap::before {
+        content: ""; position: absolute; left: 50%; top: 50%; width: 76%; height: 120px;
+        transform: translate(-50%, -50%); border-radius: 999px;
+        background: radial-gradient(closest-side, rgba(56,189,248,0.12), transparent 72%);
+        filter: blur(10px); pointer-events: none; z-index: 0;
+    }
+    .hero-wrap::after {
+        content: ""; position: absolute; top: 50%; left: -35%; width: 34%; height: 2px;
+        transform: translate3d(0,-50%,0);
+        background: linear-gradient(90deg, transparent, rgba(56,189,248,0.0), rgba(56,189,248,0.9), rgba(255,255,255,0.95), rgba(30,58,138,0.75), transparent);
+        opacity: 0; pointer-events: none; z-index: 2;
+        animation: heroSweep 8s cubic-bezier(0.4,0,0.2,1) infinite; will-change: transform, opacity;
+    }
+    @keyframes heroSweep {
+        0%, 18% { transform: translate3d(0,-50%,0); opacity: 0; }
+        28%, 55% { opacity: 0.85; }
+        70%, 100% { transform: translate3d(400%, -50%, 0); opacity: 0; }
+    }
+    .main-dashboard-title { letter-spacing: -0.035em; text-shadow: 0 8px 28px rgba(30,58,138,0.14), 0 0 24px rgba(56,189,248,0.10); }
+
+    .metric-card, .square-metric, .flow-card, .status-card, .decision-card,
+    [data-testid="stPlotlyChart"], .stPlotlyChart, div[data-testid="stDataFrame"] {
+        border: 1px solid rgba(148,163,184,0.18) !important;
+    }
+    .metric-card, .square-metric, .flow-card, .decision-card {
+        box-shadow: 0 10px 26px rgba(15,23,42,0.045), 0 2px 8px rgba(14,165,233,0.035), inset 0 1px 0 rgba(255,255,255,0.82);
+        backdrop-filter: blur(2px);
+    }
+    .metric-card:hover, .square-metric:hover, .flow-card:hover, .decision-card:hover {
+        transform: translate3d(0,-4px,0) !important;
+        box-shadow: 0 18px 38px rgba(15,23,42,0.085), 0 4px 18px rgba(14,165,233,0.10), 0 0 0 1px rgba(14,165,233,0.14), inset 0 1px 0 rgba(255,255,255,0.92) !important;
+    }
+
+    /* Executive opening KPI row: sorted hierarchy + equal-height visual rhythm. */
+    .executive-kpi { height: 232px !important; min-height: 232px !important; box-sizing: border-box !important; }
+    .executive-kpi .metric-card-title { letter-spacing: 0.7px; }
+    .executive-kpi .metric-card-value { font-size: 1.95rem; }
+    .executive-kpi .metric-card-subtitle { line-height: 1.45; max-width: 100%; }
+    @media (max-width: 900px) { .executive-kpi { height: auto !important; min-height: 190px !important; } }
+
+    [data-testid="stAppViewContainer"] h2, [data-testid="stAppViewContainer"] h3 { position: relative; padding-bottom: 0.28rem; }
+    [data-testid="stAppViewContainer"] h2::after, [data-testid="stAppViewContainer"] h3::after {
+        content: ""; display: block; width: 56px; height: 2px; margin-top: 5px; border-radius: 999px;
+        background: linear-gradient(90deg, var(--c-navy), var(--c-blue), transparent); opacity: 0.8;
+    }
+    div[data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"] {
+        border: 1px solid rgba(14,165,233,0.22) !important;
+        box-shadow: inset 0 -3px 0 var(--c-blue), 0 6px 16px rgba(14,165,233,0.10) !important;
+    }
+
     /* ---------- Accessibility: respect reduced-motion preference globally ---------- */
     @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
@@ -1328,23 +1401,24 @@ with tab1:
         unsafe_allow_html=True)
 
     r1c1, r1c2, r1c3, r1c4 = st.columns(4)
-    render_metric_card(r1c1, "Total Tracked SKUs", f"{total_skus:,}", "Count of filtered Master Audit SKUs", extra=source_tag("Dashboard Derived"))
+    # Executive hierarchy: scope → accuracy → health → immediate risk.
+    render_metric_card(r1c1, "Total Tracked SKUs", f"{total_skus:,}", "Count of filtered Master Audit SKUs", extra=source_tag("Dashboard Derived"), extra_class="executive-kpi")
+    render_metric_card(r1c2, "Forecast Accuracy", fmt_num(avg_accuracy, 1, "%") if not is_missing(avg_accuracy) else "N/A", "Portfolio mean • Master Audit Accuracy_Pct", extra=source_tag("Dashboard Derived"), extra_class="executive-kpi")
 
     if forecast_health_source:
         fh_status = score_to_status(forecast_health_avg)
         fh_badge = badge_html(fh_status, fh_status.title())
-        fh_subtitle = f"Dashboard presentation band • Mean of Master Audit Forecast_Health_Score {fh_badge}"
+        fh_subtitle = f"Mean Master Audit Forecast Health • Dashboard presentation band {fh_badge}"
     else:
         fh_subtitle = "Forecast_Health_Score unavailable in current source"
-    render_metric_card(r1c2, "Forecast Health Score", fmt_num(forecast_health_avg, 0, "%"), fh_subtitle, extra=source_tag("Dashboard Derived"))
+    render_metric_card(r1c3, "Forecast Health Score", fmt_num(forecast_health_avg, 0, "%"), fh_subtitle, extra=source_tag("Dashboard Derived"), extra_class="executive-kpi")
 
-    render_metric_card(r1c3, "Forecast Accuracy", fmt_num(avg_accuracy, 1, "%") if not is_missing(avg_accuracy) else "N/A", "Portfolio mean • Master Audit Accuracy_Pct", extra=source_tag("Dashboard Derived"))
-    render_metric_card(r1c4, "High-Risk SKUs", fmt_int(high_risk_count), "High Forecast_Risk count • Master Audit", variant="ribbon", pulse=(not is_missing(high_risk_count) and high_risk_count > 0), extra=source_tag("Dashboard Derived"))
+    render_metric_card(r1c4, "High-Risk SKUs", fmt_int(high_risk_count), "High Forecast_Risk count • Master Audit", variant="ribbon", pulse=(not is_missing(high_risk_count) and high_risk_count > 0), extra=source_tag("Dashboard Derived"), extra_class="executive-kpi")
 
     r2c1, r2c2, r2c3 = st.columns(3)
-    render_metric_card(r2c1, "Model-Implied Inventory Value", fmt_monetary(inv_value_sum), "Portfolio sum • Master Audit Inventory_Value", extra=source_tag("Dashboard Derived"))
-    render_metric_card(r2c2, "Model-Implied Working Capital", fmt_monetary(wc_sum), "Portfolio sum • Master Audit Working_Capital", extra=source_tag("Dashboard Derived"))
-    render_metric_card(r2c3, "Portfolio Mean Financial Health", fmt_num(fin_health_avg, 0, "%") if not is_missing(fin_health_avg) else "N/A", "Mean of SKU Financial Health Scores • Master Audit KPI_Financial_Health_Score", extra=source_tag("Dashboard Derived"))
+    render_metric_card(r2c1, "Model-Implied Inventory Value", fmt_monetary(inv_value_sum), "Portfolio sum • Master Audit Inventory_Value", extra=source_tag("Dashboard Derived"), extra_class="executive-kpi")
+    render_metric_card(r2c2, "Model-Implied Working Capital", fmt_monetary(wc_sum), "Portfolio sum • Master Audit Working_Capital", extra=source_tag("Dashboard Derived"), extra_class="executive-kpi")
+    render_metric_card(r2c3, "Portfolio Mean Financial Health", fmt_num(fin_health_avg, 0, "%") if not is_missing(fin_health_avg) else "N/A", "Mean of SKU Financial Health Scores • Master Audit KPI_Financial_Health_Score", extra=source_tag("Dashboard Derived"), extra_class="executive-kpi")
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("<hr>", unsafe_allow_html=True)
