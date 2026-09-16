@@ -89,45 +89,24 @@ if "_sidebar_bootstrap_done" not in st.session_state:
 _ORIGINAL_PLOTLY_CHART = st.plotly_chart
 
 def _cinematic_plotly_chart(fig, *args, **kwargs):
+    """Lightweight chart wrapper: presentation-only, no trace iteration.
+
+    The previous wrapper walked every trace and updated axes/layout on every
+    rerun. With 24 charts that created avoidable Python-side work. We now only
+    fill the minimum global visual defaults when they are absent.
+    """
     try:
-        # Force a consistent light paper/plot background on every chart.
-        # Several charts in this file only ever set plot_bgcolor (never
-        # paper_bgcolor), and several others set neither — which left the
-        # chart's outer "paper" area to inherit Plotly's own dark-mode
-        # detection, producing a white plotting box sitting inside a dark
-        # halo. Setting both explicitly here, globally, removes that
-        # mismatch everywhere at once instead of patching 24 call sites.
-        fig.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="#ffffff",
-            font=dict(family="'Inter', 'Segoe UI', -apple-system, sans-serif", size=13, color="#334155"),
-            title_font=dict(family="'Inter', 'Segoe UI', -apple-system, sans-serif", size=16, color="#1E3A8A"),
-            legend=dict(bgcolor="rgba(255,255,255,0.6)", bordercolor="rgba(226,232,240,0.8)", borderwidth=1,
-                        font=dict(color="#334155")),
-            hoverlabel=dict(bgcolor="white", font_size=13, font_family="'Inter', 'Segoe UI', sans-serif",
-                             bordercolor="#0EA5E9", font_color="#0F172A"),
-        )
-        fig.update_xaxes(showline=True, linecolor="rgba(148,163,184,0.35)", gridcolor="rgba(226,232,240,0.55)",
-                          zerolinecolor="rgba(148,163,184,0.35)", color="#334155")
-        fig.update_yaxes(showline=True, linecolor="rgba(148,163,184,0.35)", gridcolor="rgba(226,232,240,0.55)",
-                          zerolinecolor="rgba(148,163,184,0.35)", color="#334155")
-        # Visualization upgrade — additive trace polish only. Never touches a
-        # trace's x/y/values, color, name, or type: only refines the visual
-        # finish (rounded bar corners, crisper marker outlines) so charts
-        # read as more considered without any data or chart-type change.
-        for trace in fig.data:
-            ttype = getattr(trace, "type", None)
-            try:
-                if ttype == "bar":
-                    trace.update(marker_cornerradius=4)
-                elif ttype in ("scatter", "scattergl") and trace.mode and "markers" in trace.mode:
-                    current_line = getattr(trace.marker, "line", None)
-                    if current_line is None or current_line.width is None:
-                        trace.update(marker_line_width=1, marker_line_color="rgba(255,255,255,0.6)")
-            except Exception:
-                continue
+        updates = {}
+        if getattr(fig.layout, "paper_bgcolor", None) in (None, ""):
+            updates["paper_bgcolor"] = "rgba(0,0,0,0)"
+        if getattr(fig.layout, "plot_bgcolor", None) in (None, ""):
+            updates["plot_bgcolor"] = "#ffffff"
+        if getattr(fig.layout, "font", None) is None:
+            updates["font"] = dict(family="'Inter', 'Segoe UI', -apple-system, sans-serif", size=13, color="#334155")
+        if updates:
+            fig.update_layout(**updates)
     except Exception:
-        pass  # never let a cosmetic enhancement break a chart render
+        pass
     return _ORIGINAL_PLOTLY_CHART(fig, *args, **kwargs)
 
 st.plotly_chart = _cinematic_plotly_chart
@@ -989,17 +968,11 @@ st.markdown("""
     @media (max-width: 900px) { .story-strip { flex-wrap: wrap; } .story-arrow { display: none; } }
 
 
-    div[data-testid="stDataFrame"] { transition: transform var(--dur-med) ease, box-shadow var(--dur-med) ease; border-radius: var(--clay-radius-sm); overflow: hidden; border: none; box-shadow: var(--clay-shadow); }
-    div[data-testid="stDataFrame"]:hover { transform: translateY(-1px); box-shadow: var(--clay-shadow-hover); }
+    div[data-testid="stDataFrame"] { border-radius: var(--clay-radius-sm); overflow: hidden; border: none; box-shadow: var(--clay-shadow); }
 
     [data-testid="stPlotlyChart"], .stPlotlyChart {
-        transition: transform var(--dur-med) var(--ease-spring), box-shadow var(--dur-med) ease !important;
         border-radius: var(--clay-radius); background: transparent;
         box-shadow: var(--clay-shadow);
-        animation: chartReveal var(--dur-slow) var(--ease-standard) both;
-    }
-    [data-testid="stPlotlyChart"]:hover, .stPlotlyChart:hover {
-        transform: translateY(-2px) !important; box-shadow: var(--clay-shadow-hover) !important; z-index: 5;
     }
     iframe { overflow: hidden !important; }
 
@@ -1080,77 +1053,6 @@ st.markdown("""
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
 
-    /* ==========================================================================
-       CINEMATIC FLASH LAYER — presentation only
-       Exact theme/layout preserved. Motion is compositor-friendly (transform +
-       opacity) and never animates background-position or layout dimensions.
-       ========================================================================== */
-    .stApp { position: relative; overflow-x: hidden; }
-    .block-container { position: relative; z-index: 1; }
-    .stApp::before {
-        content: ""; position: fixed; inset: -20% -10%; pointer-events: none; z-index: 0;
-        background:
-            radial-gradient(36% 28% at 12% 18%, rgba(56,189,248,0.085), transparent 72%),
-            radial-gradient(30% 26% at 88% 12%, rgba(30,58,138,0.075), transparent 72%),
-            radial-gradient(34% 30% at 76% 86%, rgba(14,165,233,0.055), transparent 72%);
-        opacity: 0.9; transform: translate3d(0,0,0) scale(1);
-        animation: cinematicAmbient 18s ease-in-out infinite alternate; will-change: transform, opacity;
-    }
-    @keyframes cinematicAmbient {
-        from { transform: translate3d(-0.5%, -0.3%, 0) scale(1); opacity: 0.78; }
-        to   { transform: translate3d(0.5%, 0.35%, 0) scale(1.025); opacity: 0.96; }
-    }
-    .hero-wrap { isolation: isolate; overflow: hidden; border-radius: 18px; }
-    .hero-wrap::before {
-        content: ""; position: absolute; left: 50%; top: 50%; width: 76%; height: 120px;
-        transform: translate(-50%, -50%); border-radius: 999px;
-        background: radial-gradient(closest-side, rgba(56,189,248,0.12), transparent 72%);
-        filter: blur(10px); pointer-events: none; z-index: 0;
-    }
-    .hero-wrap::after {
-        content: ""; position: absolute; top: 50%; left: -35%; width: 34%; height: 2px;
-        transform: translate3d(0,-50%,0);
-        background: linear-gradient(90deg, transparent, rgba(56,189,248,0.0), rgba(56,189,248,0.9), rgba(255,255,255,0.95), rgba(30,58,138,0.75), transparent);
-        opacity: 0; pointer-events: none; z-index: 2;
-        animation: heroSweep 8s cubic-bezier(0.4,0,0.2,1) infinite; will-change: transform, opacity;
-    }
-    @keyframes heroSweep {
-        0%, 18% { transform: translate3d(0,-50%,0); opacity: 0; }
-        28%, 55% { opacity: 0.85; }
-        70%, 100% { transform: translate3d(400%, -50%, 0); opacity: 0; }
-    }
-    .main-dashboard-title { letter-spacing: -0.035em; text-shadow: 0 8px 28px rgba(30,58,138,0.14), 0 0 24px rgba(56,189,248,0.10); }
-
-    .metric-card, .square-metric, .flow-card, .status-card, .decision-card,
-    [data-testid="stPlotlyChart"], .stPlotlyChart, div[data-testid="stDataFrame"] {
-        border: 1px solid rgba(148,163,184,0.18) !important;
-    }
-    .metric-card, .square-metric, .flow-card, .decision-card {
-        box-shadow: 0 10px 26px rgba(15,23,42,0.045), 0 2px 8px rgba(14,165,233,0.035), inset 0 1px 0 rgba(255,255,255,0.82);
-        backdrop-filter: blur(2px);
-    }
-    .metric-card:hover, .square-metric:hover, .flow-card:hover, .decision-card:hover {
-        transform: translate3d(0,-4px,0) !important;
-        box-shadow: 0 18px 38px rgba(15,23,42,0.085), 0 4px 18px rgba(14,165,233,0.10), 0 0 0 1px rgba(14,165,233,0.14), inset 0 1px 0 rgba(255,255,255,0.92) !important;
-    }
-
-    /* Executive opening KPI row: sorted hierarchy + equal-height visual rhythm. */
-    .executive-kpi { height: 232px !important; min-height: 232px !important; box-sizing: border-box !important; }
-    .executive-kpi .metric-card-title { letter-spacing: 0.7px; }
-    .executive-kpi .metric-card-value { font-size: 1.95rem; }
-    .executive-kpi .metric-card-subtitle { line-height: 1.45; max-width: 100%; }
-    @media (max-width: 900px) { .executive-kpi { height: auto !important; min-height: 190px !important; } }
-
-    [data-testid="stAppViewContainer"] h2, [data-testid="stAppViewContainer"] h3 { position: relative; padding-bottom: 0.28rem; }
-    [data-testid="stAppViewContainer"] h2::after, [data-testid="stAppViewContainer"] h3::after {
-        content: ""; display: block; width: 56px; height: 2px; margin-top: 5px; border-radius: 999px;
-        background: linear-gradient(90deg, var(--c-navy), var(--c-blue), transparent); opacity: 0.8;
-    }
-    div[data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"] {
-        border: 1px solid rgba(14,165,233,0.22) !important;
-        box-shadow: inset 0 -3px 0 var(--c-blue), 0 6px 16px rgba(14,165,233,0.10) !important;
-    }
-
     /* ---------- Accessibility: respect reduced-motion preference globally ---------- */
     @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
@@ -1194,13 +1096,23 @@ st.sidebar.markdown("---")
 # (Test_Actuals etc.) are absent, we do NOT stamp an identical fabricated
 # series across every row. We record their absence and degrade gracefully.
 # ------------------------------------------------------------------------------
+def _resolve_authoritative_workbook():
+    """Resolve only the canonical Master Audit or its dated authoritative export."""
+    base = Path(__file__).resolve().parent
+    candidates = [
+        base / "Enterprise_Supply_Chain_Master_Audit.xlsx",
+        base / "Enterprise_Supply_Chain_Master_Audit(20260916-155339).xlsx",
+        base / "Enterprise_Supply_Chain_Master_Audit(20260916-155643).xlsx",
+    ]
+    return next((p for p in candidates if p.exists()), None)
+
 @st.cache_data(show_spinner=False)
 def load_and_clean_data():
     """Load the production Master Audit only; optional demo mode is explicit and never silent."""
     data_source_label = "Master Audit"
     try:
-        master_path = Path(__file__).resolve().parent / "Enterprise_Supply_Chain_Master_Audit.xlsx"
-        if master_path.exists():
+        master_path = _resolve_authoritative_workbook()
+        if master_path is not None:
             df = pd.read_excel(master_path, sheet_name="Executive_Summary")
         elif os.getenv("AURIX_DASHBOARD_DEMO_MODE", "0") == "1":
             # Explicit developer/demo switch only. Never silently used in production.
@@ -1416,9 +1328,9 @@ with tab1:
     render_metric_card(r1c4, "High-Risk SKUs", fmt_int(high_risk_count), "High Forecast_Risk count • Master Audit", variant="ribbon", pulse=(not is_missing(high_risk_count) and high_risk_count > 0), extra=source_tag("Dashboard Derived"), extra_class="executive-kpi")
 
     r2c1, r2c2, r2c3 = st.columns(3)
-    render_metric_card(r2c1, "Model-Implied Inventory Value", fmt_monetary(inv_value_sum), "Portfolio sum • Master Audit Inventory_Value", extra=source_tag("Dashboard Derived"), extra_class="executive-kpi")
-    render_metric_card(r2c2, "Model-Implied Working Capital", fmt_monetary(wc_sum), "Portfolio sum • Master Audit Working_Capital", extra=source_tag("Dashboard Derived"), extra_class="executive-kpi")
-    render_metric_card(r2c3, "Portfolio Mean Financial Health", fmt_num(fin_health_avg, 0, "%") if not is_missing(fin_health_avg) else "N/A", "Mean of SKU Financial Health Scores • Master Audit KPI_Financial_Health_Score", extra=source_tag("Dashboard Derived"), extra_class="executive-kpi")
+    render_metric_card(r2c1, "Model-Implied Inventory Value", fmt_monetary(inv_value_sum), "Portfolio sum • Master Audit Inventory_Value", extra=source_tag("Dashboard Derived"))
+    render_metric_card(r2c2, "Model-Implied Working Capital", fmt_monetary(wc_sum), "Portfolio sum • Master Audit Working_Capital", extra=source_tag("Dashboard Derived"))
+    render_metric_card(r2c3, "Portfolio Mean Financial Health", fmt_num(fin_health_avg, 0, "%") if not is_missing(fin_health_avg) else "N/A", "Mean of SKU Financial Health Scores • Master Audit KPI_Financial_Health_Score", extra=source_tag("Dashboard Derived"))
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("<hr>", unsafe_allow_html=True)
