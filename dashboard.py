@@ -154,14 +154,15 @@ MASTER_AUDIT_FIELDS = [
 # Accuracy_Pct is the project-defined sMAPE-derived forecast accuracy field supplied by the Master Audit.
 # A probabilistic confidence measure is not used as a dashboard KPI.
 # Optional array-level fields — NOT present in the Master Audit export as verified.
-# If a sandbox upload happens to include them, richer per-SKU trajectory views unlock consistently.
+# If the authoritative source includes them, richer per-SKU trajectory views unlock consistently.
 OPTIONAL_ARRAY_FIELDS = ['Test_Actuals', 'Test_Predictions', 'Test_Lower_Bound', 'Test_Upper_Bound']
 # A few plausible alternate names for an observed/actual inventory position, checked defensively
-# in the Sandbox upload path only — never fabricated if absent.
+# in the authoritative source only — never fabricated if absent.
 POSSIBLE_ACTUAL_INVENTORY_COLS = ['Actual_Inventory', 'Current_Inventory', 'On_Hand_Inventory', 'Current_Stock', 'Closing_Balance']
 
 ABC_ORDER = ['A', 'B', 'C']
 XYZ_ORDER = ['X', 'Y', 'Z']
+RISK_ORDER = ['Low', 'Medium', 'High']
 ABC_COLOR_MAP = {'A': '#1E3A8A', 'B': '#0EA5E9', 'C': '#94A3B8'}
 XYZ_COLOR_MAP = {'X': '#0D9488', 'Y': '#F59E0B', 'Z': '#EF4444'}
 
@@ -222,11 +223,12 @@ def fmt_int(val, suffix=""):
     except Exception:
         return "N/A"
 
-def fmt_currency(val):
+def fmt_monetary(val):
+    """Neutral monetary-unit formatter; currency is intentionally not assumed."""
     if is_missing(val):
         return "N/A"
     try:
-        return f"₹{float(val):,.2f}"
+        return f"{float(val):,.0f}"
     except Exception:
         return "N/A"
 
@@ -619,11 +621,11 @@ st.markdown("""
            values only — no animation cost while idle. */
         --clay-radius: 22px;
         --clay-radius-sm: 16px;
-        --clay-shadow: 10px 10px 24px rgba(30,41,59,0.10), -8px -8px 18px rgba(255,255,255,0.9), inset 0 1px 0 rgba(255,255,255,0.7);
-        --clay-shadow-hover: 16px 16px 36px rgba(30,41,59,0.14), -10px -10px 24px rgba(255,255,255,0.95), inset 0 1px 0 rgba(255,255,255,0.8);
-        --clay-shadow-pressed: inset 6px 6px 12px rgba(30,41,59,0.10), inset -5px -5px 12px rgba(255,255,255,0.75);
-        --glow-blue: 0 0 0 1px rgba(14,165,233,0.18), 0 14px 44px rgba(14,165,233,0.28);
-        --glow-navy: 0 0 0 1px rgba(30,58,138,0.16), 0 14px 44px rgba(30,58,138,0.22);
+        --clay-shadow: 0 2px 8px rgba(30,41,59,0.07), 0 1px 2px rgba(15,23,42,0.05);
+        --clay-shadow-hover: 0 6px 16px rgba(15,23,42,0.10), 0 2px 4px rgba(15,23,42,0.05);
+        --clay-shadow-pressed: inset 0 1px 4px rgba(15,23,42,0.08);
+        --glow-blue: 0 0 0 1px rgba(14,165,233,0.10), 0 6px 18px rgba(14,165,233,0.12);
+        --glow-navy: 0 0 0 1px rgba(30,58,138,0.10), 0 6px 18px rgba(30,58,138,0.10);
 
         /* Motion scale */
         --ease-standard: cubic-bezier(0.4,0,0.2,1);
@@ -811,8 +813,8 @@ st.markdown("""
         transition: transform var(--dur-med) var(--ease-spring), box-shadow var(--dur-med) ease;
     }
     div[data-testid="stMetric"]:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--clay-shadow-hover), var(--glow-blue);
+        transform: translateY(-2px);
+        box-shadow: var(--clay-shadow-hover);
     }
 
     /* ---------- Metric card (consolidated: ribbon + square variants share one token base) ---------- */
@@ -852,8 +854,8 @@ st.markdown("""
         justify-content: space-between;
     }
     .metric-card--ribbon:hover {
-        transform: translateY(-7px) scale(1.015);
-        box-shadow: var(--clay-shadow-hover), var(--glow-blue);
+        transform: translateY(-2px);
+        box-shadow: var(--clay-shadow-hover);
         border-left: 5px solid var(--c-navy);
     }
     .metric-card-title {
@@ -912,10 +914,10 @@ st.markdown("""
     }
     .square-metric:hover::after { opacity: 1; animation: cardSheen 1s ease forwards; }
     .square-metric:hover {
-        transform: scale(1.05) translateY(-4px); box-shadow: var(--clay-shadow-hover), var(--glow-blue);
+        transform: translateY(-2px); box-shadow: var(--clay-shadow-hover);
         border-top: 4px solid var(--c-navy); z-index: 10;
     }
-    .square-metric:hover .square-metric-value { transform: scale(1.08); }
+    .square-metric:hover .square-metric-value { transform: none; }
     .square-metric-label { font-size: 0.92rem; color: var(--c-slate-600); font-weight: 800; margin-bottom: 0.35rem;
         line-height: 1.25; overflow-wrap: break-word; hyphens: auto; }
     .square-metric-value { font-size: 1.7rem; color: var(--c-navy); font-weight: 900; line-height: 1.25; text-shadow: 0 1px 0 rgba(255,255,255,0.5);
@@ -925,7 +927,7 @@ st.markdown("""
     /* ---------- Status card (advisor / diagnostic recommendations — one class, data-status modifier) ---------- */
     .status-card { border-radius: var(--clay-radius-sm); padding: 1.1rem 1.2rem; margin-bottom: 0.9rem;
         transition: transform var(--dur-fast) ease, box-shadow var(--dur-fast) ease; border: none; box-shadow: var(--clay-shadow); }
-    .status-card:hover { transform: translateX(4px) translateY(-3px); box-shadow: var(--clay-shadow-hover); }
+    .status-card:hover { transform: translateY(-2px); box-shadow: var(--clay-shadow-hover); }
     .status-card[data-status="green"] { background: linear-gradient(160deg, var(--c-success-bg), #ffffff 130%); border-left: 6px solid var(--c-success); }
     .status-card[data-status="amber"] { background: linear-gradient(160deg, var(--c-warning-bg), #ffffff 130%); border-left: 6px solid var(--c-warning); }
     .status-card[data-status="red"]   { background: linear-gradient(160deg, var(--c-danger-bg), #ffffff 130%);  border-left: 6px solid var(--c-danger); }
@@ -944,7 +946,7 @@ st.markdown("""
         opacity: 0; pointer-events: none;
     }
     .decision-card:hover::after { opacity: 1; animation: cardSheen 1s ease forwards; }
-    .decision-card:hover { box-shadow: var(--clay-shadow-hover), var(--glow-navy); transform: translateY(-4px); }
+    .decision-card:hover { box-shadow: var(--clay-shadow-hover); transform: translateY(-2px); }
     .decision-card-title { font-size: 0.85rem; font-weight: 800; color: var(--c-navy); margin-bottom: 0.25rem; }
     .decision-card-text { font-size: 0.92rem; color: var(--c-slate-700); line-height: 1.4; }
 
@@ -962,7 +964,7 @@ st.markdown("""
         opacity: 0; pointer-events: none;
     }
     .flow-card:hover::after { opacity: 1; animation: cardSheen 1s ease forwards; }
-    .flow-card:hover { transform: translateY(-5px) scale(1.02); box-shadow: var(--clay-shadow-hover), var(--glow-blue); }
+    .flow-card:hover { transform: translateY(-2px); box-shadow: var(--clay-shadow-hover); }
     .flow-card-title { font-size: 1rem; font-weight: 900; color: var(--c-slate-900); margin-bottom: 0.5rem; }
     .flow-card-text { font-size: 0.85rem; color: var(--c-slate-700); font-weight: 600; margin-bottom: 0.25rem; line-height: 1.35; }
 
@@ -986,7 +988,7 @@ st.markdown("""
 
 
     div[data-testid="stDataFrame"] { transition: transform var(--dur-med) ease, box-shadow var(--dur-med) ease; border-radius: var(--clay-radius-sm); overflow: hidden; border: none; box-shadow: var(--clay-shadow); }
-    div[data-testid="stDataFrame"]:hover { transform: scale(1.003) translateY(-3px); box-shadow: var(--clay-shadow-hover); }
+    div[data-testid="stDataFrame"]:hover { transform: translateY(-1px); box-shadow: var(--clay-shadow-hover); }
 
     [data-testid="stPlotlyChart"], .stPlotlyChart {
         transition: transform var(--dur-med) var(--ease-spring), box-shadow var(--dur-med) ease !important;
@@ -995,7 +997,7 @@ st.markdown("""
         animation: chartReveal var(--dur-slow) var(--ease-standard) both;
     }
     [data-testid="stPlotlyChart"]:hover, .stPlotlyChart:hover {
-        transform: translateY(-7px) !important; box-shadow: var(--clay-shadow-hover), var(--glow-navy) !important; z-index: 5;
+        transform: translateY(-2px) !important; box-shadow: var(--clay-shadow-hover) !important; z-index: 5;
     }
     iframe { overflow: hidden !important; }
 
@@ -1016,18 +1018,18 @@ st.markdown("""
         opacity: 1; animation: cardSheen 0.9s ease forwards;
     }
     .stButton > button:hover, .stDownloadButton > button:hover {
-        transform: translateY(-3px) scale(1.02); box-shadow: 0 14px 32px rgba(14, 165, 233, 0.42), var(--glow-blue) !important;
+        transform: translateY(-2px); box-shadow: 0 8px 18px rgba(14, 165, 233, 0.18) !important;
         background: linear-gradient(135deg, var(--c-navy), #1E40AF);
     }
     .stButton > button:active, .stDownloadButton > button:active {
-        transform: translateY(0) scale(0.98); transition: transform 0.08s ease !important;
+        transform: translateY(0); transition: transform 0.08s ease !important;
     }
 
     /* ---------- Tabs: cinematic active-state glow ---------- */
     div[data-testid="stTabs"] [data-baseweb="tab-list"] {
         display: flex !important; width: 100% !important; justify-content: center !important; gap: 8px;
         background: linear-gradient(155deg, #ffffff, var(--c-slate-50)); border-radius: var(--clay-radius-sm);
-        box-shadow: var(--clay-shadow); padding: 6px; margin-bottom: 0.4rem;
+        box-shadow: var(--clay-shadow); padding: 4px; margin-bottom: 0.4rem;
     }
     div[data-testid="stTabs"] [data-baseweb="tab"] {
         flex-grow: 1 !important; text-align: center !important; justify-content: center !important;
@@ -1069,7 +1071,7 @@ st.markdown("""
         position: absolute; top: 50%; left: 50%; width: 640px; height: 320px;
         transform: translate(-50%, -50%); border-radius: 50%;
         background: radial-gradient(closest-side, rgba(14,165,233,0.16), rgba(30,58,138,0.08) 60%, transparent 80%);
-        animation: ambientGlow 6s ease-in-out infinite; pointer-events: none; z-index: 0;
+        pointer-events: none; z-index: 0;
     }
     .hero-wrap { position: relative; }
 
@@ -1120,25 +1122,20 @@ st.sidebar.markdown("---")
 # series across every row. We record their absence and degrade gracefully.
 # ------------------------------------------------------------------------------
 @st.cache_data(show_spinner=False)
-def load_and_clean_data(file_bytes, file_name):
+def load_and_clean_data():
+    """Load the production Master Audit only; optional demo mode is explicit and never silent."""
     data_source_label = "Master Audit"
     try:
-        if file_bytes is not None:
-            if file_name.endswith('.csv'):
-                df = pd.read_csv(io.BytesIO(file_bytes))
-            else:
-                df = pd.read_excel(io.BytesIO(file_bytes))
-            data_source_label = f"Sandbox Upload ({file_name})"
+        master_path = Path(__file__).resolve().parent / "Enterprise_Supply_Chain_Master_Audit.xlsx"
+        if master_path.exists():
+            df = pd.read_excel(master_path, sheet_name="Executive_Summary")
+        elif os.getenv("AURIX_DASHBOARD_DEMO_MODE", "0") == "1":
+            # Explicit developer/demo switch only. Never silently used in production.
+            df = pd.DataFrame({'SKU': ['DEMO_SKU_001'], 'ABC_Class': ['A'], 'XYZ_Class': ['X'], 'ABC_XYZ_Class': ['AX']})
+            data_source_label = "Developer Demo Mode"
         else:
-            master_path = Path(__file__).resolve().parent / "Enterprise_Supply_Chain_Master_Audit.xlsx"
-            if master_path.exists():
-                df = pd.read_excel(master_path, sheet_name="Executive_Summary")
-            elif os.getenv("AURIX_DASHBOARD_DEMO_MODE", "0") == "1":
-                # Explicit developer/demo switch only. Never silently used in production.
-                df = pd.DataFrame({'SKU': ['DEMO_SKU_001'], 'ABC_Class': ['A'], 'XYZ_Class': ['X'], 'ABC_XYZ_Class': ['AX']})
-                data_source_label = "Developer Demo Mode"
-            else:
-                raise FileNotFoundError("Master Audit workbook not found. Dashboard cannot initialise.")
+            raise FileNotFoundError("Master Audit workbook not found. Dashboard cannot initialise.")
+
         # Column-name hygiene only — never value fabrication.
         df.columns = [str(c).strip() for c in df.columns]
         if 'SKU' not in df.columns:
@@ -1154,56 +1151,15 @@ def load_and_clean_data(file_bytes, file_name):
         st.error(f"Could not read the Master Audit/source file cleanly: {e}")
         st.stop()
 
-uploaded_file = None
-file_bytes = None
-file_name = "default"
-df, DATA_SOURCE_LABEL = load_and_clean_data(file_bytes, file_name)
+df, DATA_SOURCE_LABEL = load_and_clean_data()
 
 # ------------------------------------------------------------------------------
-# Raw 24-Month Workbook loader — READ-ONLY, optional. Expected structure: one
-# sheet per month, each with Particulars / Opening Balance / Inwards / Outwards
-# / Closing Balance. This is genuinely not part of the Master Audit and was not
-# supplied in every session — when absent, every downstream "24-Month Historical"
-# view degrades to an explicit "upload to unlock" message rather than pretending
-# an annual aggregate is a monthly time series.
+# Raw 24-Month Workbook upload infrastructure removed in this production build.
+# The current application has no uploader widget, so keeping dormant upload state
+# would create a misleading control path. The Master Audit remains the runtime
+# source of truth; the dashboard degrades to aggregate views where monthly raw data
+# is unavailable.
 # ------------------------------------------------------------------------------
-@st.cache_data(show_spinner=False)
-def load_raw_workbook(raw_bytes):
-    if raw_bytes is None:
-        return None
-    try:
-        xls = pd.ExcelFile(io.BytesIO(raw_bytes))
-        expected_cols = {'Particulars', 'Inwards', 'Outwards'}
-        frames = []
-        for i, sheet in enumerate(xls.sheet_names):
-            sdf = pd.read_excel(xls, sheet_name=sheet)
-            sdf.columns = [str(c).strip() for c in sdf.columns]
-            if not expected_cols.issubset(set(sdf.columns)):
-                continue
-            sdf = sdf.rename(columns={'Particulars': 'SKU'})
-            sdf['SKU'] = sdf['SKU'].astype(str).str.strip()
-            sdf = sdf[~sdf['SKU'].str.lower().isin({'', 'nan', 'none', 'grand total', 'total'})].copy()
-            sdf['Outwards'] = pd.to_numeric(sdf['Outwards'], errors='coerce').fillna(0)
-            # Missing Outwards = 0; negative Outwards are intentionally retained.
-            sdf['Month'] = sheet
-            sdf['Month_Index'] = i
-            keep = [c for c in ['SKU', 'Month', 'Month_Index', 'Opening Balance', 'Inwards', 'Outwards', 'Closing Balance'] if c in sdf.columns]
-            frames.append(sdf[keep])
-        if not frames:
-            return None
-        combined = pd.concat(frames, ignore_index=True)
-        for c in ['Opening Balance', 'Inwards', 'Outwards', 'Closing Balance']:
-            if c in combined.columns:
-                combined[c] = pd.to_numeric(combined[c], errors='coerce')
-        return combined
-    except Exception:
-        return None
-
-raw_workbook_file = None
-raw_bytes = None
-raw_history_df = load_raw_workbook(raw_bytes)
-HAS_RAW_HISTORY = raw_history_df is not None and len(raw_history_df) > 0
-RAW_HISTORY_SOURCE_NAME = raw_workbook_file.name if (raw_workbook_file is not None and HAS_RAW_HISTORY) else None
 
 # Availability flags computed BEFORE any downstream default-filling, and never
 # used to justify inventing per-row values.
@@ -1248,7 +1204,7 @@ elif not sku_list:
     # an empty options list, so no widget is left pointing at a stale SKU.
     st.session_state.shared_sku = None
 
-# Pending cross-tab SKU jump (e.g. "🎯 Jump to SKU" in Top Priority Decisions).
+# Pending cross-tab SKU jump (e.g. "🎯 Jump to SKU" in Most Common Executive Recommendations).
 # Streamlit forbids writing st.session_state.sidebar_sku / tab2_sku / tab3_sku
 # once those selectbox widgets have already been instantiated in this run, so
 # a button placed further down the page cannot set them directly. Instead it
@@ -1368,7 +1324,7 @@ with tab1:
 
     st.markdown(
         f'<div class="illustrative-banner" data-status="{overall_status_key}" style="border-color: var(--c-blue); background: var(--c-blue-pale); color: var(--c-navy);">'
-        f'🧭 Dashboard-Derived Portfolio Status: <strong>{overall_status}</strong> &nbsp;|&nbsp; Data Source: <strong>{DATA_SOURCE_LABEL}</strong> &nbsp;|&nbsp; SKUs in View: <strong>{total_skus:,}</strong></div>',
+        f'🧭 Dashboard-Derived Portfolio Signal: <strong>{overall_status}</strong> &nbsp;|&nbsp; Data Source: <strong>{DATA_SOURCE_LABEL}</strong> &nbsp;|&nbsp; SKUs in View: <strong>{total_skus:,}</strong></div>',
         unsafe_allow_html=True)
 
     r1c1, r1c2, r1c3, r1c4 = st.columns(4)
@@ -1377,7 +1333,7 @@ with tab1:
     if forecast_health_source:
         fh_status = score_to_status(forecast_health_avg)
         fh_badge = badge_html(fh_status, fh_status.title())
-        fh_subtitle = f"Portfolio mean • Master Audit Forecast_Health_Score {fh_badge}"
+        fh_subtitle = f"Dashboard presentation band • Mean of Master Audit Forecast_Health_Score {fh_badge}"
     else:
         fh_subtitle = "Forecast_Health_Score unavailable in current source"
     render_metric_card(r1c2, "Forecast Health Score", fmt_num(forecast_health_avg, 0, "%"), fh_subtitle, extra=source_tag("Dashboard Derived"))
@@ -1386,9 +1342,9 @@ with tab1:
     render_metric_card(r1c4, "High-Risk SKUs", fmt_int(high_risk_count), "High Forecast_Risk count • Master Audit", variant="ribbon", pulse=(not is_missing(high_risk_count) and high_risk_count > 0), extra=source_tag("Dashboard Derived"))
 
     r2c1, r2c2, r2c3 = st.columns(3)
-    render_metric_card(r2c1, "Model-Implied Inventory Value", fmt_currency(inv_value_sum), "Portfolio sum • Master Audit Inventory_Value", extra=source_tag("Dashboard Derived"))
-    render_metric_card(r2c2, "Model-Implied Working Capital", fmt_currency(wc_sum), "Portfolio sum • Master Audit Working_Capital", extra=source_tag("Dashboard Derived"))
-    render_metric_card(r2c3, "Financial Health Score", fmt_num(fin_health_avg, 0, "%") if not is_missing(fin_health_avg) else "N/A", "Portfolio mean • Master Audit KPI_Financial_Health_Score", extra=source_tag("Dashboard Derived"))
+    render_metric_card(r2c1, "Model-Implied Inventory Value", fmt_monetary(inv_value_sum), "Portfolio sum • Master Audit Inventory_Value", extra=source_tag("Dashboard Derived"))
+    render_metric_card(r2c2, "Model-Implied Working Capital", fmt_monetary(wc_sum), "Portfolio sum • Master Audit Working_Capital", extra=source_tag("Dashboard Derived"))
+    render_metric_card(r2c3, "Portfolio Mean Financial Health", fmt_num(fin_health_avg, 0, "%") if not is_missing(fin_health_avg) else "N/A", "Mean of SKU Financial Health Scores • Master Audit KPI_Financial_Health_Score", extra=source_tag("Dashboard Derived"))
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("<hr>", unsafe_allow_html=True)
@@ -1417,11 +1373,11 @@ with tab1:
             fig_xyz.update_layout(plot_bgcolor='white', margin=dict(l=10, r=10, t=40, b=10))
             st.plotly_chart(fig_xyz, width='stretch')
         else:
-            st.info("XYZ_Class not available in this data source — upload a Master Audit export that includes it to unlock this view.")
+            st.info("XYZ_Class is not available in the current Master Audit source; this view requires that authoritative field.")
 
     st.markdown("<hr>", unsafe_allow_html=True)
     st.subheader("🧩 ABC–XYZ Segmentation Matrix")
-    st.markdown('<div class="section-caption">Count of SKUs by combined ABC — Demand Volume × XYZ — Demand Variability classification.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-caption">Count of SKUs by combined ABC — Demand Volume Classification × XYZ — Demand Variability classification.</div>', unsafe_allow_html=True)
     if HAS_ABC_XYZ and total_skus > 0:
         abc_order = ABC_ORDER
         xyz_order = XYZ_ORDER
@@ -1436,8 +1392,8 @@ with tab1:
         valid_codes = codes[valid_code]
         matrix = pd.crosstab(valid_codes.str[0], valid_codes.str[1]).reindex(index=abc_order, columns=xyz_order, fill_value=0)
         fig_matrix = px.imshow(matrix, text_auto=True, color_continuous_scale=[[0, '#F1F5F9'], [1, '#1E3A8A']],
-                                labels=dict(x="XYZ — Demand Variability", y="ABC — Demand Volume", color="SKU Count"))
-        fig_matrix.update_layout(margin=dict(l=10, r=10, t=20, b=10))
+                                labels=dict(x="XYZ — Demand Variability", y="ABC — Demand Volume Classification", color="SKU Count"))
+        fig_matrix.update_layout(title="ABC–XYZ Segmentation Matrix — SKU Count", margin=dict(l=10, r=10, t=40, b=10))
         st.plotly_chart(fig_matrix, width='stretch')
     else:
         st.info("ABC_XYZ_Class not available — matrix will populate once this field is present in the source data.")
@@ -1459,7 +1415,7 @@ with tab1:
         st.info("Annual_Demand not available in this data source.")
 
     st.markdown("<hr>", unsafe_allow_html=True)
-    st.subheader("🚨 What Needs Attention Now?")
+    st.subheader("🚨 Immediate Risk & Priority Exceptions")
     attn_df = pd.DataFrame()
     attn_cols = [c for c in ['SKU', 'ABC_XYZ_Class', 'ABC_Class', 'Forecast_Risk', 'Priority_Level',
                               'Inventory_Health_Score', 'Executive_Recommendation'] if c in filtered_df.columns]
@@ -1481,11 +1437,13 @@ with tab1:
         st.info("Risk/priority fields not available to build the attention list.")
 
     st.markdown("<hr>", unsafe_allow_html=True)
-    st.subheader("🧭 Top Priority Decisions")
-    st.markdown('<div class="section-caption">Each recommendation lists the exact SKUs it applies to — click "Jump to" to open one directly in Decision Intelligence below.</div>', unsafe_allow_html=True)
+    st.subheader("🧭 Most Common Executive Recommendations")
+    st.markdown('<div class="section-caption">Recommendations are shown by frequency among flagged SKUs; this is not an objective priority ranking. Each recommendation lists the exact SKUs it applies to — click "Jump to" to open one directly in Decision Intelligence below.</div>', unsafe_allow_html=True)
     if 'Executive_Recommendation' in filtered_df.columns and len(attn_df) > 0:
         priority_recs_df = filtered_df.loc[attn_df.index]
-        top_recs = priority_recs_df['Executive_Recommendation'].value_counts().head(5)
+        top_recs = (priority_recs_df['Executive_Recommendation'].value_counts().rename_axis('Recommendation').reset_index(name='Count')
+                      .sort_values(['Count', 'Recommendation'], ascending=[False, True], kind='mergesort').head(5)
+                      .set_index('Recommendation')['Count'])
         for rec_i, (rec, cnt) in enumerate(top_recs.items()):
             rec_skus = priority_recs_df.loc[priority_recs_df['Executive_Recommendation'] == rec, 'SKU'].astype(str).tolist()
             shown_skus = rec_skus[:12]
@@ -1559,7 +1517,7 @@ with tab1:
     wc_cols2 = st.columns(3)
     wc_items2 = [
         ("⚠️ Risk", "Forecast-risk, RMSE and Bullwhip-based exception visibility."),
-        ("💰 Finance", "Inventory Value, Working Capital, Carrying Cost and Stockout exposure visibility."),
+        ("💰 Finance", "Model-Implied Inventory Value, Model-Implied Working Capital, Carrying Cost and Stockout exposure visibility."),
         ("🧭 Decision Support", "Rule-based recommendations linked directly to the analytical outputs above."),
     ]
     for col, (title, desc) in zip(wc_cols2, wc_items2):
@@ -1612,9 +1570,9 @@ with tab2:
 
             if not is_missing(daf_val):
                 if daf_val > 1.5:
-                    insight += f"The model-derived replenishment-signal amplification metric is {fmt_num(daf_val,2)} relative to the reference level. "
+                    insight += f"The Bullwhip Ratio — model-derived replenishment signal amplification metric is {fmt_num(daf_val,2)} relative to the reference level. "
                 else:
-                    insight += f"The model-derived replenishment-signal amplification metric is {fmt_num(daf_val,2)} and is near the reference level. "
+                    insight += f"The Bullwhip Ratio — model-derived replenishment signal amplification metric is {fmt_num(daf_val,2)} and is near the reference level. "
 
             if not is_missing(p_val):
                 health_status = ("Acceptable — no significant residual autocorrelation detected at the tested lag" if float(p_val) > 0.05 else "Review — significant residual autocorrelation detected at the tested lag")
@@ -1636,7 +1594,7 @@ with tab2:
                             if isinstance(lb, list) and isinstance(ub, list) and len(lb) == len(months):
                                 fig.add_trace(go.Scatter(x=months + months[::-1], y=ub + lb[::-1], fill='toself',
                                                           fillcolor='rgba(244, 63, 94, 0.15)', line=dict(color='rgba(255,255,255,0)'),
-                                                          hoverinfo="skip", showlegend=True, name='95% Confidence Interval'))
+                                                          hoverinfo="skip", showlegend=True, name='Forecast Uncertainty Band'))
                         except Exception:
                             pass
                         fig.add_trace(go.Scatter(x=months, y=actuals, name='Actual Demand', mode='lines+markers',
@@ -1675,7 +1633,7 @@ with tab2:
             acc_source = "Master Audit" if 'Accuracy_Pct' in filtered_df.columns else "Dashboard Derived"
             mini_html = ('<div class="metrics-grid metrics-grid--3">'
                 + render_square_metric("Next Forecast", fmt_int(safe_val(sku_row, 'Forecast_Next_Month')), "Projected " + source_tag("Master Audit"))
-                + render_square_metric("Demand Amp.", fmt_num(safe_val(sku_row, 'Bullwhip_Ratio'), 2), "Model-Derived Replenishment-Signal Amplification " + source_tag("Master Audit"))
+                + render_square_metric("Bullwhip Ratio", fmt_num(safe_val(sku_row, 'Bullwhip_Ratio'), 2), "Bullwhip Ratio — Model-Derived Replenishment Signal Amplification " + source_tag("Master Audit"))
                 + render_square_metric("Forecast Accuracy", fmt_num(acc_val, 1, '%'), source_tag(acc_source))
                 + '</div>')
             st.markdown(mini_html, unsafe_allow_html=True)
@@ -1774,15 +1732,12 @@ with tab2:
     st.markdown(f'<div class="section-caption">Substitutes the original 24-month heatmap, which required a monthly historical series not present in this Master Audit export. {source_tag("Dashboard Derived")}</div>', unsafe_allow_html=True)
     if 'ABC_Class' in filtered_df.columns and 'Forecast_Risk' in filtered_df.columns and total_skus > 0:
         risk_matrix = pd.crosstab(filtered_df['ABC_Class'], filtered_df['Forecast_Risk'])
-        risk_matrix.index = pd.Categorical(risk_matrix.index, categories=ABC_ORDER, ordered=True)
-        risk_matrix = risk_matrix.sort_index().dropna(how='all')
-        risk_cols = sorted([str(c) for c in risk_matrix.columns], key=lambda x: x.lower())
-        risk_matrix = risk_matrix.reindex(columns=risk_cols, fill_value=0)
+        risk_matrix = risk_matrix.reindex(index=ABC_ORDER, columns=RISK_ORDER, fill_value=0)
         fig_riskhm = px.imshow(risk_matrix, text_auto=True, color_continuous_scale=[[0, '#F1F5F9'], [1, '#991B1B']],
-                                labels=dict(x="Forecast Risk", y="ABC — Demand Volume", color="SKU Count"))
-        fig_riskhm.update_xaxes(categoryorder='array', categoryarray=risk_cols)
+                                labels=dict(x="Forecast Risk", y="ABC — Demand Volume Classification", color="SKU Count"))
+        fig_riskhm.update_xaxes(categoryorder='array', categoryarray=RISK_ORDER)
         fig_riskhm.update_yaxes(categoryorder='array', categoryarray=ABC_ORDER)
-        fig_riskhm.update_layout(margin=dict(l=10, r=10, t=20, b=10))
+        fig_riskhm.update_layout(title="Forecast Risk by ABC Class — SKU Count", margin=dict(l=10, r=10, t=40, b=10))
         st.plotly_chart(fig_riskhm, width='stretch')
     else:
         st.info("ABC_Class and/or Forecast_Risk not available for this view.")
@@ -1840,8 +1795,8 @@ with tab3:
         render_metric_card(inv_cols[3], "Average Inventory", fmt_int(safe_val(sku_row3, 'Average_Inventory_Units')), "units", variant="ribbon", extra=source_tag("Master Audit"))
 
         inv_cols2 = st.columns(4)
-        render_metric_card(inv_cols2[0], "Model-Implied Inventory Value", fmt_currency(safe_val(sku_row3, 'Inventory_Value')), "", extra=source_tag("Master Audit"))
-        render_metric_card(inv_cols2[1], "Model-Implied Working Capital", fmt_currency(safe_val(sku_row3, 'Working_Capital')), "", extra=source_tag("Master Audit"))
+        render_metric_card(inv_cols2[0], "Model-Implied Inventory Value", fmt_monetary(safe_val(sku_row3, 'Inventory_Value')), "", extra=source_tag("Master Audit"))
+        render_metric_card(inv_cols2[1], "Model-Implied Working Capital", fmt_monetary(safe_val(sku_row3, 'Working_Capital')), "", extra=source_tag("Master Audit"))
         render_metric_card(inv_cols2[2], "Model-Implied Inventory Days", fmt_num(safe_val(sku_row3, 'Inventory_Days'), 0), "days", extra=source_tag("Master Audit"))
         render_metric_card(inv_cols2[3], "Inventory Turnover", fmt_num(safe_val(sku_row3, 'Inventory_Turnover'), 2), "turns / yr", extra=source_tag("Master Audit"))
 
@@ -1944,7 +1899,7 @@ with tab3:
     st.markdown(
         f'<div class="decision-card"><div class="decision-card-title">📊 Model-Implied vs. Actual Inventory '
         f'{source_tag("Master Audit")}</div><div class="decision-card-text">'
-        f'Model-Implied Inventory Value across the current filter is <strong>{fmt_currency(inv_value_sum)}</strong> — the analytical '
+        f'Model-Implied Inventory Value across the current filter is <strong>{fmt_monetary(inv_value_sum)}</strong> — the analytical '
         f'figure implied by applying this policy to Master Audit fields, not an observed accounting balance. '
         f'{"An actual on-hand inventory column is available in this data source." if ACTUAL_INV_COL else "No actual/observed on-hand inventory column is present in this data source, so it is not shown as if it were."}'
         f'</div></div>', unsafe_allow_html=True)
@@ -1956,7 +1911,7 @@ with tab3:
 # Where does the supply chain need attention?
 # ==============================================================================
 with tab4:
-    st.subheader("⚠️ Model-Derived Replenishment-Signal Amplification vs. Forecast Error")
+    st.subheader("⚠️ Bullwhip Ratio vs. Forecast Error")
     st.markdown(f"""<div class="section-caption">Quadrant boundaries below are median-split cut points computed on the current filter — a
     {source_tag("Dashboard Derived")} diagnostic classification, not an official Master Audit threshold.</div>""", unsafe_allow_html=True)
 
@@ -1980,8 +1935,8 @@ with tab4:
                                   color_discrete_map={"Stable": "#10B981", "Forecast Issue": "#F59E0B",
                                                        "Signal Amplification": "#0EA5E9", "Critical": "#EF4444"},
                                   hover_data=['SKU'] if 'SKU' in scatter_df.columns else None,
-                                  labels={'_bw': 'Model-Derived Replenishment-Signal Amplification', '_rmse': 'RMSE'},
-                                  title="Replenishment-Signal Amplification vs. Forecast Error — Dashboard-Derived Review Lens")
+                                  labels={'_bw': 'Bullwhip Ratio — Model-Derived Replenishment Signal Amplification', '_rmse': 'RMSE'},
+                                  title="Bullwhip Ratio vs. Forecast Error — Dashboard-Derived Review Lens")
         fig_scatter.add_vline(x=med_bw, line_dash="dot", line_color="#94A3B8")
         fig_scatter.add_hline(y=med_rmse, line_dash="dot", line_color="#94A3B8")
         fig_scatter.update_traces(marker=dict(size=9, opacity=0.75, line=dict(width=1, color='white')))
@@ -1997,7 +1952,7 @@ with tab4:
         if 'ABC_Class' in filtered_df.columns and total_skus > 0:
             abc_bar = ordered_category_counts(filtered_df, 'ABC_Class', ABC_ORDER)
             fig_abc_bar = px.bar(abc_bar, x='ABC_Class', y='Count', color='ABC_Class',
-                                  color_discrete_map=ABC_COLOR_MAP, category_orders={'ABC_Class': ABC_ORDER}, title="ABC — Demand Volume")
+                                  color_discrete_map=ABC_COLOR_MAP, category_orders={'ABC_Class': ABC_ORDER}, title="ABC — Demand Volume Classification")
             fig_abc_bar.update_layout(plot_bgcolor='white', showlegend=False, margin=dict(l=20, r=20, t=40, b=20))
             st.plotly_chart(fig_abc_bar, width='stretch')
         else:
@@ -2006,7 +1961,7 @@ with tab4:
         if HAS_XYZ and total_skus > 0:
             xyz_bar = ordered_category_counts(filtered_df, 'XYZ_Class', XYZ_ORDER)
             fig_xyz_bar = px.bar(xyz_bar, x='XYZ_Class', y='Count', color='XYZ_Class',
-                                  color_discrete_map=XYZ_COLOR_MAP, category_orders={'XYZ_Class': XYZ_ORDER}, title="XYZ — Demand Variability")
+                                  color_discrete_map=XYZ_COLOR_MAP, category_orders={'XYZ_Class': XYZ_ORDER}, title="XYZ — Demand Variability Classification")
             fig_xyz_bar.update_layout(plot_bgcolor='white', showlegend=False, margin=dict(l=20, r=20, t=40, b=20))
             st.plotly_chart(fig_xyz_bar, width='stretch')
         else:
@@ -2026,7 +1981,7 @@ with tab4:
                 risk_intensity.loc[a, x] = v
         fig_intensity = px.imshow(risk_intensity, text_auto='.1f', color_continuous_scale=[[0, '#D1FAE5'], [0.5, '#FEF3C7'], [1, '#991B1B']],
                                    labels=dict(x="XYZ", y="ABC", color="Avg RMSE"))
-        fig_intensity.update_layout(margin=dict(l=10, r=10, t=20, b=10))
+        fig_intensity.update_layout(title="ABC–XYZ Risk Intensity — Mean RMSE", margin=dict(l=10, r=10, t=40, b=10))
         st.plotly_chart(fig_intensity, width='stretch')
     else:
         st.info("ABC_XYZ_Class and/or RMSE not available for this view.")
@@ -2045,28 +2000,8 @@ with tab4:
 
     st.markdown("<hr>", unsafe_allow_html=True)
     st.subheader("📉 Pareto Analysis")
-    if HAS_RAW_HISTORY:
-        st.markdown(f'<div class="section-caption">Based on 24-month total Outwards from the raw historical workbook — the full tracked period. {source_tag("Historical Raw Data")}</div>', unsafe_allow_html=True)
-        hist_totals = raw_history_df[raw_history_df['SKU'].isin(filtered_df['SKU'])].groupby('SKU', as_index=False)['Outwards'].sum()
-        hist_totals = hist_totals.rename(columns={'Outwards': 'Total_24M_Outwards'}).sort_values('Total_24M_Outwards', ascending=False).reset_index(drop=True)
-        outwards_total = hist_totals['Total_24M_Outwards'].sum()
-        if outwards_total and outwards_total > 0:
-            hist_totals['Cumulative %'] = hist_totals['Total_24M_Outwards'].cumsum() / outwards_total * 100
-            top_n = hist_totals.head(30)
-            fig_pareto = make_subplots(specs=[[{"secondary_y": True}]])
-            fig_pareto.add_trace(go.Bar(x=top_n['SKU'], y=top_n['Total_24M_Outwards'], name='24M Total Outwards', marker_color='#0EA5E9'), secondary_y=False)
-            fig_pareto.add_trace(go.Scatter(x=top_n['SKU'], y=top_n['Cumulative %'], name='Cumulative %', line=dict(color='#F43F5E', width=3)), secondary_y=True)
-            fig_pareto.add_hline(y=80, line_dash="dot", line_color="#991B1B", secondary_y=True, annotation_text="80% threshold")
-            fig_pareto.update_layout(title="Top 30 SKUs — Pareto (24-Month Historical Outwards)", plot_bgcolor='white',
-                                      margin=dict(l=20, r=20, t=40, b=80), xaxis_tickangle=-60)
-            st.plotly_chart(fig_pareto, width='stretch')
-            reached = hist_totals.index[hist_totals['Cumulative %'] >= 80]
-            a_class_count = int(reached[0] + 1) if len(reached) else len(hist_totals)
-            st.caption(f"Approximately {a_class_count:,} of {len(hist_totals):,} SKUs (by 24-month Outwards) reach 80% of cumulative demand.")
-        else:
-            st.info("Total 24-month Outwards is zero for the current filter — Pareto ranking is not meaningful.")
-    elif 'Annual_Demand' in filtered_df.columns and total_skus > 0:
-        st.markdown(f'<div class="section-caption">Based on Annual_Demand — the full tracked period available in the Master Audit. Upload the raw 24-month workbook to base this on true monthly Outwards instead. {source_tag("Master Audit")}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-caption">Based on Annualised Demand from the Master Audit. The current source export does not contain per-SKU monthly history, so this is an aggregate demand-volume Pareto view rather than a reconstructed monthly series. {source_tag("Master Audit")}</div>', unsafe_allow_html=True)
+    if 'Annual_Demand' in filtered_df.columns and total_skus > 0:
         pareto_df = filtered_df[['SKU', 'Annual_Demand']].dropna().sort_values('Annual_Demand', ascending=False).reset_index(drop=True)
         annual_total = pareto_df['Annual_Demand'].sum()
         if len(pareto_df) > 0 and annual_total and annual_total > 0:
@@ -2075,7 +2010,7 @@ with tab4:
             fig_pareto = make_subplots(specs=[[{"secondary_y": True}]])
             fig_pareto.add_trace(go.Bar(x=top_n['SKU'], y=top_n['Annual_Demand'], name='Annualised Demand', marker_color='#0EA5E9'), secondary_y=False)
             fig_pareto.add_trace(go.Scatter(x=top_n['SKU'], y=top_n['Cumulative %'], name='Cumulative %', line=dict(color='#F43F5E', width=3)), secondary_y=True)
-            fig_pareto.add_hline(y=80, line_dash="dot", line_color="#991B1B", secondary_y=True, annotation_text="80% threshold")
+            fig_pareto.add_hline(y=80, line_dash="dot", line_color="#991B1B", secondary_y=True, annotation_text="80% reference threshold")
             fig_pareto.update_layout(title="Top 30 SKUs — Pareto (Annualised Demand, Master Audit)", plot_bgcolor='white',
                                       margin=dict(l=20, r=20, t=40, b=80), xaxis_tickangle=-60)
             st.plotly_chart(fig_pareto, width='stretch')
@@ -2085,7 +2020,7 @@ with tab4:
         else:
             st.info("Annual_Demand is unavailable or zero for the current filter — Pareto ranking is not meaningful.")
     else:
-        st.info("Neither the raw 24-month workbook nor Annual_Demand is available for the primary Pareto view.")
+        st.info("Annual_Demand is not available for the primary Pareto view.")
 
     st.markdown("<hr>", unsafe_allow_html=True)
     st.subheader("🪤 High Inventory Days & Lower Demand Diagnostic")
@@ -2147,8 +2082,8 @@ with tab4:
     with pz1:
         render_status_card("red", "1. High Demand Volume + High Variability", "A-class SKUs combined with Z-class demand variability — "
                             "immediate analytical attention.", action="Review AZ-segment SKUs in Tab 1 ABC–XYZ matrix")
-        render_status_card("amber", "2. High Forecast Error + High Replenishment-Signal Amplification", "Elevated RMSE alongside high Model-Derived Replenishment-Signal Amplification — "
-                            "forecast / replenishment-signal diagnostic review.", action="See Model-Derived Replenishment-Signal Amplification vs. Forecast Error quadrant above")
+        render_status_card("amber", "2. High Forecast Error + High Replenishment-Signal Amplification", "Elevated RMSE alongside high Bullwhip Ratio — Model-Derived Replenishment Signal Amplification — "
+                            "forecast / replenishment-signal diagnostic review.", action="See Bullwhip Ratio vs. Forecast Error quadrant above")
     with pz2:
         render_status_card("amber", "3. High Inventory Days + Low Demand", "SKUs with high model-implied Inventory Days and lower demand — further inventory review.", action="See High Inventory Days & Lower Demand Diagnostic above")
         render_status_card("red", "4. High Business Risk + Lower Service Indicators", "Elevated business risk combined with lower model-implied service/fill-rate indicators — service protection review.", action="Cross-reference with Tab 3 Model-Implied Service Level / Fill Rate")
@@ -2159,23 +2094,26 @@ with tab4:
 with tab5:
     st.markdown('<div class="section-caption">Analytical baseline — Master Audit. Figures below are model-implied financial '
                 'exposure computed from this project\'s inventory policy, not observed accounting balances.</div>', unsafe_allow_html=True)
-    st.subheader("💰 Financial KPIs")
+    st.subheader("💰 Master Audit Financial Measures")
+    st.markdown('<div class="section-caption">Portfolio aggregations of authoritative Master Audit financial fields. The underlying fields remain Master Audit; the portfolio aggregation is Dashboard Derived.</div>', unsafe_allow_html=True)
     fk1, fk2, fk3, fk4 = st.columns(4)
-    render_metric_card(fk1, "Model-Implied Inventory Value", fmt_currency(inv_value_sum), "Portfolio Sum of Master Audit Inventory_Value", extra=source_tag("Dashboard Derived"))
-    render_metric_card(fk2, "Model-Implied Working Capital", fmt_currency(wc_sum), "Portfolio Sum of Master Audit Working_Capital", extra=source_tag("Dashboard Derived"))
+    render_metric_card(fk1, "Model-Implied Inventory Value", fmt_monetary(inv_value_sum), "Portfolio aggregation of Master Audit Inventory_Value", extra=source_tag("Dashboard Derived"))
+    render_metric_card(fk2, "Model-Implied Working Capital", fmt_monetary(wc_sum), "Portfolio aggregation of Master Audit Working_Capital", extra=source_tag("Dashboard Derived"))
     carrying_sum = safe_series(filtered_df, 'Estimated_Carrying_Cost', numeric=True).sum() if 'Estimated_Carrying_Cost' in filtered_df.columns else np.nan
     stockout_sum = safe_series(filtered_df, 'Stockout_Cost', numeric=True).sum() if 'Stockout_Cost' in filtered_df.columns else np.nan
-    render_metric_card(fk3, "Estimated Carrying Cost", fmt_currency(carrying_sum), "Sum of Master Audit Estimated_Carrying_Cost", extra=source_tag("Dashboard Derived"))
-    render_metric_card(fk4, "Estimated Stockout Cost / Exposure", fmt_currency(stockout_sum), "Sum of Master Audit Stockout_Cost", extra=source_tag("Dashboard Derived"))
+    render_metric_card(fk3, "Estimated Carrying Cost", fmt_monetary(carrying_sum), "Portfolio aggregation of Master Audit Estimated_Carrying_Cost", extra=source_tag("Dashboard Derived"))
+    render_metric_card(fk4, "Estimated Stockout Cost / Exposure", fmt_monetary(stockout_sum), "Portfolio aggregation of Master Audit Stockout_Cost", extra=source_tag("Dashboard Derived"))
 
+    st.subheader("📊 Dashboard-Derived Portfolio Indicators")
+    st.markdown('<div class="section-caption">Aggregations or transformations calculated by the dashboard from authoritative Master Audit fields; these are not separate source columns.</div>', unsafe_allow_html=True)
     fk5, fk6, fk7, fk8 = st.columns(4)
     turnover_avg = portfolio_turnover
     days_avg = portfolio_inventory_days
     wc_eff_avg = portfolio_wce
-    render_metric_card(fk5, "Portfolio Inventory Turnover", fmt_num(turnover_avg, 2), "turns / yr", extra=source_tag("Dashboard Derived"))
-    render_metric_card(fk6, "Portfolio Inventory Days", fmt_num(days_avg, 0), "365 ÷ mean(Inventory_Turnover)", extra=source_tag("Dashboard Derived"))
-    render_metric_card(fk7, "Financial Health", fmt_num(fin_health_avg, 0, "%"), "Portfolio Mean of Master Audit KPI_Financial_Health_Score", extra=source_tag("Dashboard Derived"))
-    render_metric_card(fk8, "Working Capital Efficiency", fmt_num(wc_eff_avg, 0, "%"), "Inventory_Turnover ÷ 6 × 100; clipped 0–100", extra=source_tag("Dashboard Derived"))
+    render_metric_card(fk5, "Portfolio Inventory Turnover", fmt_num(turnover_avg, 2), "Mean of Master Audit Inventory_Turnover", extra=source_tag("Dashboard Derived"))
+    render_metric_card(fk6, "Portfolio-Implied Inventory Days", fmt_num(days_avg, 0), "365 ÷ portfolio mean Inventory Turnover", extra=source_tag("Dashboard Derived"))
+    render_metric_card(fk7, "Portfolio Mean Financial Health", fmt_num(fin_health_avg, 0, "%"), "Mean of SKU Financial Health Scores", extra=source_tag("Dashboard Derived"))
+    render_metric_card(fk8, "Portfolio Working Capital Efficiency — Derived", fmt_num(wc_eff_avg, 0, "%"), "Portfolio mean Inventory Turnover ÷ 6 × 100; clipped 0–100", extra=source_tag("Dashboard Derived"))
 
     st.markdown("<hr>", unsafe_allow_html=True)
     tcol1, tcol2 = st.columns(2)
@@ -2185,24 +2123,24 @@ with tab5:
         if len(tree_df) > 0:
             fig_tree = px.treemap(tree_df, path=[px.Constant("Portfolio"), 'ABC_Class', 'SKU'], values='Inventory_Value',
                                    color='ABC_Class', color_discrete_map=ABC_COLOR_MAP)
-            fig_tree.update_layout(margin=dict(l=10, r=10, t=30, b=10))
+            fig_tree.update_layout(title="Inventory Value by ABC Hierarchy", margin=dict(l=10, r=10, t=40, b=10))
             st.plotly_chart(fig_tree, width='stretch')
             st.caption(f"Tile size = Inventory_Value (Master Audit). {source_tag('Master Audit')}", unsafe_allow_html=True)
         else:
             st.info("Inventory_Value and/or ABC_Class not available for the treemap.")
     with tcol2:
-        st.subheader("💧 Financial Composition Waterfall")
-        st.markdown(f'<div class="section-caption">Components aggregated from Master Audit fields; not a hypothetical reduction scenario. {source_tag("Dashboard Derived")}</div>', unsafe_allow_html=True)
+        st.subheader("💰 Financial Composition")
+        st.markdown(f'<div class="section-caption">Portfolio comparison of Master Audit financial components; not a hypothetical reduction scenario. {source_tag("Dashboard Derived")}</div>', unsafe_allow_html=True)
         if not is_missing(inv_value_sum) and not is_missing(carrying_sum) and not is_missing(stockout_sum):
             # Separate model-implied financial components only.
-            fig_wf = go.Figure(go.Bar(
+            fig_components = go.Figure(go.Bar(
                 x=["Model-Implied Inventory Value", "Estimated Carrying Cost", "Estimated Stockout Cost / Exposure"],
                 y=[inv_value_sum, carrying_sum, stockout_sum],
-                text=[fmt_currency(inv_value_sum), fmt_currency(carrying_sum), fmt_currency(stockout_sum)],
+                text=[fmt_monetary(inv_value_sum), fmt_monetary(carrying_sum), fmt_monetary(stockout_sum)],
                 textposition='auto', marker_color=['#1E3A8A', '#F59E0B', '#EF4444']
             ))
-            fig_wf.update_layout(title="Model-Implied Financial Components", plot_bgcolor='white', margin=dict(l=20, r=20, t=40, b=20), yaxis_title="₹")
-            st.plotly_chart(fig_wf, width='stretch')
+            fig_components.update_layout(title="Model-Implied Financial Components", plot_bgcolor='white', margin=dict(l=20, r=20, t=40, b=20), xaxis_title="Financial Measure", yaxis_title="Monetary Units")
+            st.plotly_chart(fig_components, width='stretch')
         else:
             st.info("Inventory_Value, Estimated_Carrying_Cost and Stockout_Cost are all required for this chart.")
 
@@ -2213,7 +2151,7 @@ with tab5:
     st.markdown("<hr>", unsafe_allow_html=True)
     st.markdown(
         '<div class="illustrative-banner">These are the financial dimensions the project enables management to monitor '
-        '(Inventory Value, Working Capital, Carrying Cost, Stockout Exposure, Turnover, Financial Health, Working-Capital '
+        '(Inventory Value, Model-Implied Working Capital, Carrying Cost, Stockout Exposure, Turnover, Financial Health, Portfolio Working Capital Efficiency '
         'Efficiency). <strong>Realised financial impact requires post-deployment measurement and finance validation</strong> — '
         'it is not calculated here.</div>', unsafe_allow_html=True)
 
@@ -2226,9 +2164,9 @@ with tab5:
         illustrative_value_reduction = inv_value_sum * (reduction_pct / 100.0)
         residual_value = inv_value_sum - illustrative_value_reduction
         sc1, sc2, sc3 = st.columns(3)
-        sc1.metric("Current Model-Implied Inventory Value", fmt_currency(inv_value_sum))
-        sc2.metric(f"Illustrative Inventory Value Reduction ({reduction_pct}%)", fmt_currency(illustrative_value_reduction), help="Illustrative Scenario — hypothetical value reduction only.")
-        sc3.metric("Illustrative Residual Inventory Value", fmt_currency(residual_value))
+        sc1.metric("Current Model-Implied Inventory Value", fmt_monetary(inv_value_sum))
+        sc2.metric(f"Illustrative Inventory Value Reduction ({reduction_pct}%)", fmt_monetary(illustrative_value_reduction), help="Illustrative Scenario — hypothetical value reduction only.")
+        sc3.metric("Illustrative Residual Inventory Value", fmt_monetary(residual_value))
         st.caption("Illustrative Scenario: simple linear what-if applied to current Model-Implied Inventory Value. It does not represent cash generation, realised benefits, a model recommendation, service-level impact, or feasibility analysis. " + "Illustrative Scenario")
     else:
         st.info("Inventory_Value not available - cannot build the illustrative scenario.")
@@ -2283,10 +2221,11 @@ with tab5:
         methodology_text += "**Forecasting:** Forecast outputs (Forecast_Next_Month, Accuracy_Pct, MAE, RMSE, Bias, CV, Health_P_Value) are taken directly from the Master Audit. Accuracy_Pct is the project-defined sMAPE-derived accuracy metric, not probabilistic confidence. This dashboard does not re-run, re-fit or retrain any forecasting model; final SKU model selection is based on the lowest validation sMAPE.\n\n"
         methodology_text += "**Validation:** Where per-SKU test-period arrays are present in the source file, an actual-vs-predicted trajectory with an uncertainty band is shown. Where they are not (the case for the current Master Audit export), only the aggregate validation statistics are shown, and this is stated explicitly on-screen.\n\n"
         methodology_text += "**Inventory Optimisation:** Safety Stock, Reorder Point and EOQ are read directly from the Master Audit. No inventory numbers are invented — where an actual/observed on-hand figure isn't available, only the model recommendation is shown. The underlying formula (reverse-engineered from the source notebook and verified against all SKUs — see the Inventory Mathematics QA Report below) is: Safety Stock = 1.645 × RMSE × √(Lead Time ÷ 30); Reorder Point = (Forecast Next Month ÷ 30 × Lead Time) + Safety Stock. **Note:** this is a single-uncertainty-term model driven by forecast error (RMSE); lead time itself is treated as a fixed 7-day constant, not a random variable with its own standard deviation. A fuller two-term formulation (combining separate demand-variance and lead-time-variance terms) is sometimes used as a reference methodology, but it is not what this specific pipeline computes — the dashboard validates against what the model actually implements, not against an assumption of what it should implement.\n\n"
-        methodology_text += "**Segmentation:** ABC — Demand Volume and XYZ — Demand Variability, and their combination, come directly from the Master Audit. ABC is based on cumulative demand volume.\n\n"
-        methodology_text += "**Risk:** RMSE, Model-Derived Replenishment-Signal Amplification, Business Risk and Priority Level come from the Master Audit. Bullwhip_Ratio is interpreted as Model-Derived Replenishment-Signal Amplification relative to the reference level. The amplification-vs-RMSE chart and High Inventory Days & Lower Demand Diagnostic are Dashboard-Derived Review Lenses.\n\n"
-        methodology_text += "**Financial Layer:** Model-Implied Inventory Value, Model-Implied Working Capital, Estimated Carrying Cost and Estimated Stockout Cost are Master Audit fields. The only hypothetical figure on this dashboard is the clearly labelled Illustrative Inventory Value Reduction scenario.\n\n"
-        methodology_text += "**Decision Layer:** Recommendations shown below are the Master Audit's rule-based, model-informed outputs — presented as Decision Support / Decision Intelligence, not as autonomous actions or operational execution."
+        methodology_text += "**Segmentation:** ABC — Demand Volume Classification and XYZ — Demand Variability Classification, and their combination, come directly from the Master Audit. ABC is based on cumulative demand volume.\n\n"
+        methodology_text += "**Presentation Bands:** Forecast Health Score badges use dashboard presentation bands of Excellent (≥80), Good (60–79), Attention (40–59) and Poor (<40). These are display rules, not source-model thresholds.\n\n"
+        methodology_text += "**Risk:** RMSE, Bullwhip Ratio, Business Risk and Priority Level come from the Master Audit. In the diagnostic view, Bullwhip Ratio is interpreted as model-derived replenishment signal amplification relative to the reference level. The Bullwhip Ratio vs. Forecast Error chart and High Inventory Days & Lower Demand Diagnostic are Dashboard-Derived Review Lenses.\n\n"
+        methodology_text += "**Financial Layer:** Inventory_Value, Working_Capital, Estimated_Carrying_Cost and Stockout_Cost are Master Audit fields; dashboard portfolio aggregates of these fields are explicitly labelled Dashboard Derived. The only hypothetical figure on this dashboard is the clearly labelled Illustrative Inventory Value Reduction scenario.\n\n"
+        methodology_text += "**Decision Layer:** Recommendations shown below are the Master Audit's rule-based, model-informed outputs — presented as Decision Support / Decision Intelligence, not as autonomous actions or operational execution. The executive recommendation panel groups flagged SKUs by recommendation frequency; it is not a priority ranking."
         st.markdown(methodology_text)
         if MISSING_AUTHORITATIVE_FIELDS:
             st.markdown(f"""**Field Completeness Check:** {len(MISSING_AUTHORITATIVE_FIELDS)} field(s) expected by this dashboard are
