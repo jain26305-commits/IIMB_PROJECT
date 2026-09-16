@@ -1897,7 +1897,7 @@ with tab3:
         'providing Safety Stock, Reorder Point, EOQ, Model-Implied Inventory Days, Inventory Turnover, Model-Implied Service Level, Model-Implied Fill Rate and Inventory '
         'Health figures above.</div></div>', unsafe_allow_html=True)
     st.markdown(
-        f'<div class="decision-card"><div class="decision-card-title">📊 Model-Implied vs. Actual Inventory '
+        f'<div class="decision-card"><div class="decision-card-title">📊 Model-Implied Inventory Position '
         f'{source_tag("Master Audit")}</div><div class="decision-card-text">'
         f'Model-Implied Inventory Value across the current filter is <strong>{fmt_monetary(inv_value_sum)}</strong> — the analytical '
         f'figure implied by applying this policy to Master Audit fields, not an observed accounting balance. '
