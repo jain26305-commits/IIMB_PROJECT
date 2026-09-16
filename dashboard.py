@@ -42,6 +42,7 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 import ast
 import io
+import re
 import html
 import streamlit as st
 from openpyxl.styles import Font, PatternFill, Alignment
@@ -1121,8 +1122,17 @@ def load_and_clean_data():
         else:
             raise FileNotFoundError("Master Audit workbook not found. Dashboard cannot initialise.")
 
-        # Column-name hygiene only — never value fabrication.
-        df.columns = [str(c).strip() for c in df.columns]
+        # Column-name normalisation only — never value fabrication.
+        # The authoritative workbook uses human-readable headers with spaces
+        # (e.g. 'Forecast Next Month', 'Inventory Value'), while the dashboard's
+        # internal field map intentionally uses canonical underscore names
+        # (e.g. 'Forecast_Next_Month', 'Inventory_Value').
+        # Normalise headers at the ingestion boundary so every source field maps
+        # deterministically without changing any underlying values.
+        df.columns = [
+            re.sub(r"\s+", "_", str(c).strip())
+            for c in df.columns
+        ]
         if 'SKU' not in df.columns:
             raise ValueError("Authoritative source is missing the SKU field.")
         df['SKU'] = df['SKU'].astype(str).str.strip()
