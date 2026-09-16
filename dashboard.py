@@ -15,6 +15,7 @@ warnings.filterwarnings("ignore")
 import sys
 import types
 import os
+from pathlib import Path
 import numpy as np
 
 # --- NumPy 2.0+ compatibility shims (kept from the original build) ---
@@ -80,7 +81,7 @@ if "_sidebar_bootstrap_done" not in st.session_state:
 # st.plotly_chart. It never touches a figure's data, traces, colors, titles,
 # axis ranges, or chart type — it only layers in smoother typography, a
 # gentle entrance transition, and refined hover styling so every one of the
-# 24+ charts in this file benefits automatically without editing each one by
+# 24+ charts in this file benefits consistently without editing each one by
 # hand (and without risking a mismatched font or forgotten polish pass on any
 # single chart). If a figure already sets a given property, that figure's own
 # setting is left alone — this only fills in what isn't already specified.
@@ -150,10 +151,10 @@ MASTER_AUDIT_FIELDS = [
     'Ordering_Cost_Event', 'Demand_Stability_Score', 'Model_Reliability',
     'Expected_Impact', 'KPI_Financial_Health_Score', 'KPI_Working_Capital_Efficiency'
 ]
-# Accuracy_Pct is intentionally not a dashboard metric. Accuracy_Pct is the project-defined
-# sMAPE-derived forecast accuracy field supplied by the Master Audit.
+# Accuracy_Pct is the project-defined sMAPE-derived forecast accuracy field supplied by the Master Audit.
+# A probabilistic confidence measure is not used as a dashboard KPI.
 # Optional array-level fields — NOT present in the Master Audit export as verified.
-# If a sandbox upload happens to include them, richer per-SKU trajectory views unlock automatically.
+# If a sandbox upload happens to include them, richer per-SKU trajectory views unlock consistently.
 OPTIONAL_ARRAY_FIELDS = ['Test_Actuals', 'Test_Predictions', 'Test_Lower_Bound', 'Test_Upper_Bound']
 # A few plausible alternate names for an observed/actual inventory position, checked defensively
 # in the Sandbox upload path only — never fabricated if absent.
@@ -176,6 +177,15 @@ def safe_series(df, col, numeric=False, default=np.nan):
         s = df[col]
         return pd.to_numeric(s, errors='coerce') if numeric else s
     return pd.Series([default] * len(df), index=df.index if df is not None else None)
+
+def safe_sum(series):
+    """Sum while preserving all-missing/empty states as N/A instead of manufacturing zero."""
+    if series is None:
+        return np.nan
+    s = pd.to_numeric(series, errors='coerce')
+    if s.notna().sum() == 0:
+        return np.nan
+    return float(s.sum(min_count=1))
 
 def safe_val(row, col, default=None):
     try:
@@ -233,7 +243,8 @@ def deterministic_high_risk_sort(df):
     work = df.copy()
     keys=[]; asc=[]
     if 'Priority_Level' in work.columns:
-        work['_priority'] = work['Priority_Level'].astype(str).str.strip().map({'High':0,'Medium':1,'Low':2}).fillna(99)
+        work['_priority'] = (work['Priority_Level'].astype(str).str.strip().str.lower()
+                             .map({'high': 0, 'medium': 1, 'low': 2}).fillna(99))
         keys.append('_priority'); asc.append(True)
     if 'RMSE' in work.columns:
         work['_rmse'] = pd.to_numeric(work['RMSE'], errors='coerce')
@@ -284,7 +295,7 @@ def score_to_status(score, thresholds=(80, 60, 40)):
     if score >= lo: return "attention"
     return "poor"
 
-def render_metric_card(container, title, value, subtitle="", variant="ribbon", pulse=False, extra=""):
+def render_metric_card(container, title, value, subtitle="", *, variant="ribbon", pulse=False, extra=""):
     # Flattened to a single unindented line (Data Integrity Fix, Sept 2026):
     # any HTML string with 4+ leading spaces per line risks being parsed as a
     # markdown code fence — see the note on render_square_metric below for the
@@ -360,9 +371,12 @@ def independent_ss_rop(row):
     fc = safe_val(row, 'Forecast_Next_Month')
     status = str(safe_val(row, 'Status', ''))
     if 'Dead Stock' in status or 'Constant Demand' in status:
-        # Zero demand variance -> zero buffer is the CORRECT answer by the model's own design.
-        ltd = safe_val(row, 'Mean_Monthly_Demand', 0.0) or 0.0
-        ltd = (ltd / 30.0) * LEAD_TIME_DAYS
+        # Zero demand variance -> zero buffer is the model's design. The
+        # replenishment quantity still requires a real mean-demand input.
+        mean_m = safe_val(row, 'Mean_Monthly_Demand')
+        if is_missing(mean_m):
+            return {'ss': 0.0, 'rop': None, 'basis': 'Zero-variance guard; Mean_Monthly_Demand missing'}
+        ltd = (float(mean_m) / 30.0) * LEAD_TIME_DAYS
         return {'ss': 0.0, 'rop': round(ltd, 0), 'basis': 'Zero-variance guard (design-correct zero)'}
     if is_missing(rmse) or is_missing(fc):
         return {'ss': None, 'rop': None, 'basis': 'Insufficient inputs (RMSE/Forecast missing)'}
@@ -1116,8 +1130,9 @@ def load_and_clean_data(file_bytes, file_name):
                 df = pd.read_excel(io.BytesIO(file_bytes))
             data_source_label = f"Sandbox Upload ({file_name})"
         else:
-            if os.path.exists("Enterprise_Supply_Chain_Master_Audit.xlsx"):
-                df = pd.read_excel("Enterprise_Supply_Chain_Master_Audit.xlsx", sheet_name="Executive_Summary")
+            master_path = Path(__file__).resolve().parent / "Enterprise_Supply_Chain_Master_Audit.xlsx"
+            if master_path.exists():
+                df = pd.read_excel(master_path, sheet_name="Executive_Summary")
             elif os.getenv("AURIX_DASHBOARD_DEMO_MODE", "0") == "1":
                 # Explicit developer/demo switch only. Never silently used in production.
                 df = pd.DataFrame({'SKU': ['DEMO_SKU_001'], 'ABC_Class': ['A'], 'XYZ_Class': ['X'], 'ABC_XYZ_Class': ['AX']})
@@ -1289,27 +1304,23 @@ else:
     forecast_health_avg = np.nan
     forecast_health_source = None
 
-if total_skus > 0 and not is_missing(avg_rmse):
-    share_below_rmse = float((rmse_series <= avg_rmse).sum()) / total_skus * 100
-else:
-    share_below_rmse = np.nan
-
 avg_accuracy = accuracy_series.mean() if 'Accuracy_Pct' in filtered_df.columns else np.nan
 
 if 'Forecast_Risk' in filtered_df.columns:
     high_risk_count = int((filtered_df['Forecast_Risk'].astype(str).str.strip().str.lower() == 'high').sum())
     high_risk_source = "Master Audit"
 else:
-    high_risk_mask = ((bullwhip_series > 2) | (cv_series > 1)) & (rmse_series > avg_rmse)
-    high_risk_count = int(high_risk_mask.fillna(False).sum())
-    high_risk_source = "Dashboard Derived"
+    # Forecast_Risk is an authoritative source field; do not invent a substitute
+    # classification when it is absent.
+    high_risk_count = np.nan
+    high_risk_source = None
 
-inv_value_sum = inv_value_series.sum() if 'Inventory_Value' in filtered_df.columns else np.nan
-wc_sum = wc_series.sum() if 'Working_Capital' in filtered_df.columns else np.nan
+inv_value_sum = safe_sum(inv_value_series) if 'Inventory_Value' in filtered_df.columns else np.nan
+wc_sum = safe_sum(wc_series) if 'Working_Capital' in filtered_df.columns else np.nan
 fin_health_avg = fin_health_series.mean() if 'KPI_Financial_Health_Score' in filtered_df.columns else np.nan
 inv_health_avg = inv_health_series.mean() if 'Inventory_Health_Score' in filtered_df.columns else np.nan
 
-# Overall qualitative status banner (Dashboard Derived — combines several authoritative signals)
+# Overall qualitative status banner (Dashboard-Derived Portfolio Status — combines authoritative signals)
 status_points = 0
 status_total = 0
 for val, good_thresh, reverse in [(forecast_health_avg, 70, False), (avg_accuracy, 70, False),
@@ -1320,7 +1331,8 @@ for val, good_thresh, reverse in [(forecast_health_avg, 70, False), (avg_accurac
             status_points += 1
 if status_total > 0:
     overall_ratio = status_points / status_total
-    if high_risk_count == 0 and overall_ratio >= 0.75:
+    high_risk_zero_known = (not is_missing(high_risk_count) and high_risk_count == 0)
+    if high_risk_zero_known and overall_ratio >= 0.75:
         overall_status, overall_status_key = "Stable & Healthy", "excellent"
     elif overall_ratio >= 0.5:
         overall_status, overall_status_key = "Needs Attention", "good"
@@ -1335,7 +1347,7 @@ else:
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "🏠 Executive Control Tower",
     "📈 Demand & Forecast Intelligence",
-    "📦 Inventory Optimization",
+    "📦 Inventory Optimisation",
     "⚠️ Risk, Segmentation & Diagnostics",
     "💰 Financial Impact, Methodology & Audit",
 ])
@@ -1364,18 +1376,19 @@ with tab1:
 
     if forecast_health_source:
         fh_status = score_to_status(forecast_health_avg)
-        render_metric_card(r1c2, "Forecast Health Score", fmt_num(forecast_health_avg, 0, "%"), "Mean of Master Audit Forecast_Health_Score", badge_html(fh_status, fh_status.title()), extra=source_tag("Dashboard Derived"))
+        fh_badge = badge_html(fh_status, fh_status.title())
+        fh_subtitle = f"Portfolio mean • Master Audit Forecast_Health_Score {fh_badge}"
     else:
-        sb_status = score_to_status(share_below_rmse)
-        render_metric_card(r1c2, "Share of SKUs Below Portfolio RMSE", fmt_num(share_below_rmse, 0, "%"), badge_html(sb_status, sb_status.title()), extra=source_tag("Dashboard Derived"))
+        fh_subtitle = "Forecast_Health_Score unavailable in current source"
+    render_metric_card(r1c2, "Forecast Health Score", fmt_num(forecast_health_avg, 0, "%"), fh_subtitle, extra=source_tag("Dashboard Derived"))
 
-    render_metric_card(r1c3, "Forecast Accuracy", fmt_num(avg_accuracy, 1, "%") if not is_missing(avg_accuracy) else "N/A", "Portfolio Average", extra=source_tag("Dashboard Derived"))
-    render_metric_card(r1c4, "High-Risk SKUs", f"{high_risk_count:,}", "Filtered count of Master Audit Forecast_Risk", variant="ribbon", pulse=(high_risk_count > 0), extra=source_tag("Dashboard Derived"))
+    render_metric_card(r1c3, "Forecast Accuracy", fmt_num(avg_accuracy, 1, "%") if not is_missing(avg_accuracy) else "N/A", "Portfolio mean • Master Audit Accuracy_Pct", extra=source_tag("Dashboard Derived"))
+    render_metric_card(r1c4, "High-Risk SKUs", fmt_int(high_risk_count), "High Forecast_Risk count • Master Audit", variant="ribbon", pulse=(not is_missing(high_risk_count) and high_risk_count > 0), extra=source_tag("Dashboard Derived"))
 
     r2c1, r2c2, r2c3 = st.columns(3)
-    render_metric_card(r2c1, "Model-Implied Inventory Value", fmt_currency(inv_value_sum), "Sum of Master Audit Inventory_Value", extra=source_tag("Dashboard Derived"))
-    render_metric_card(r2c2, "Model-Implied Working Capital", fmt_currency(wc_sum), "Sum of Master Audit Working_Capital", extra=source_tag("Dashboard Derived"))
-    render_metric_card(r2c3, "Financial Health Score", fmt_num(fin_health_avg, 0, "%") if not is_missing(fin_health_avg) else "N/A", "Mean of Master Audit KPI_Financial_Health_Score", extra=source_tag("Dashboard Derived"))
+    render_metric_card(r2c1, "Model-Implied Inventory Value", fmt_currency(inv_value_sum), "Portfolio sum • Master Audit Inventory_Value", extra=source_tag("Dashboard Derived"))
+    render_metric_card(r2c2, "Model-Implied Working Capital", fmt_currency(wc_sum), "Portfolio sum • Master Audit Working_Capital", extra=source_tag("Dashboard Derived"))
+    render_metric_card(r2c3, "Financial Health Score", fmt_num(fin_health_avg, 0, "%") if not is_missing(fin_health_avg) else "N/A", "Portfolio mean • Master Audit KPI_Financial_Health_Score", extra=source_tag("Dashboard Derived"))
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("<hr>", unsafe_allow_html=True)
@@ -1410,8 +1423,8 @@ with tab1:
     st.subheader("🧩 ABC–XYZ Segmentation Matrix")
     st.markdown('<div class="section-caption">Count of SKUs by combined ABC — Demand Volume × XYZ — Demand Variability classification.</div>', unsafe_allow_html=True)
     if HAS_ABC_XYZ and total_skus > 0:
-        abc_order = ['A', 'B', 'C']
-        xyz_order = ['X', 'Y', 'Z']
+        abc_order = ABC_ORDER
+        xyz_order = XYZ_ORDER
         # Vectorized rebuild of the same ABC x XYZ count matrix (Performance Fix,
         # Sept 2026): the original per-row Python loop over the full filtered
         # dataset ran on every script rerun; this produces an identical matrix
@@ -1459,7 +1472,9 @@ with tab1:
         attn_df = filtered_df[attn_mask][attn_cols].copy()
         if 'Inventory_Value' in filtered_df.columns:
             attn_df = attn_df.join(filtered_df.loc[attn_mask, 'Inventory_Value'])
-            attn_df = attn_df.sort_values('Inventory_Value', ascending=False)
+            attn_df = attn_df.sort_values(['Inventory_Value', 'SKU'], ascending=[False, True], kind='mergesort', na_position='last')
+        else:
+            attn_df = deterministic_high_risk_sort(attn_df)
         st.dataframe(attn_df.head(25), width='stretch', hide_index=True)
         st.caption(f"{len(attn_df):,} SKU(s) flagged as High Risk or High Priority in the current filter. Showing top 25 by Inventory Value.")
     else:
@@ -1759,8 +1774,14 @@ with tab2:
     st.markdown(f'<div class="section-caption">Substitutes the original 24-month heatmap, which required a monthly historical series not present in this Master Audit export. {source_tag("Dashboard Derived")}</div>', unsafe_allow_html=True)
     if 'ABC_Class' in filtered_df.columns and 'Forecast_Risk' in filtered_df.columns and total_skus > 0:
         risk_matrix = pd.crosstab(filtered_df['ABC_Class'], filtered_df['Forecast_Risk'])
+        risk_matrix.index = pd.Categorical(risk_matrix.index, categories=ABC_ORDER, ordered=True)
+        risk_matrix = risk_matrix.sort_index().dropna(how='all')
+        risk_cols = sorted([str(c) for c in risk_matrix.columns], key=lambda x: x.lower())
+        risk_matrix = risk_matrix.reindex(columns=risk_cols, fill_value=0)
         fig_riskhm = px.imshow(risk_matrix, text_auto=True, color_continuous_scale=[[0, '#F1F5F9'], [1, '#991B1B']],
-                                labels=dict(x="Forecast Risk", y="ABC Class", color="SKU Count"))
+                                labels=dict(x="Forecast Risk", y="ABC — Demand Volume", color="SKU Count"))
+        fig_riskhm.update_xaxes(categoryorder='array', categoryarray=risk_cols)
+        fig_riskhm.update_yaxes(categoryorder='array', categoryarray=ABC_ORDER)
         fig_riskhm.update_layout(margin=dict(l=10, r=10, t=20, b=10))
         st.plotly_chart(fig_riskhm, width='stretch')
     else:
@@ -1785,7 +1806,7 @@ with tab2:
         f'versus any prior forecasting process.</div></div>', unsafe_allow_html=True)
 
 # ==============================================================================
-# TAB 3 — INVENTORY OPTIMIZATION
+# TAB 3 — INVENTORY OPTIMISATION
 # Translate forecasts into inventory decisions for a selected SKU, plus a
 # portfolio-level replenishment view.
 # ==============================================================================
@@ -1994,7 +2015,7 @@ with tab4:
     st.subheader("🧩 ABC–XYZ Risk Intensity Matrix")
     st.markdown(f'<div class="section-caption">Average RMSE per ABC × XYZ cell — a different lens on the same segmentation shown in Tab 1 (which shows SKU counts). {source_tag("Dashboard Derived")}</div>', unsafe_allow_html=True)
     if HAS_ABC_XYZ and 'RMSE' in filtered_df.columns and total_skus > 0:
-        abc_order = ['A', 'B', 'C']; xyz_order = ['X', 'Y', 'Z']
+        abc_order = ABC_ORDER; xyz_order = XYZ_ORDER
         risk_intensity = pd.DataFrame(np.nan, index=abc_order, columns=xyz_order)
         tmp = filtered_df.copy()
         tmp['_A'] = tmp['ABC_XYZ_Class'].astype(str).str[0]
@@ -2076,7 +2097,11 @@ with tab4:
         trap_mask = (inventory_days_series >= days_q75) & (mean_monthly_series <= demand_q25)
         trap_cols = [c for c in ['SKU', 'ABC_XYZ_Class', 'Mean_Monthly_Demand', 'Inventory_Days', 'Inventory_Value',
                                   'Forecast_Risk', 'Inventory_Recommendation'] if c in filtered_df.columns]
-        trap_df = filtered_df[trap_mask][trap_cols].sort_values('Inventory_Value', ascending=False) if 'Inventory_Value' in trap_cols else filtered_df[trap_mask][trap_cols]
+        trap_df = filtered_df[trap_mask][trap_cols].copy()
+        if len(trap_df) > 0:
+            sort_cols = [c for c in ['Inventory_Value', 'Inventory_Days', 'Mean_Monthly_Demand', 'SKU'] if c in trap_df.columns]
+            ascending = [False, False, True, True][:len(sort_cols)]
+            trap_df = trap_df.sort_values(sort_cols, ascending=ascending, kind='mergesort', na_position='last')
         st.dataframe(trap_df, width='stretch', hide_index=True)
         st.caption(f"{len(trap_df):,} SKU(s) flagged as dashboard-derived candidates for inventory review — requires validation. "
                    f"These are dashboard-derived candidates for review, not confirmed excess inventory.")
@@ -2088,18 +2113,20 @@ with tab4:
     br1, br2 = st.columns(2)
     with br1:
         if 'Business Risk' in filtered_df.columns and total_skus > 0:
-            br_counts = filtered_df['Business Risk'].value_counts().reset_index()
-            br_counts.columns = ['Business Risk', 'Count']
-            fig_br = px.bar(br_counts, x='Business Risk', y='Count', color='Business Risk', title="Business Risk Categories")
+            br_order = ["Elevated Variability / Stockout Risk", "Moderate Variance", "Low Obsolescence"]
+            br_counts = filtered_df['Business Risk'].value_counts().reindex(br_order, fill_value=0).rename_axis('Business Risk').reset_index(name='Count')
+            fig_br = px.bar(br_counts, x='Business Risk', y='Count', color='Business Risk',
+                            category_orders={'Business Risk': br_order}, title="Business Risk Categories")
             fig_br.update_layout(plot_bgcolor='white', showlegend=False, margin=dict(l=20, r=20, t=40, b=20))
             st.plotly_chart(fig_br, width='stretch')
         else:
             st.info("Business Risk field not available.")
     with br2:
         if 'Supply Chain Priority' in filtered_df.columns and total_skus > 0:
-            sp_counts = filtered_df['Supply Chain Priority'].value_counts().reset_index()
-            sp_counts.columns = ['Supply Chain Priority', 'Count']
-            fig_sp = px.bar(sp_counts, x='Supply Chain Priority', y='Count', color='Supply Chain Priority', title="Supply Chain Priority Categories")
+            sp_order = ["High", "Medium", "Standard"]
+            sp_counts = filtered_df['Supply Chain Priority'].value_counts().reindex(sp_order, fill_value=0).rename_axis('Supply Chain Priority').reset_index(name='Count')
+            fig_sp = px.bar(sp_counts, x='Supply Chain Priority', y='Count', color='Supply Chain Priority',
+                            category_orders={'Supply Chain Priority': sp_order}, title="Supply Chain Priority Categories")
             fig_sp.update_layout(plot_bgcolor='white', showlegend=False, margin=dict(l=20, r=20, t=40, b=20))
             st.plotly_chart(fig_sp, width='stretch')
         else:
@@ -2134,8 +2161,8 @@ with tab5:
                 'exposure computed from this project\'s inventory policy, not observed accounting balances.</div>', unsafe_allow_html=True)
     st.subheader("💰 Financial KPIs")
     fk1, fk2, fk3, fk4 = st.columns(4)
-    render_metric_card(fk1, "Model-Implied Inventory Value", fmt_currency(inv_value_sum), "Portfolio Sum", extra=source_tag("Master Audit"))
-    render_metric_card(fk2, "Model-Implied Working Capital", fmt_currency(wc_sum), "Portfolio Sum", extra=source_tag("Master Audit"))
+    render_metric_card(fk1, "Model-Implied Inventory Value", fmt_currency(inv_value_sum), "Portfolio Sum of Master Audit Inventory_Value", extra=source_tag("Dashboard Derived"))
+    render_metric_card(fk2, "Model-Implied Working Capital", fmt_currency(wc_sum), "Portfolio Sum of Master Audit Working_Capital", extra=source_tag("Dashboard Derived"))
     carrying_sum = safe_series(filtered_df, 'Estimated_Carrying_Cost', numeric=True).sum() if 'Estimated_Carrying_Cost' in filtered_df.columns else np.nan
     stockout_sum = safe_series(filtered_df, 'Stockout_Cost', numeric=True).sum() if 'Stockout_Cost' in filtered_df.columns else np.nan
     render_metric_card(fk3, "Estimated Carrying Cost", fmt_currency(carrying_sum), "Sum of Master Audit Estimated_Carrying_Cost", extra=source_tag("Dashboard Derived"))
@@ -2147,7 +2174,7 @@ with tab5:
     wc_eff_avg = portfolio_wce
     render_metric_card(fk5, "Portfolio Inventory Turnover", fmt_num(turnover_avg, 2), "turns / yr", extra=source_tag("Dashboard Derived"))
     render_metric_card(fk6, "Portfolio Inventory Days", fmt_num(days_avg, 0), "365 ÷ mean(Inventory_Turnover)", extra=source_tag("Dashboard Derived"))
-    render_metric_card(fk7, "Financial Health", fmt_num(fin_health_avg, 0, "%"), "Portfolio Average", extra=source_tag("Master Audit"))
+    render_metric_card(fk7, "Financial Health", fmt_num(fin_health_avg, 0, "%"), "Portfolio Mean of Master Audit KPI_Financial_Health_Score", extra=source_tag("Dashboard Derived"))
     render_metric_card(fk8, "Working Capital Efficiency", fmt_num(wc_eff_avg, 0, "%"), "Inventory_Turnover ÷ 6 × 100; clipped 0–100", extra=source_tag("Dashboard Derived"))
 
     st.markdown("<hr>", unsafe_allow_html=True)
@@ -2157,7 +2184,7 @@ with tab5:
         tree_df = filtered_df[['ABC_Class', 'SKU', 'Inventory_Value']].dropna() if ('Inventory_Value' in filtered_df.columns and 'ABC_Class' in filtered_df.columns) else pd.DataFrame()
         if len(tree_df) > 0:
             fig_tree = px.treemap(tree_df, path=[px.Constant("Portfolio"), 'ABC_Class', 'SKU'], values='Inventory_Value',
-                                   color='ABC_Class', color_discrete_map={'A': '#1E3A8A', 'B': '#0EA5E9', 'C': '#94A3B8', '(?)': '#E2E8F0'})
+                                   color='ABC_Class', color_discrete_map=ABC_COLOR_MAP)
             fig_tree.update_layout(margin=dict(l=10, r=10, t=30, b=10))
             st.plotly_chart(fig_tree, width='stretch')
             st.caption(f"Tile size = Inventory_Value (Master Audit). {source_tag('Master Audit')}", unsafe_allow_html=True)
@@ -2167,9 +2194,9 @@ with tab5:
         st.subheader("💧 Financial Composition Waterfall")
         st.markdown(f'<div class="section-caption">Components aggregated from Master Audit fields; not a hypothetical reduction scenario. {source_tag("Dashboard Derived")}</div>', unsafe_allow_html=True)
         if not is_missing(inv_value_sum) and not is_missing(carrying_sum) and not is_missing(stockout_sum):
-            # Separate model-implied components; do not present a model-implied financial components.
+            # Separate model-implied financial components only.
             fig_wf = go.Figure(go.Bar(
-                x=["Inventory Value", "Estimated Carrying Cost", "Estimated Stockout Cost / Exposure"],
+                x=["Model-Implied Inventory Value", "Estimated Carrying Cost", "Estimated Stockout Cost / Exposure"],
                 y=[inv_value_sum, carrying_sum, stockout_sum],
                 text=[fmt_currency(inv_value_sum), fmt_currency(carrying_sum), fmt_currency(stockout_sum)],
                 textposition='auto', marker_color=['#1E3A8A', '#F59E0B', '#EF4444']
@@ -2202,7 +2229,7 @@ with tab5:
         sc1.metric("Current Model-Implied Inventory Value", fmt_currency(inv_value_sum))
         sc2.metric(f"Illustrative Inventory Value Reduction ({reduction_pct}%)", fmt_currency(illustrative_value_reduction), help="Illustrative Scenario — hypothetical value reduction only.")
         sc3.metric("Illustrative Residual Inventory Value", fmt_currency(residual_value))
-        st.caption("Illustrative Scenario: simple linear what-if applied to current Model-Implied Inventory Value. It does not represent released cash, realised savings, a model recommendation, service-level impact, or feasibility analysis. " + "Illustrative Scenario")
+        st.caption("Illustrative Scenario: simple linear what-if applied to current Model-Implied Inventory Value. It does not represent cash generation, realised benefits, a model recommendation, service-level impact, or feasibility analysis. " + "Illustrative Scenario")
     else:
         st.info("Inventory_Value not available - cannot build the illustrative scenario.")
 
@@ -2231,11 +2258,11 @@ with tab5:
         ("Demand Forecast", "Statistical models project next-period demand per SKU.", "Feeds procurement and production planning."),
         ("Procurement", "Purchase orders sized using EOQ and Reorder Point logic.", "Determines supplier order cadence."),
         ("Production", "Make-to-order / buffer policies may be considered where supplier reliability, lead time, commercial requirements and service considerations support them.", "Aligns output with validated forecast and inventory signals."),
-        ("Warehouse", "Safety stock and slotting decisions based on ABC-XYZ class.", "Drives storage and pick-face prioritization."),
+        ("Warehouse", "Safety stock and slotting decisions based on ABC-XYZ class.", "Drives storage and pick-face prioritisation."),
         ("Transportation", "Replenishment lead time assumptions feed safety-stock sizing.", "Impacts service-level attainment."),
         ("Customer Service", "Fill Rate and Service Level tracked against demand.", "Surfaces stockout risk early."),
         ("Finance", "Model-Implied Inventory Value, Model-Implied Working Capital and Estimated Carrying Cost quantified.", "Anchors the financial impact story."),
-        ("Executive Decisions", "Recommendations synthesized into prioritized actions.", "Closes the loop back to forecasting."),
+        ("Executive Decisions", "Recommendations synthesized into prioritised actions.", "Closes the loop back to forecasting."),
     ]
     cards_html = '<div class="matrix-grid-container">'
     for i in range(len(stage_details)):
@@ -2255,7 +2282,7 @@ with tab5:
         methodology_text = "**Data:** Master Audit export (Enterprise_Supply_Chain_Master_Audit.xlsx, Executive_Summary sheet), " + f"{len(df):,}" + " SKUs. Methodology uses 24 calendar months, 1,401 true SKUs, Grand Total excluded, missing Outwards = 0 and negative Outwards retained. Annualised Demand = full-period mean monthly demand × 12; it is not necessarily trailing-12-month actual demand. Month-level historical raw data was not part of this export, so demand statistics here are either per-SKU aggregates or portfolio-level distributions of those aggregates.\n\n"
         methodology_text += "**Forecasting:** Forecast outputs (Forecast_Next_Month, Accuracy_Pct, MAE, RMSE, Bias, CV, Health_P_Value) are taken directly from the Master Audit. Accuracy_Pct is the project-defined sMAPE-derived accuracy metric, not probabilistic confidence. This dashboard does not re-run, re-fit or retrain any forecasting model; final SKU model selection is based on the lowest validation sMAPE.\n\n"
         methodology_text += "**Validation:** Where per-SKU test-period arrays are present in the source file, an actual-vs-predicted trajectory with an uncertainty band is shown. Where they are not (the case for the current Master Audit export), only the aggregate validation statistics are shown, and this is stated explicitly on-screen.\n\n"
-        methodology_text += "**Inventory Optimization:** Safety Stock, Reorder Point and EOQ are read directly from the Master Audit. No inventory numbers are invented — where an actual/observed on-hand figure isn't available, only the model recommendation is shown. The underlying formula (reverse-engineered from the source notebook and verified against all SKUs — see the Inventory Mathematics QA Report below) is: Safety Stock = 1.645 × RMSE × √(Lead Time ÷ 30); Reorder Point = (Forecast Next Month ÷ 30 × Lead Time) + Safety Stock. **Note:** this is a single-uncertainty-term model driven by forecast error (RMSE); lead time itself is treated as a fixed 7-day constant, not a random variable with its own standard deviation. A fuller two-term formulation (combining separate demand-variance and lead-time-variance terms) is sometimes used as a reference methodology, but it is not what this specific pipeline computes — the dashboard validates against what the model actually implements, not against an assumption of what it should implement.\n\n"
+        methodology_text += "**Inventory Optimisation:** Safety Stock, Reorder Point and EOQ are read directly from the Master Audit. No inventory numbers are invented — where an actual/observed on-hand figure isn't available, only the model recommendation is shown. The underlying formula (reverse-engineered from the source notebook and verified against all SKUs — see the Inventory Mathematics QA Report below) is: Safety Stock = 1.645 × RMSE × √(Lead Time ÷ 30); Reorder Point = (Forecast Next Month ÷ 30 × Lead Time) + Safety Stock. **Note:** this is a single-uncertainty-term model driven by forecast error (RMSE); lead time itself is treated as a fixed 7-day constant, not a random variable with its own standard deviation. A fuller two-term formulation (combining separate demand-variance and lead-time-variance terms) is sometimes used as a reference methodology, but it is not what this specific pipeline computes — the dashboard validates against what the model actually implements, not against an assumption of what it should implement.\n\n"
         methodology_text += "**Segmentation:** ABC — Demand Volume and XYZ — Demand Variability, and their combination, come directly from the Master Audit. ABC is based on cumulative demand volume.\n\n"
         methodology_text += "**Risk:** RMSE, Model-Derived Replenishment-Signal Amplification, Business Risk and Priority Level come from the Master Audit. Bullwhip_Ratio is interpreted as Model-Derived Replenishment-Signal Amplification relative to the reference level. The amplification-vs-RMSE chart and High Inventory Days & Lower Demand Diagnostic are Dashboard-Derived Review Lenses.\n\n"
         methodology_text += "**Financial Layer:** Model-Implied Inventory Value, Model-Implied Working Capital, Estimated Carrying Cost and Estimated Stockout Cost are Master Audit fields. The only hypothetical figure on this dashboard is the clearly labelled Illustrative Inventory Value Reduction scenario.\n\n"
