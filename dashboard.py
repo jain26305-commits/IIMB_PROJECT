@@ -150,7 +150,7 @@ MASTER_AUDIT_FIELDS = [
     'Ordering_Cost_Event', 'Demand_Stability_Score', 'Model_Reliability',
     'Expected_Impact', 'KPI_Financial_Health_Score', 'KPI_Working_Capital_Efficiency'
 ]
-# Forecast_Confidence is intentionally not a dashboard metric. Accuracy_Pct is the project-defined
+# Accuracy_Pct is intentionally not a dashboard metric. Accuracy_Pct is the project-defined
 # sMAPE-derived forecast accuracy field supplied by the Master Audit.
 # Optional array-level fields — NOT present in the Master Audit export as verified.
 # If a sandbox upload happens to include them, richer per-SKU trajectory views unlock automatically.
@@ -1282,7 +1282,12 @@ portfolio_turnover = turnover_series.mean() if total_skus > 0 and 'Inventory_Tur
 portfolio_inventory_days = 365.0 / portfolio_turnover if not is_missing(portfolio_turnover) and portfolio_turnover > 0 else np.nan
 portfolio_wce = float(np.clip(portfolio_turnover / 6.0 * 100.0, 0, 100)) if not is_missing(portfolio_turnover) else np.nan
 
-forecast_health_source = "Master Audit" if 'Forecast_Health_Score' in filtered_df.columns else None
+if 'Forecast_Health_Score' in filtered_df.columns:
+    forecast_health_avg = fhs_series.mean()
+    forecast_health_source = "Master Audit"
+else:
+    forecast_health_avg = np.nan
+    forecast_health_source = None
 
 if total_skus > 0 and not is_missing(avg_rmse):
     share_below_rmse = float((rmse_series <= avg_rmse).sum()) / total_skus * 100
