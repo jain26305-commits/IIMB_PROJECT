@@ -1271,6 +1271,327 @@ st.markdown("""
         .stButton > button::after, .stDownloadButton > button::after { display: none !important; }
         .square-metric:hover .square-metric-value { transform: none !important; }
     }
+
+    /* ===================== FINAL LAYOUT + ULTRA CLAYMORPHISM ===================== */
+    div[data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        align-items: stretch !important;
+        gap: 1.15rem !important;
+    }
+    div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+        flex: 1 1 0 !important;
+        flex-basis: 0 !important;
+        width: 0 !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: visible !important;
+    }
+    div[data-testid="column"] > div[data-testid="stVerticalBlock"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        flex-direction: column !important;
+        flex: 1 1 auto !important;
+    }
+
+    /* Uniform native controls across every tab */
+    .stButton, .stDownloadButton,
+    div[data-testid="stButton"], div[data-testid="stDownloadButton"] {
+        width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+    }
+    .stButton > button, .stDownloadButton > button,
+    div[data-testid="stButton"] > button, div[data-testid="stDownloadButton"] > button {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 52px !important;
+        min-height: 52px !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        padding: 0 1.15rem !important;
+        margin: 0 !important;
+        border: 1px solid rgba(255,255,255,0.72) !important;
+        border-radius: 18px !important;
+        background:
+            radial-gradient(circle at 25% 18%, rgba(255,255,255,0.95) 0 12%, transparent 42%),
+            linear-gradient(145deg, #38BDF8 0%, #0EA5E9 55%, #1E3A8A 100%) !important;
+        color: #FFFFFF !important;
+        font-weight: 850 !important;
+        letter-spacing: 0.35px !important;
+        line-height: 1 !important;
+        box-shadow:
+            11px 13px 26px rgba(30,58,138,0.22),
+            -8px -8px 19px rgba(255,255,255,0.98),
+            inset 2px 2px 5px rgba(255,255,255,0.44),
+            inset -4px -4px 9px rgba(15,23,42,0.22),
+            inset 0 0 0 1px rgba(255,255,255,0.18) !important;
+        transition:
+            transform 0.2s cubic-bezier(0.175,0.885,0.32,1.275),
+            box-shadow 0.2s ease,
+            filter 0.2s ease !important;
+        position: relative !important;
+        overflow: hidden !important;
+    }
+    .stButton > button::before, .stDownloadButton > button::before,
+    div[data-testid="stButton"] > button::before, div[data-testid="stDownloadButton"] > button::before {
+        content: "";
+        position: absolute;
+        inset: 1px 1px auto 1px;
+        height: 45%;
+        border-radius: 17px 17px 50% 50%;
+        background: linear-gradient(180deg, rgba(255,255,255,0.34), transparent);
+        pointer-events: none;
+    }
+    .stButton > button:hover, .stDownloadButton > button:hover,
+    div[data-testid="stButton"] > button:hover, div[data-testid="stDownloadButton"] > button:hover {
+        transform: translateY(-3px) scale(1.008) !important;
+        filter: saturate(1.08) brightness(1.035) !important;
+        box-shadow:
+            13px 16px 31px rgba(30,58,138,0.26),
+            -9px -9px 21px rgba(255,255,255,1),
+            inset 2px 2px 6px rgba(255,255,255,0.5),
+            inset -5px -5px 11px rgba(15,23,42,0.25),
+            0 0 0 1px rgba(14,165,233,0.08) !important;
+    }
+    .stButton > button:active, .stDownloadButton > button:active,
+    div[data-testid="stButton"] > button:active, div[data-testid="stDownloadButton"] > button:active {
+        transform: translateY(1px) scale(0.985) !important;
+        box-shadow:
+            inset 5px 6px 11px rgba(15,23,42,0.22),
+            inset -4px -4px 9px rgba(255,255,255,0.46) !important;
+    }
+
+    /* Perfectly uniform KPI cards: same height, same internal rhythm, same baseline */
+    div[data-testid="column"] .metric-card,
+    .metric-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        height: 230px !important;
+        min-height: 230px !important;
+        max-height: 230px !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
+        padding: 1.25rem 1.35rem 1.15rem !important;
+        border-radius: 26px !important;
+        background:
+            radial-gradient(circle at 18% 10%, rgba(255,255,255,0.98) 0 14%, transparent 44%),
+            radial-gradient(circle at 88% 88%, rgba(14,165,233,0.08), transparent 38%),
+            linear-gradient(145deg, #FFFFFF 0%, #F8FAFC 58%, #EEF3F8 100%) !important;
+        box-shadow:
+            15px 17px 34px rgba(15,23,42,0.12),
+            -10px -10px 24px rgba(255,255,255,0.98),
+            inset 2px 2px 6px rgba(255,255,255,0.95),
+            inset -4px -5px 10px rgba(15,23,42,0.055),
+            0 0 0 1px rgba(255,255,255,0.72) !important;
+        transition:
+            transform 0.22s cubic-bezier(0.175,0.885,0.32,1.275),
+            box-shadow 0.22s ease,
+            border-color 0.22s ease !important;
+        position: relative !important;
+        overflow: hidden !important;
+    }
+    .metric-card::before {
+        content: "" !important;
+        position: absolute !important;
+        inset: 1px 1px auto 1px !important;
+        height: 46% !important;
+        border-radius: 25px 25px 48% 48% !important;
+        background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0)) !important;
+        opacity: 0.78 !important;
+        pointer-events: none !important;
+        z-index: 0 !important;
+    }
+    .metric-card::after {
+        content: "" !important;
+        position: absolute !important;
+        inset: auto 10px 8px 10px !important;
+        height: 3px !important;
+        border-radius: 999px !important;
+        background: linear-gradient(90deg, transparent, rgba(14,165,233,0.20), transparent) !important;
+        opacity: 0.85 !important;
+        pointer-events: none !important;
+    }
+    .metric-card > * {
+        position: relative !important;
+        z-index: 1 !important;
+        min-width: 0 !important;
+    }
+    .metric-card:hover {
+        transform: translateY(-5px) !important;
+        box-shadow:
+            18px 22px 42px rgba(15,23,42,0.15),
+            -12px -12px 28px rgba(255,255,255,1),
+            inset 2px 2px 7px rgba(255,255,255,0.98),
+            inset -5px -6px 12px rgba(15,23,42,0.065),
+            0 0 0 1px rgba(14,165,233,0.10) !important;
+    }
+    .metric-card-title {
+        flex: 0 0 auto !important;
+        min-height: 2.35rem !important;
+        line-height: 1.35 !important;
+        margin-bottom: 0.35rem !important;
+        overflow-wrap: anywhere !important;
+    }
+    .metric-card-value {
+        flex: 0 0 auto !important;
+        margin-bottom: 0.45rem !important;
+        line-height: 1.15 !important;
+        overflow-wrap: anywhere !important;
+    }
+    .metric-card-subtitle {
+        margin-top: auto !important;
+        line-height: 1.45 !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    /* Strong clay treatment for the smaller analytical tiles */
+    .square-metric,
+    .flow-card,
+    .decision-card,
+    .status-card,
+    .story-node,
+    div[data-testid="stMetric"],
+    div[data-testid="stDataFrame"],
+    div[data-testid="stExpander"],
+    [data-testid="stPlotlyChart"], .stPlotlyChart {
+        box-shadow:
+            12px 14px 28px rgba(15,23,42,0.11),
+            -9px -9px 21px rgba(255,255,255,0.98),
+            inset 2px 2px 5px rgba(255,255,255,0.88),
+            inset -3px -4px 8px rgba(15,23,42,0.045),
+            0 0 0 1px rgba(255,255,255,0.72) !important;
+        border-radius: 22px !important;
+    }
+    .square-metric {
+        min-height: 178px !important;
+        border-top-width: 4px !important;
+        padding: 1rem 0.85rem !important;
+        background:
+            radial-gradient(circle at 20% 12%, rgba(255,255,255,0.98), transparent 42%),
+            linear-gradient(145deg, #FFFFFF 0%, #F4F7FA 100%) !important;
+    }
+    .flow-card, .decision-card, .status-card {
+        background:
+            radial-gradient(circle at 18% 12%, rgba(255,255,255,0.98), transparent 45%),
+            linear-gradient(145deg, #FFFFFF 0%, #F3F7FA 100%) !important;
+    }
+    .flow-card:hover, .decision-card:hover, .status-card:hover, .square-metric:hover,
+    div[data-testid="stMetric"]:hover, div[data-testid="stDataFrame"]:hover {
+        transform: translateY(-4px) !important;
+        box-shadow:
+            15px 18px 34px rgba(15,23,42,0.14),
+            -10px -10px 24px rgba(255,255,255,1),
+            inset 2px 2px 5px rgba(255,255,255,0.92),
+            inset -4px -5px 9px rgba(15,23,42,0.05),
+            0 0 0 1px rgba(14,165,233,0.08) !important;
+    }
+
+    /* Uniform tab geometry and deeper clay surface */
+    div[data-testid="stTabs"] [data-baseweb="tab-list"] {
+        display: flex !important;
+        width: 100% !important;
+        justify-content: stretch !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+        padding: 7px !important;
+        border-radius: 23px !important;
+        background: linear-gradient(145deg, #FDFEFF 0%, #EEF3F8 100%) !important;
+        box-shadow:
+            12px 14px 28px rgba(15,23,42,0.11),
+            -9px -9px 21px rgba(255,255,255,0.98),
+            inset 2px 2px 5px rgba(255,255,255,0.9),
+            inset -3px -3px 7px rgba(15,23,42,0.045) !important;
+    }
+    div[data-testid="stTabs"] [data-baseweb="tab"] {
+        flex: 1 1 0 !important;
+        width: 0 !important;
+        min-width: 0 !important;
+        height: 50px !important;
+        min-height: 50px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        padding: 0 12px !important;
+        border-radius: 17px !important;
+        box-sizing: border-box !important;
+        font-size: 0.92rem !important;
+        font-weight: 800 !important;
+        overflow: hidden !important;
+        white-space: nowrap !important;
+        text-overflow: ellipsis !important;
+        color: var(--c-slate-700) !important;
+        background: linear-gradient(145deg, #FFFFFF 0%, #F4F7FA 100%) !important;
+        box-shadow:
+            4px 5px 10px rgba(15,23,42,0.07),
+            -4px -4px 9px rgba(255,255,255,0.94),
+            inset 1px 1px 3px rgba(255,255,255,0.8),
+            inset -2px -2px 4px rgba(15,23,42,0.04) !important;
+    }
+    div[data-testid="stTabs"] [data-baseweb="tab"]:hover {
+        transform: translateY(-2px) !important;
+        box-shadow:
+            7px 8px 14px rgba(15,23,42,0.10),
+            -5px -5px 11px rgba(255,255,255,0.98),
+            inset 1px 1px 3px rgba(255,255,255,0.86) !important;
+    }
+    div[data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"] {
+        color: var(--c-navy) !important;
+        background: linear-gradient(145deg, #E0F2FE 0%, #FFFFFF 100%) !important;
+        box-shadow:
+            7px 9px 17px rgba(30,58,138,0.13),
+            -6px -6px 13px rgba(255,255,255,0.98),
+            inset 3px 3px 6px rgba(255,255,255,0.82),
+            inset -3px -3px 6px rgba(30,58,138,0.08),
+            0 0 0 1px rgba(14,165,233,0.10) !important;
+    }
+
+    /* Selectors and text inputs use the same tactile surface language */
+    [data-baseweb="select"] > div,
+    [data-baseweb="input"],
+    div[data-testid="stTextInput"] input,
+    div[data-testid="stNumberInput"] input,
+    textarea {
+        border-radius: 18px !important;
+        background: linear-gradient(145deg, #FFFFFF 0%, #F2F6F9 100%) !important;
+        box-shadow:
+            8px 9px 19px rgba(15,23,42,0.09),
+            -6px -6px 14px rgba(255,255,255,0.98),
+            inset 2px 2px 4px rgba(255,255,255,0.9),
+            inset -3px -3px 6px rgba(15,23,42,0.045) !important;
+    }
+
+    @media (max-width: 900px) {
+        div[data-testid="stTabs"] [data-baseweb="tab"] { font-size: 0.82rem !important; padding: 0 7px !important; }
+        .metric-card { height: 215px !important; min-height: 215px !important; max-height: 215px !important; }
+    }
+    @media (max-width: 640px) {
+        div[data-testid="stHorizontalBlock"] { gap: 0.8rem !important; }
+        div[data-testid="stTabs"] [data-baseweb="tab-list"] { gap: 6px !important; }
+        div[data-testid="stTabs"] [data-baseweb="tab"] { height: 46px !important; min-height: 46px !important; font-size: 0.72rem !important; }
+        .metric-card { height: 205px !important; min-height: 205px !important; max-height: 205px !important; }
+    }
+
 </style>
 """, unsafe_allow_html=True)
 
