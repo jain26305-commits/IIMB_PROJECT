@@ -1074,15 +1074,100 @@ st.markdown("""
             0 0 0 1px rgba(255,255,255,0.72) !important;
         border-radius: 18px !important;
     }
+    .metrics-grid {
+        width: 100% !important;
+        align-items: stretch !important;
+        grid-auto-rows: 136px !important;
+    }
+    .metrics-grid--3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
     .square-metric {
-        min-height: 112px !important;
-        height: 112px !important;
-        max-height: 112px !important;
+        min-height: 136px !important;
+        height: 136px !important;
+        max-height: 136px !important;
+        width: 100% !important;
+        min-width: 0 !important;
         border-top-width: 4px !important;
-        padding: 0.65rem 0.55rem !important;
+        padding: 0.58rem 0.55rem !important;
+        box-sizing: border-box !important;
+        display: grid !important;
+        grid-template-rows: auto auto 1fr !important;
+        align-items: start !important;
+        justify-items: center !important;
+        justify-content: stretch !important;
+        overflow: visible !important;
         background:
             radial-gradient(circle at 20% 12%, rgba(255,255,255,0.98), transparent 42%),
             linear-gradient(145deg, #FFFFFF 0%, #F4F7FA 100%) !important;
+    }
+    .square-metric-label {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        min-height: 2.25rem !important;
+        margin-bottom: 0.12rem !important;
+        font-size: 0.78rem !important;
+        line-height: 1.14 !important;
+        text-align: center !important;
+        overflow-wrap: anywhere !important;
+        word-break: normal !important;
+    }
+    .square-metric-value {
+        max-width: 100% !important;
+        font-size: 2.05rem !important;
+        line-height: 1.02 !important;
+        white-space: nowrap !important;
+        overflow: visible !important;
+        margin: 0 auto 0.05rem auto !important;
+    }
+    .square-metric-delta {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        align-self: end !important;
+        font-size: 0.70rem !important;
+        line-height: 1.16 !important;
+        text-align: center !important;
+        overflow-wrap: anywhere !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        margin-top: 0.15rem !important;
+    }
+    @media (max-width: 900px) {
+        .metrics-grid--3 {
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        }
+        .square-metric {
+            min-height: 130px !important;
+            height: 130px !important;
+            max-height: 130px !important;
+        }
+        .square-metric-value {
+            font-size: 1.82rem !important;
+        }
+        .square-metric-label {
+            font-size: 0.74rem !important;
+        }
+        .square-metric-delta {
+            font-size: 0.67rem !important;
+        }
+    }
+    @media (max-width: 640px) {
+        .metrics-grid--3 {
+            grid-template-columns: 1fr !important;
+        }
+        .metrics-grid {
+            grid-auto-rows: auto !important;
+        }
+        .square-metric {
+            min-height: 124px !important;
+            height: 124px !important;
+            max-height: 124px !important;
+        }
+        .square-metric-value {
+            font-size: 1.68rem !important;
+        }
     }
     .flow-card, .decision-card, .status-card {
         background:
@@ -1262,7 +1347,8 @@ st.markdown("""
             line-height: 1.15 !important;
         }
     }
-    div[data-testid="column"] .metric-card * {
+    div[data-testid="column"] .metric-card *,
+    div[data-testid="column"] .square-metric * {
         max-width: 100% !important;
         box-sizing: border-box !important;
     }
@@ -1705,9 +1791,9 @@ with tab2:
             acc_val = safe_val(sku_row, 'Accuracy_Pct')
             acc_source = "Master Audit" if 'Accuracy_Pct' in filtered_df.columns else "Dashboard Derived"
             mini_html = ('<div class="metrics-grid metrics-grid--3">'
-                + render_square_metric("Next Forecast", fmt_int(safe_val(sku_row, 'Forecast_Next_Month')), "Projected " + source_tag("Master Audit"))
-                + render_square_metric("Bullwhip Ratio", fmt_num(safe_val(sku_row, 'Bullwhip_Ratio'), 2), "Bullwhip Ratio — Model-Derived Replenishment Signal Amplification " + source_tag("Master Audit"))
-                + render_square_metric("Forecast Accuracy", fmt_num(acc_val, 1, '%'), source_tag(acc_source))
+                + render_square_metric("Next Forecast", fmt_int(safe_val(sku_row, 'Forecast_Next_Month')), "Projected")
+                + render_square_metric("Bullwhip Ratio", fmt_num(safe_val(sku_row, 'Bullwhip_Ratio'), 2), "Model-Derived Replenishment Signal Amplification")
+                + render_square_metric("Forecast Accuracy", fmt_num(acc_val, 1, '%'), "")
                 + '</div>')
             st.markdown(mini_html, unsafe_allow_html=True)
         st.markdown("<hr>", unsafe_allow_html=True)
