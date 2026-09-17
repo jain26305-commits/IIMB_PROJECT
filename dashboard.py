@@ -260,6 +260,8 @@ SOURCE_TAG_CLASS = {
     "Illustrative Scenario": "tag-illustrative",
 }
 def source_tag(label):
+    if label in {"Master Audit", "Dashboard Derived"}:
+        return ""
     cls = SOURCE_TAG_CLASS.get(label, "tag-derived")
     return f'<span class="source-tag {cls}">{label}</span>'
 
