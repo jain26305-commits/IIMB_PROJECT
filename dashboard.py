@@ -1077,59 +1077,37 @@ st.markdown("""
     .metrics-grid {
         width: 100% !important;
         align-items: stretch !important;
-        grid-auto-rows: 156px !important;
-        gap: 0.8rem !important;
+        grid-auto-rows: 136px !important;
     }
     .metrics-grid--3 {
         grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     }
     .square-metric {
-        min-height: 156px !important;
-        height: 156px !important;
-        max-height: 156px !important;
+        min-height: 136px !important;
+        height: 136px !important;
+        max-height: 136px !important;
         width: 100% !important;
         min-width: 0 !important;
-        border-top: 4px solid var(--c-blue) !important;
-        border-radius: 26px !important;
-        padding: 0.72rem 0.78rem 0.68rem !important;
+        border-top-width: 4px !important;
+        padding: 0.58rem 0.55rem !important;
         box-sizing: border-box !important;
         display: grid !important;
         grid-template-rows: auto auto 1fr !important;
         align-items: start !important;
         justify-items: center !important;
         justify-content: stretch !important;
-        overflow: hidden !important;
+        overflow: visible !important;
         background:
-            radial-gradient(circle at 18% 8%, rgba(255,255,255,0.98), transparent 43%),
-            radial-gradient(circle at 85% 92%, rgba(14,165,233,0.10), transparent 48%),
-            linear-gradient(145deg, #FFFFFF 0%, #F3F7FB 100%) !important;
-        box-shadow:
-            12px 15px 30px rgba(15,23,42,0.11),
-            -9px -9px 20px rgba(255,255,255,0.98),
-            inset 2px 2px 5px rgba(255,255,255,0.94),
-            inset -3px -4px 8px rgba(15,23,42,0.045),
-            0 0 0 1px rgba(255,255,255,0.78) !important;
-    }
-    .square-metric:hover {
-        transform: translateY(-3px) !important;
-        border-top-color: var(--c-navy) !important;
-        box-shadow:
-            16px 20px 34px rgba(15,23,42,0.13),
-            -10px -10px 22px rgba(255,255,255,0.99),
-            inset 2px 2px 5px rgba(255,255,255,0.96),
-            inset -3px -4px 8px rgba(15,23,42,0.045),
-            0 0 0 1px rgba(14,165,233,0.14),
-            0 10px 28px rgba(14,165,233,0.10) !important;
+            radial-gradient(circle at 20% 12%, rgba(255,255,255,0.98), transparent 42%),
+            linear-gradient(145deg, #FFFFFF 0%, #F4F7FA 100%) !important;
     }
     .square-metric-label {
         width: 100% !important;
         max-width: 100% !important;
         min-width: 0 !important;
-        min-height: 2.45rem !important;
+        min-height: 2.25rem !important;
         margin-bottom: 0.12rem !important;
-        font-size: 0.93rem !important;
-        color: var(--c-slate-600) !important;
-        font-weight: 850 !important;
+        font-size: 0.78rem !important;
         line-height: 1.14 !important;
         text-align: center !important;
         overflow-wrap: anywhere !important;
@@ -1137,59 +1115,59 @@ st.markdown("""
     }
     .square-metric-value {
         max-width: 100% !important;
-        font-size: 2.34rem !important;
+        font-size: 2.05rem !important;
         line-height: 1.02 !important;
         white-space: nowrap !important;
         overflow: visible !important;
-        margin: 0 auto 0.08rem auto !important;
-        padding: 0.10rem 0.34rem 0.13rem !important;
-        border-radius: 16px !important;
-        background: linear-gradient(145deg, rgba(255,255,255,0.99), rgba(224,242,254,0.92)) !important;
-        box-shadow:
-            inset 1px 1px 4px rgba(255,255,255,0.99),
-            inset -2px -2px 5px rgba(15,23,42,0.045),
-            4px 5px 12px rgba(14,165,233,0.11),
-            0 0 20px rgba(14,165,233,0.07) !important;
-        color: var(--c-navy) !important;
-        font-weight: 950 !important;
+        margin: 0 auto 0.05rem auto !important;
     }
     .square-metric-delta {
         width: 100% !important;
         max-width: 100% !important;
         min-width: 0 !important;
         align-self: end !important;
-        font-size: 0.75rem !important;
-        color: var(--c-slate-500) !important;
-        font-weight: 650 !important;
-        line-height: 1.18 !important;
+        font-size: 0.70rem !important;
+        line-height: 1.16 !important;
         text-align: center !important;
         overflow-wrap: anywhere !important;
         white-space: normal !important;
-        overflow: hidden !important;
-        display: -webkit-box !important;
-        -webkit-box-orient: vertical !important;
-        -webkit-line-clamp: 3 !important;
+        overflow: visible !important;
         margin-top: 0.15rem !important;
     }
-    @media (max-width: 1100px) {
-        .metrics-grid { grid-auto-rows: 150px !important; }
-        .square-metric { min-height: 150px !important; height: 150px !important; max-height: 150px !important; }
-        .square-metric-value { font-size: 2.15rem !important; }
-        .square-metric-label { font-size: 0.87rem !important; }
-    }
     @media (max-width: 900px) {
-        .metrics-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
-        .metrics-grid { grid-auto-rows: 142px !important; }
-        .square-metric { min-height: 142px !important; height: 142px !important; max-height: 142px !important; border-radius: 23px !important; }
-        .square-metric-value { font-size: 1.95rem !important; }
-        .square-metric-label { font-size: 0.82rem !important; }
-        .square-metric-delta { font-size: 0.69rem !important; }
+        .metrics-grid--3 {
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        }
+        .square-metric {
+            min-height: 130px !important;
+            height: 130px !important;
+            max-height: 130px !important;
+        }
+        .square-metric-value {
+            font-size: 1.82rem !important;
+        }
+        .square-metric-label {
+            font-size: 0.74rem !important;
+        }
+        .square-metric-delta {
+            font-size: 0.67rem !important;
+        }
     }
     @media (max-width: 640px) {
-        .metrics-grid--3 { grid-template-columns: 1fr !important; }
-        .metrics-grid { grid-auto-rows: auto !important; gap: 0.75rem !important; }
-        .square-metric { min-height: 136px !important; height: 136px !important; max-height: 136px !important; border-radius: 21px !important; }
-        .square-metric-value { font-size: 1.78rem !important; }
+        .metrics-grid--3 {
+            grid-template-columns: 1fr !important;
+        }
+        .metrics-grid {
+            grid-auto-rows: auto !important;
+        }
+        .square-metric {
+            min-height: 124px !important;
+            height: 124px !important;
+            max-height: 124px !important;
+        }
+        .square-metric-value {
+            font-size: 1.68rem !important;
+        }
     }
     .flow-card, .decision-card, .status-card {
         background:
@@ -1761,7 +1739,7 @@ with tab2:
                 health_status = ("Acceptable — no significant residual autocorrelation detected at the tested lag" if float(p_val) > 0.05 else "Review — significant residual autocorrelation detected at the tested lag")
                 insight += f"\n\n**Residual Diagnostic:** {health_status} — Ljung-Box p-value {fmt_num(p_val,3)}."
             st.info(insight)
-        t2_col1, t2_col2 = st.columns([1, 1.7])
+        t2_col1, t2_col2 = st.columns([2.5, 1])
         with t2_col1:
             if HAS_TEST_ARRAYS:
                 try:
@@ -1814,7 +1792,7 @@ with tab2:
             acc_source = "Master Audit" if 'Accuracy_Pct' in filtered_df.columns else "Dashboard Derived"
             mini_html = ('<div class="metrics-grid metrics-grid--3">'
                 + render_square_metric("Next Forecast", fmt_int(safe_val(sku_row, 'Forecast_Next_Month')), "Projected")
-                + render_square_metric("Bullwhip Ratio", fmt_num(safe_val(sku_row, 'Bullwhip_Ratio'), 2), "Model-Derived Replenishment Signal · Amplification")
+                + render_square_metric("Bullwhip Ratio", fmt_num(safe_val(sku_row, 'Bullwhip_Ratio'), 2), "Model-Derived Replenishment Signal Amplification")
                 + render_square_metric("Forecast Accuracy", fmt_num(acc_val, 1, '%'), "")
                 + '</div>')
             st.markdown(mini_html, unsafe_allow_html=True)
