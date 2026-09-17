@@ -64,21 +64,25 @@ if "_sidebar_bootstrap_done" not in st.session_state:
     </script>""", unsafe_allow_javascript=True)
 _ORIGINAL_PLOTLY_CHART = st.plotly_chart
 def _cinematic_plotly_chart(fig, *args, **kwargs):
-    """Lightweight chart wrapper: presentation-only, no trace iteration.
-    The previous wrapper walked every trace and updated axes/layout on every
-    rerun. With 24 charts that created avoidable Python-side work. We now only
-    fill the minimum global visual defaults when they are absent.
-    """
     try:
-        updates = {}
+        updates = {"autosize": True}
         if getattr(fig.layout, "paper_bgcolor", None) in (None, ""):
             updates["paper_bgcolor"] = "rgba(0,0,0,0)"
         if getattr(fig.layout, "plot_bgcolor", None) in (None, ""):
             updates["plot_bgcolor"] = "#ffffff"
         if getattr(fig.layout, "font", None) is None:
-            updates["font"] = dict(family="'Inter', 'Segoe UI', -apple-system, sans-serif", size=13, color="#334155")
-        if updates:
-            fig.update_layout(**updates)
+            updates["font"] = dict(
+                family="'Inter', 'Segoe UI', -apple-system, sans-serif",
+                size=13,
+                color="#334155"
+            )
+        fig.update_layout(**updates)
+        config = dict(kwargs.get("config") or {})
+        config.setdefault("responsive", True)
+        config.setdefault("displayModeBar", False)
+        kwargs["config"] = config
+        if "width" not in kwargs and "use_container_width" not in kwargs:
+            kwargs["width"] = "stretch"
     except Exception:
         pass
     return _ORIGINAL_PLOTLY_CHART(fig, *args, **kwargs)
@@ -801,7 +805,7 @@ st.markdown("""
         border-radius: var(--clay-radius); background: transparent;
         box-shadow: var(--clay-shadow);
     }
-    iframe { overflow: hidden !important; }
+    iframe { max-width: 100% !important; border: 0 !important; }
     .stButton > button:focus-visible, .stDownloadButton > button:focus-visible,
     div[data-testid="stTabs"] [data-baseweb="tab"]:focus-visible,
     [data-baseweb="select"]:focus-within, input:focus-visible {
@@ -1378,32 +1382,330 @@ st.markdown("""
     }
     [data-testid="stPlotlyChart"],
     .stPlotlyChart {
+        display: block !important;
         width: 100% !important;
         max-width: 100% !important;
         min-width: 0 !important;
-        overflow: visible !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        contain: layout paint !important;
+    }
+    [data-testid="stPlotlyChart"] > div,
+    .stPlotlyChart > div,
+    [data-testid="stPlotlyChart"] .js-plotly-plot,
+    .stPlotlyChart .js-plotly-plot,
+    [data-testid="stPlotlyChart"] .plot-container,
+    .stPlotlyChart .plot-container,
+    [data-testid="stPlotlyChart"] .svg-container,
+    .stPlotlyChart .svg-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
         box-sizing: border-box !important;
     }
     [data-testid="stPlotlyChart"] iframe,
     .stPlotlyChart iframe {
+        display: block !important;
         width: 100% !important;
         max-width: 100% !important;
         min-width: 0 !important;
-        display: block !important;
         border: 0 !important;
-    }
-    [data-testid="stPlotlyChart"] > div,
-    .stPlotlyChart > div {
-        width: 100% !important;
-        max-width: 100% !important;
     }
     div[data-testid="column"] {
         min-width: 0 !important;
+        max-width: 100% !important;
+    }
+    body,
+    [data-testid="stAppViewContainer"],
+    [data-testid="stAppViewBlockContainer"],
+    section.main {
+        max-width: 100% !important;
+        overflow-x: hidden !important;
     }
 
-    [data-testid="stPlotlyChart"] .js-plotly-plot,
-    .stPlotlyChart .js-plotly-plot {
-        max-height: 260px !important;
+    /* Final mobile pass: one coherent responsive system overrides earlier
+       breakpoint fragments without changing analytical logic. */
+    @media (max-width: 640px) {
+        html, body, [data-testid="stAppViewContainer"], [data-testid="stAppViewBlockContainer"],
+        section.main, .main, .block-container {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            overflow-x: hidden !important;
+            box-sizing: border-box !important;
+        }
+
+        .block-container {
+            padding: 0.65rem 0.55rem 1.25rem !important;
+        }
+
+        .main-dashboard-title {
+            font-size: 1.45rem !important;
+            line-height: 1.18 !important;
+            max-width: 100% !important;
+            margin-bottom: 0.55rem !important;
+        }
+
+        .hero-wrap {
+            padding: 0 !important;
+            margin-bottom: 0.6rem !important;
+        }
+
+        div[data-testid="stHorizontalBlock"] {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            gap: 0.65rem !important;
+            flex-wrap: wrap !important;
+            align-items: stretch !important;
+            box-sizing: border-box !important;
+        }
+
+        div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            flex: 1 1 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        div[data-testid="column"] {
+            min-width: 0 !important;
+            max-width: 100% !important;
+            overflow: visible !important;
+        }
+
+        div[data-testid="column"] .metric-card,
+        .metric-card {
+            width: 100% !important;
+            min-width: 0 !important;
+            height: 120px !important;
+            min-height: 120px !important;
+            max-height: 120px !important;
+            flex: 0 0 120px !important;
+            padding: 0.52rem 0.64rem !important;
+            border-radius: 20px !important;
+            overflow: visible !important;
+        }
+
+        .metric-card-title {
+            min-height: 1.3rem !important;
+            max-height: 2.35rem !important;
+            font-size: 0.67rem !important;
+            line-height: 1.12 !important;
+            overflow-wrap: anywhere !important;
+        }
+
+        .metric-card-value {
+            font-size: 1.82rem !important;
+            line-height: 1 !important;
+            white-space: nowrap !important;
+        }
+
+        .metric-card-subtitle {
+            min-height: 1.55rem !important;
+            max-height: 2.45rem !important;
+            font-size: 0.59rem !important;
+            line-height: 1.14 !important;
+            overflow-wrap: anywhere !important;
+            white-space: normal !important;
+        }
+
+        .metrics-grid {
+            width: 100% !important;
+            grid-template-columns: 1fr !important;
+            grid-auto-rows: 128px !important;
+            gap: 0.65rem !important;
+        }
+
+        .square-metric {
+            width: 100% !important;
+            min-width: 0 !important;
+            height: 128px !important;
+            min-height: 128px !important;
+            max-height: 128px !important;
+            border-radius: 20px !important;
+            padding: 0.55rem 0.58rem !important;
+            overflow: visible !important;
+        }
+
+        .square-metric-label {
+            min-height: 2rem !important;
+            font-size: 0.76rem !important;
+            line-height: 1.12 !important;
+            overflow-wrap: anywhere !important;
+        }
+
+        .square-metric-value {
+            font-size: 1.78rem !important;
+            line-height: 1 !important;
+            white-space: nowrap !important;
+        }
+
+        .square-metric-delta {
+            font-size: 0.66rem !important;
+            line-height: 1.14 !important;
+            overflow-wrap: anywhere !important;
+            white-space: normal !important;
+        }
+
+        div[data-testid="stTabs"] [data-baseweb="tab-list"] {
+            width: 100% !important;
+            max-width: 100% !important;
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 5px !important;
+            padding: 5px !important;
+            overflow: visible !important;
+            border-radius: 18px !important;
+            box-sizing: border-box !important;
+        }
+
+        div[data-testid="stTabs"] [data-baseweb="tab"] {
+            flex: 1 1 calc(50% - 5px) !important;
+            width: auto !important;
+            min-width: 0 !important;
+            height: 40px !important;
+            min-height: 40px !important;
+            padding: 0 6px !important;
+            border-radius: 12px !important;
+            font-size: 0.66rem !important;
+            line-height: 1 !important;
+            white-space: normal !important;
+            text-overflow: clip !important;
+            overflow: hidden !important;
+            text-align: center !important;
+        }
+
+        [data-testid="stPlotlyChart"],
+        .stPlotlyChart {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+
+        [data-testid="stPlotlyChart"] > div,
+        .stPlotlyChart > div,
+        [data-testid="stPlotlyChart"] .js-plotly-plot,
+        .stPlotlyChart .js-plotly-plot,
+        [data-testid="stPlotlyChart"] .plot-container,
+        .stPlotlyChart .plot-container,
+        [data-testid="stPlotlyChart"] .svg-container,
+        .stPlotlyChart .svg-container {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            box-sizing: border-box !important;
+        }
+
+        [data-testid="stPlotlyChart"] iframe,
+        .stPlotlyChart iframe {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            display: block !important;
+            border: 0 !important;
+        }
+
+        div[data-testid="stDataFrame"] {
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+        }
+
+        div[data-testid="stDataFrame"] > div {
+            min-width: 100% !important;
+        }
+
+        .flow-card,
+        .decision-card,
+        .status-card,
+        .illustrative-banner {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            overflow-wrap: anywhere !important;
+        }
+
+        .flow-card-title,
+        .decision-card-title {
+            font-size: 0.88rem !important;
+            line-height: 1.18 !important;
+        }
+
+        .flow-card-text,
+        .decision-card-text,
+        .status-card-desc {
+            font-size: 0.76rem !important;
+            line-height: 1.3 !important;
+            overflow-wrap: anywhere !important;
+        }
+
+        .section-caption {
+            font-size: 0.70rem !important;
+            line-height: 1.28 !important;
+            overflow-wrap: anywhere !important;
+        }
+
+        .stButton > button,
+        .stDownloadButton > button {
+            width: 100% !important;
+            min-width: 0 !important;
+            height: 44px !important;
+            min-height: 44px !important;
+            max-height: 44px !important;
+            padding: 0.45rem 0.72rem !important;
+            border-radius: 14px !important;
+            font-size: 0.78rem !important;
+            line-height: 1.1 !important;
+            white-space: normal !important;
+            text-align: center !important;
+            overflow: hidden !important;
+        }
+
+        [data-baseweb="select"] > div,
+        [data-baseweb="input"],
+        div[data-testid="stTextInput"] input,
+        div[data-testid="stNumberInput"] input,
+        textarea {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-height: 42px !important;
+            border-radius: 14px !important;
+            box-sizing: border-box !important;
+        }
+
+        div[data-testid="stMetric"] {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            max-width: 100% !important;
+            overflow-wrap: anywhere !important;
+        }
+
+        p, label, span, div {
+            max-width: 100%;
+        }
+    }
+
+    @media (min-width: 641px) and (max-width: 900px) {
+        div[data-testid="column"] {
+            min-width: 0 !important;
+            max-width: 100% !important;
+        }
+        [data-testid="stPlotlyChart"],
+        .stPlotlyChart {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
     }
 
 </style>
@@ -1836,7 +2138,11 @@ with tab2:
                 fig_snap = px.bar(snap_df, x='Metric', y='Value', color='Metric',
                                    color_discrete_sequence=['#94A3B8', '#0EA5E9'], title="Forecast Snapshot")
                 fig_snap.update_layout(plot_bgcolor='white', showlegend=False, margin=dict(l=20, r=20, t=40, b=20))
-                st.plotly_chart(fig_snap, width='stretch')
+                st.plotly_chart(
+                    fig_snap,
+                    width='stretch',
+                    config={'responsive': True, 'displayModeBar': False}
+                )
                 st.markdown(f"""<div class="section-caption">Month-by-month actual-vs-predicted arrays are not included in this Master Audit export —
                 only aggregate validation statistics (Accuracy, MAE, RMSE, Bias) are available per SKU. {source_tag("Master Audit")}</div>""", unsafe_allow_html=True)
         with t2_col2:
