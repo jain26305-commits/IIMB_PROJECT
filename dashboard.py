@@ -1647,6 +1647,99 @@ st.markdown("""
         align-self: stretch !important;
     }
 
+
+    /* Final text-fit pass: preserve compact cards while guaranteeing that
+       titles, KPI values, subtitles and status badges remain fully visible. */
+    div[data-testid="column"] .metric-card,
+    .metric-card {
+        height: 132px !important;
+        min-height: 132px !important;
+        max-height: 132px !important;
+        flex: 0 0 132px !important;
+        padding: 0.58rem 0.78rem 0.55rem !important;
+        overflow: visible !important;
+    }
+
+    .metric-card-title {
+        min-height: 1.45rem !important;
+        max-height: 2.35rem !important;
+        margin-bottom: 0.12rem !important;
+        font-size: 0.70rem !important;
+        line-height: 1.18 !important;
+        overflow: visible !important;
+        overflow-wrap: anywhere !important;
+        word-break: normal !important;
+    }
+
+    .metric-card-value {
+        font-size: 2.30rem !important;
+        line-height: 1.02 !important;
+        margin-bottom: 0.10rem !important;
+        white-space: nowrap !important;
+        overflow: visible !important;
+    }
+
+    .metric-card-subtitle {
+        margin-top: 0.10rem !important;
+        min-height: 1.70rem !important;
+        max-height: 2.55rem !important;
+        font-size: 0.64rem !important;
+        line-height: 1.18 !important;
+        overflow: visible !important;
+        overflow-wrap: anywhere !important;
+        white-space: normal !important;
+    }
+
+    .metric-card-subtitle .badge {
+        margin-top: 2px !important;
+        white-space: nowrap !important;
+        vertical-align: baseline !important;
+    }
+
+    @media (max-width: 900px) {
+        div[data-testid="column"] .metric-card,
+        .metric-card {
+            height: 126px !important;
+            min-height: 126px !important;
+            max-height: 126px !important;
+            flex-basis: 126px !important;
+        }
+        .metric-card-value {
+            font-size: 2.02rem !important;
+        }
+        .metric-card-subtitle {
+            font-size: 0.62rem !important;
+        }
+    }
+
+    @media (max-width: 640px) {
+        div[data-testid="column"] .metric-card,
+        .metric-card {
+            height: 120px !important;
+            min-height: 120px !important;
+            max-height: 120px !important;
+            flex-basis: 120px !important;
+            padding-left: 0.68rem !important;
+            padding-right: 0.68rem !important;
+        }
+        .metric-card-value {
+            font-size: 1.82rem !important;
+        }
+        .metric-card-title {
+            font-size: 0.66rem !important;
+        }
+        .metric-card-subtitle {
+            font-size: 0.59rem !important;
+            line-height: 1.15 !important;
+        }
+    }
+
+    /* Prevent any dashboard text wrapper from clipping card content. */
+    div[data-testid="column"] .metric-card * {
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
 </style>
 """, unsafe_allow_html=True)
 
