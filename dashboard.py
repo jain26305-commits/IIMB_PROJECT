@@ -710,23 +710,64 @@ st.markdown("""
         background-color: var(--c-danger-bg) !important; color: var(--c-danger-text) !important; border-color: var(--c-danger-border) !important;
     }
 
-    /* ---------- Row alignment fix ----------
-       st.columns() renders each column as an independently-sized flex item,
-       so a card in one column can end at a different height than its
-       neighbor whenever the title/subtitle text wraps differently. Making
-       each column a stretching flex column (and letting the metric card
-       grow to fill it) keeps every card in a row ending at the same
-       baseline, regardless of text length — no Python layout code changed. */
-    div[data-testid="stHorizontalBlock"] { align-items: stretch !important; }
+    div[data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        align-items: stretch !important;
+        overflow: visible !important;
+    }
     div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
-        display: flex !important; flex-direction: column !important;
+        flex: 1 1 0% !important;
+        width: 0 !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: visible !important;
     }
     div[data-testid="column"] > div[data-testid="stVerticalBlock"] {
-        display: flex !important; flex-direction: column !important; flex: 1 1 auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        flex-direction: column !important;
+        flex: 1 1 auto !important;
     }
     div[data-testid="column"] .metric-card,
-    div[data-testid="column"] .flow-card {
-        height: 100% !important;
+    div[data-testid="column"] .flow-card,
+    div[data-testid="column"] .decision-card,
+    div[data-testid="column"] .status-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        align-self: stretch !important;
+    }
+    .metric-card-title,
+    .metric-card-value,
+    .metric-card-subtitle,
+    .flow-card-title,
+    .flow-card-text,
+    .decision-card-title,
+    .decision-card-text,
+    .status-card-desc,
+    .status-card-action {
+        min-width: 0 !important;
+        max-width: 100% !important;
+        overflow-wrap: anywhere !important;
+        word-break: normal !important;
+    }
+    .source-tag {
+        display: inline-block !important;
+        max-width: 100% !important;
+        white-space: normal !important;
+        overflow-wrap: anywhere !important;
+        box-sizing: border-box !important;
     }
 
     @keyframes cardSheen {
@@ -801,6 +842,10 @@ st.markdown("""
 
     /* ---------- Metric card (consolidated: ribbon + square variants share one token base) ---------- */
     .metric-card {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
         background:
             radial-gradient(140% 100% at 0% 0%, rgba(14,165,233,0.06), transparent 55%),
             linear-gradient(155deg, #ffffff 0%, var(--c-slate-50) 100%);
@@ -1841,7 +1886,7 @@ with tab3:
                 unsafe_allow_html=True)
             st.caption(f"Basis: {val_result['basis']}. Independent formula: Safety Stock = 1.645 × RMSE × √(Lead Time ÷ 30); "
                        f"Reorder Point = (Forecast Next Month ÷ 30 × Lead Time) + Safety Stock — reproduced directly from the source "
-                       f"notebook's own implementation, not a generic textbook substitute. {source_tag('Dashboard Derived')}", unsafe_allow_html=True)
+                       f"notebook's own implementation, not a generic textbook substitute. {source_tag('Dashboard Derived')}")
             if ma_ss == 0 and ss_ok:
                 st.info("A Safety Stock of 0 is mathematically correct here — not a data-quality defect. It occurs when the SKU has zero "
                         "historical demand variance (dead stock / constant demand) or when the forecast model achieved a near-zero RMSE "
