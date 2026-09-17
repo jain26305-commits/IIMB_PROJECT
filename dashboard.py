@@ -1401,6 +1401,11 @@ st.markdown("""
         min-width: 0 !important;
     }
 
+    [data-testid="stPlotlyChart"] .js-plotly-plot,
+    .stPlotlyChart .js-plotly-plot {
+        max-height: 260px !important;
+    }
+
 </style>
 """, unsafe_allow_html=True)
 st.markdown("""
@@ -1788,7 +1793,7 @@ with tab2:
                 health_status = ("Acceptable — no significant residual autocorrelation detected at the tested lag" if float(p_val) > 0.05 else "Review — significant residual autocorrelation detected at the tested lag")
                 insight += f"\n\n**Residual Diagnostic:** {health_status} — Ljung-Box p-value {fmt_num(p_val,3)}."
             st.info(insight)
-        t2_col1, t2_col2 = st.columns([1.15, 1.55])
+        t2_col1, t2_col2 = st.columns([1.0, 1.8])
         with t2_col1:
             if HAS_TEST_ARRAYS:
                 try:
@@ -1845,65 +1850,59 @@ with tab2:
                 + render_square_metric("Forecast Accuracy", fmt_num(acc_val, 1, '%'), "")
                 + '</div>')
             st.markdown(mini_html, unsafe_allow_html=True)
-            if all(c in filtered_df.columns for c in ['MA sMAPE', 'Naive sMAPE', 'SNaive sMAPE', 'AutoARIMA sMAPE']):
-                model_compare = pd.DataFrame({
-                    'Model': ['3-Month Moving Average', 'Naive', 'Seasonal Naive', 'AutoARIMA'],
-                    'Validation sMAPE': [
-                        safe_val(sku_row, 'MA sMAPE'),
-                        safe_val(sku_row, 'Naive sMAPE'),
-                        safe_val(sku_row, 'SNaive sMAPE'),
-                        safe_val(sku_row, 'AutoARIMA sMAPE')
-                    ]
-                })
-                model_compare['Validation sMAPE'] = pd.to_numeric(model_compare['Validation sMAPE'], errors='coerce')
-                model_compare = model_compare.dropna(subset=['Validation sMAPE'])
-                winner_text = str(safe_val(sku_row, 'Order', 'N/A'))
-                if len(model_compare) > 0:
-                    fig_model_compare = px.bar(
-                        model_compare.sort_values('Validation sMAPE', ascending=True),
-                        x='Validation sMAPE',
-                        y='Model',
-                        orientation='h',
-                        text='Validation sMAPE',
-                        title="Model Competition — Validation sMAPE",
-                        color='Model',
-                        color_discrete_sequence=['#1E3A8A', '#0EA5E9', '#7C3AED', '#F43F5E']
+            if 'Mean_Monthly_Demand' in filtered_df.columns and 'Forecast_Next_Month' in filtered_df.columns:
+                historical_avg = pd.to_numeric(safe_val(sku_row, 'Mean_Monthly_Demand'), errors='coerce')
+                next_forecast = pd.to_numeric(safe_val(sku_row, 'Forecast_Next_Month'), errors='coerce')
+                if pd.notna(historical_avg) and pd.notna(next_forecast):
+                    compare_df = pd.DataFrame({
+                        'Metric': ['Historical Average', 'Next-Month Forecast'],
+                        'Value': [float(historical_avg), float(next_forecast)]
+                    })
+                    fig_forecast_compare = go.Figure()
+                    fig_forecast_compare.add_trace(
+                        go.Bar(
+                            x=compare_df['Metric'],
+                            y=compare_df['Value'],
+                            text=[fmt_int(v) for v in compare_df['Value']],
+                            textposition='outside',
+                            cliponaxis=False,
+                            marker_color=['#94A3B8', '#0EA5E9'],
+                            marker_line=dict(color='rgba(255,255,255,0)', width=0)
+                        )
                     )
-                    fig_model_compare.update_traces(
-                        texttemplate='%{x:.2f}',
-                        textposition='outside',
-                        cliponaxis=False
-                    )
-                    fig_model_compare.update_layout(
-                        height=235,
-                        showlegend=False,
+                    fig_forecast_compare.update_layout(
+                        title="Demand Snapshot — Historical Average vs Next-Month Forecast",
+                        height=245,
+                        margin=dict(l=34, r=24, t=48, b=42),
                         plot_bgcolor='rgba(0,0,0,0)',
                         paper_bgcolor='rgba(0,0,0,0)',
-                        margin=dict(l=4, r=36, t=42, b=8),
+                        showlegend=False,
                         xaxis=dict(
-                            title="Validation sMAPE — lower is better",
-                            showgrid=True,
-                            gridcolor='#E2E8F0',
-                            zeroline=False
+                            title=None,
+                            showgrid=False,
+                            zeroline=False,
+                            fixedrange=True
                         ),
                         yaxis=dict(
-                            title=None,
-                            categoryorder='array',
-                            categoryarray=model_compare.sort_values('Validation sMAPE', ascending=True)['Model'].tolist()
+                            title="Units",
+                            showgrid=True,
+                            gridcolor='#E2E8F0',
+                            zeroline=False,
+                            fixedrange=True
                         )
                     )
                     st.plotly_chart(
-                        fig_model_compare,
+                        fig_forecast_compare,
                         width='stretch',
-                        config={'displayModeBar': False}
+                        config={'displayModeBar': False, 'responsive': True}
                     )
                     st.caption(
-                        f"Selected SKU model comparison from Master Audit. Winning pathway: {html.escape(winner_text)}."
+                        "Compact selected-SKU demand view based on authoritative Master Audit fields."
                     )
                 else:
-                    st.info("Model comparison values are unavailable for the selected SKU.")
+                    st.info("Historical average or next-month forecast is unavailable for the selected SKU.")
             else:
-                st.info("Candidate-model sMAPE fields are not available in the current Master Audit source.")
+                st.info("Required demand fields are unavailable in the current Master Audit source.")
         st.markdown("<hr>", unsafe_allow_html=True)
         st.subheader("🔬 Full Diagnostic Panel")
         d1, d2, d3, d4, d5, d6 = st.columns(6)
