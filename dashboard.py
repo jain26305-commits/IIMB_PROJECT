@@ -1845,6 +1845,65 @@ with tab2:
                 + render_square_metric("Forecast Accuracy", fmt_num(acc_val, 1, '%'), "")
                 + '</div>')
             st.markdown(mini_html, unsafe_allow_html=True)
+            if all(c in filtered_df.columns for c in ['MA sMAPE', 'Naive sMAPE', 'SNaive sMAPE', 'AutoARIMA sMAPE']):
+                model_compare = pd.DataFrame({
+                    'Model': ['3-Month Moving Average', 'Naive', 'Seasonal Naive', 'AutoARIMA'],
+                    'Validation sMAPE': [
+                        safe_val(sku_row, 'MA sMAPE'),
+                        safe_val(sku_row, 'Naive sMAPE'),
+                        safe_val(sku_row, 'SNaive sMAPE'),
+                        safe_val(sku_row, 'AutoARIMA sMAPE')
+                    ]
+                })
+                model_compare['Validation sMAPE'] = pd.to_numeric(model_compare['Validation sMAPE'], errors='coerce')
+                model_compare = model_compare.dropna(subset=['Validation sMAPE'])
+                winner_text = str(safe_val(sku_row, 'Order', 'N/A'))
+                if len(model_compare) > 0:
+                    fig_model_compare = px.bar(
+                        model_compare.sort_values('Validation sMAPE', ascending=True),
+                        x='Validation sMAPE',
+                        y='Model',
+                        orientation='h',
+                        text='Validation sMAPE',
+                        title="Model Competition — Validation sMAPE",
+                        color='Model',
+                        color_discrete_sequence=['#1E3A8A', '#0EA5E9', '#7C3AED', '#F43F5E']
+                    )
+                    fig_model_compare.update_traces(
+                        texttemplate='%{x:.2f}',
+                        textposition='outside',
+                        cliponaxis=False
+                    )
+                    fig_model_compare.update_layout(
+                        height=235,
+                        showlegend=False,
+                        plot_bgcolor='rgba(0,0,0,0)',
+                        paper_bgcolor='rgba(0,0,0,0)',
+                        margin=dict(l=4, r=36, t=42, b=8),
+                        xaxis=dict(
+                            title="Validation sMAPE — lower is better",
+                            showgrid=True,
+                            gridcolor='#E2E8F0',
+                            zeroline=False
+                        ),
+                        yaxis=dict(
+                            title=None,
+                            categoryorder='array',
+                            categoryarray=model_compare.sort_values('Validation sMAPE', ascending=True)['Model'].tolist()
+                        )
+                    )
+                    st.plotly_chart(
+                        fig_model_compare,
+                        width='stretch',
+                        config={'displayModeBar': False}
+                    )
+                    st.caption(
+                        f"Selected SKU model comparison from Master Audit. Winning pathway: {html.escape(winner_text)}."
+                    )
+                else:
+                    st.info("Model comparison values are unavailable for the selected SKU.")
+            else:
+                st.info("Candidate-model sMAPE fields are not available in the current Master Audit source.")
         st.markdown("<hr>", unsafe_allow_html=True)
         st.subheader("🔬 Full Diagnostic Panel")
         d1, d2, d3, d4, d5, d6 = st.columns(6)
