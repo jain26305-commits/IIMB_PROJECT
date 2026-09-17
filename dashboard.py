@@ -1841,7 +1841,7 @@ with tab3:
                 unsafe_allow_html=True)
             st.caption(f"Basis: {val_result['basis']}. Independent formula: Safety Stock = 1.645 × RMSE × √(Lead Time ÷ 30); "
                        f"Reorder Point = (Forecast Next Month ÷ 30 × Lead Time) + Safety Stock — reproduced directly from the source "
-                       f"notebook's own implementation, not a generic textbook substitute. {source_tag('Dashboard Derived')}")
+                       f"notebook's own implementation, not a generic textbook substitute. {source_tag('Dashboard Derived')}", unsafe_allow_html=True)
             if ma_ss == 0 and ss_ok:
                 st.info("A Safety Stock of 0 is mathematically correct here — not a data-quality defect. It occurs when the SKU has zero "
                         "historical demand variance (dead stock / constant demand) or when the forecast model achieved a near-zero RMSE "
@@ -2212,7 +2212,7 @@ with tab5:
     st.markdown("<hr>", unsafe_allow_html=True)
     st.subheader("📚 Methodology & Traceability")
     with st.expander("How this dashboard is built — read before presenting", expanded=True):
-        st.markdown(f"**Traceability:** Master Audit = direct source field; Dashboard Derived = calculated from filtered source data; Illustrative Scenario = hypothetical what-if. {source_tag('Master Audit')} {source_tag('Dashboard Derived')} {source_tag('Illustrative Scenario')}")
+        st.markdown(f"**Traceability:** Master Audit = direct source field; Dashboard Derived = calculated from filtered source data; Illustrative Scenario = hypothetical what-if. {source_tag('Master Audit')} {source_tag('Dashboard Derived')} {source_tag('Illustrative Scenario')}", unsafe_allow_html=True)
         methodology_text = "**Data:** Master Audit export (Enterprise_Supply_Chain_Master_Audit.xlsx, Executive_Summary sheet), " + f"{len(df):,}" + " SKUs. Methodology uses 24 calendar months, 1,401 true SKUs, Grand Total excluded, missing Outwards = 0 and negative Outwards retained. Annualised Demand = full-period mean monthly demand × 12; it is not necessarily trailing-12-month actual demand. Month-level historical raw data was not part of this export, so demand statistics here are either per-SKU aggregates or portfolio-level distributions of those aggregates.\n\n"
         methodology_text += "**Forecasting:** Forecast outputs (Forecast_Next_Month, Accuracy_Pct, MAE, RMSE, Bias, CV, Health_P_Value) are taken directly from the Master Audit. Accuracy_Pct is the project-defined sMAPE-derived accuracy metric, not probabilistic confidence. This dashboard does not re-run, re-fit or retrain any forecasting model; final SKU model selection is based on the lowest validation sMAPE.\n\n"
         methodology_text += "**Validation:** Where per-SKU test-period arrays are present in the source file, an actual-vs-predicted trajectory with an uncertainty band is shown. Where they are not (the case for the current Master Audit export), only the aggregate validation statistics are shown, and this is stated explicitly on-screen.\n\n"
@@ -2281,7 +2281,7 @@ Forecast_Next_Month across the entire population — this is not a broken pipeli
 
 **Disposition:** {'CONFIRMED VALID — no data issue found.' if qa_summary['ss_material_mismatch'] == 0 and qa_summary['rop_material_mismatch'] == 0 else 'REQUIRES REVIEW for the flagged SKUs above.'}
             """)
-            st.caption(f"Audited against the full unfiltered dataset ({len(df):,} SKUs), independent of the current ABC/XYZ filter. {source_tag('Dashboard Derived')}")
+            st.caption(f"Audited against the full unfiltered dataset ({len(df):,} SKUs), independent of the current ABC/XYZ filter. {source_tag('Dashboard Derived')}", unsafe_allow_html=True)
         else:
             st.info("Could not run the mathematics audit — RMSE and/or Forecast_Next_Month are not present in this data source.")
 
