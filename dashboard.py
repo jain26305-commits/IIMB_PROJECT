@@ -1384,16 +1384,16 @@ st.markdown("""
         width: 100% !important;
         max-width: 100% !important;
         min-width: 0 !important;
-        height: 175px !important;
-        min-height: 175px !important;
-        max-height: 175px !important;
-        flex: 0 0 175px !important;
+        height: 120px !important;
+        min-height: 120px !important;
+        max-height: 120px !important;
+        flex: 0 0 120px !important;
         box-sizing: border-box !important;
         display: flex !important;
         flex-direction: column !important;
         justify-content: flex-start !important;
-        padding: 0.95rem 1.05rem 0.9rem !important;
-        border-radius: 22px !important;
+        padding: 0.68rem 0.82rem 0.62rem !important;
+        border-radius: 18px !important;
         background:
             radial-gradient(circle at 18% 10%, rgba(255,255,255,0.98) 0 14%, transparent 44%),
             radial-gradient(circle at 88% 88%, rgba(14,165,233,0.08), transparent 38%),
@@ -1448,8 +1448,8 @@ st.markdown("""
     }
     .metric-card-title {
         flex: 0 0 auto !important;
-        min-height: 2.1rem !important;
-        font-size: 0.80rem !important;
+        min-height: 1.65rem !important;
+        font-size: 0.72rem !important;
         line-height: 1.25 !important;
         margin-bottom: 0.22rem !important;
         letter-spacing: 0.45px !important;
@@ -1457,14 +1457,14 @@ st.markdown("""
     }
     .metric-card-value {
         flex: 0 0 auto !important;
-        font-size: 1.60rem !important;
-        margin-bottom: 0.28rem !important;
+        font-size: 1.38rem !important;
+        margin-bottom: 0.18rem !important;
         line-height: 1.1 !important;
         overflow-wrap: anywhere !important;
     }
     .metric-card-subtitle {
         margin-top: auto !important;
-        font-size: 0.78rem !important;
+        font-size: 0.68rem !important;
         line-height: 1.25 !important;
         overflow-wrap: anywhere !important;
     }
@@ -1485,14 +1485,14 @@ st.markdown("""
             inset 2px 2px 5px rgba(255,255,255,0.88),
             inset -3px -4px 8px rgba(15,23,42,0.045),
             0 0 0 1px rgba(255,255,255,0.72) !important;
-        border-radius: 22px !important;
+        border-radius: 18px !important;
     }
     .square-metric {
-        min-height: 145px !important;
-        height: 145px !important;
-        max-height: 145px !important;
+        min-height: 112px !important;
+        height: 112px !important;
+        max-height: 112px !important;
         border-top-width: 4px !important;
-        padding: 0.8rem 0.7rem !important;
+        padding: 0.65rem 0.55rem !important;
         background:
             radial-gradient(circle at 20% 12%, rgba(255,255,255,0.98), transparent 42%),
             linear-gradient(145deg, #FFFFFF 0%, #F4F7FA 100%) !important;
@@ -1533,16 +1533,16 @@ st.markdown("""
         flex: 1 1 0 !important;
         width: 0 !important;
         min-width: 0 !important;
-        height: 50px !important;
-        min-height: 50px !important;
+        height: 42px !important;
+        min-height: 42px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         text-align: center !important;
-        padding: 0 12px !important;
-        border-radius: 17px !important;
+        padding: 0 9px !important;
+        border-radius: 14px !important;
         box-sizing: border-box !important;
-        font-size: 0.92rem !important;
+        font-size: 0.82rem !important;
         font-weight: 800 !important;
         overflow: hidden !important;
         white-space: nowrap !important;
@@ -1590,13 +1590,13 @@ st.markdown("""
 
     @media (max-width: 900px) {
         div[data-testid="stTabs"] [data-baseweb="tab"] { font-size: 0.82rem !important; padding: 0 7px !important; }
-        div[data-testid="column"] .metric-card, .metric-card { height: 165px !important; min-height: 165px !important; max-height: 165px !important; flex-basis: 165px !important; }
+        div[data-testid="column"] .metric-card, .metric-card { height: 112px !important; min-height: 112px !important; max-height: 112px !important; flex-basis: 112px !important; }
     }
     @media (max-width: 640px) {
         div[data-testid="stHorizontalBlock"] { gap: 0.7rem !important; }
         div[data-testid="stTabs"] [data-baseweb="tab-list"] { gap: 5px !important; }
         div[data-testid="stTabs"] [data-baseweb="tab"] { height: 44px !important; min-height: 44px !important; font-size: 0.70rem !important; }
-        div[data-testid="column"] .metric-card, .metric-card { height: 155px !important; min-height: 155px !important; max-height: 155px !important; flex-basis: 155px !important; }
+        div[data-testid="column"] .metric-card, .metric-card { height: 104px !important; min-height: 104px !important; max-height: 104px !important; flex-basis: 104px !important; }
     }
 
 
