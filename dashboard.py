@@ -738,6 +738,17 @@ st.markdown("""
         flex-direction: column !important;
         flex: 1 1 auto !important;
     }
+    div[data-testid="column"] .stButton,
+    div[data-testid="column"] .stDownloadButton {
+        width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+    div[data-testid="column"] .stButton > button,
+    div[data-testid="column"] .stDownloadButton > button {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
     div[data-testid="column"] .metric-card,
     div[data-testid="column"] .flow-card,
     div[data-testid="column"] .decision-card,
@@ -1022,28 +1033,174 @@ st.markdown("""
     }
     iframe { overflow: hidden !important; }
 
-    /* ---------- Buttons — clay body + cinematic color glow on hover ---------- */
-    .stButton > button, .stDownloadButton > button {
-        background: linear-gradient(135deg, var(--c-blue), var(--c-blue-light));
-        color: white; font-weight: 700; border: none; border-radius: var(--clay-radius-sm);
-        padding: 0.55rem 1.1rem; transition: transform var(--dur-med) var(--ease-standard), box-shadow var(--dur-med) var(--ease-standard), background var(--dur-med) var(--ease-standard) !important; letter-spacing: 0.5px;
-        box-shadow: 6px 6px 16px rgba(14,165,233,0.28), -4px -4px 12px rgba(255,255,255,0.5), inset 0 1px 0 rgba(255,255,255,0.35);
-        position: relative; overflow: hidden;
+    /* ---------- Uniform claymorphism controls ---------- */
+    .stButton, .stDownloadButton {
+        width: 100% !important;
+        min-width: 0 !important;
     }
-    .stButton > button::after, .stDownloadButton > button::after {
-        content: ""; position: absolute; top: 0; left: 0; width: 40%; height: 100%;
-        background: linear-gradient(100deg, transparent, rgba(255,255,255,0.5), transparent);
-        opacity: 0; pointer-events: none;
+    .stButton > button, .stDownloadButton > button,
+    div[data-testid="stButton"] > button,
+    div[data-testid="stDownloadButton"] > button {
+        width: 100% !important;
+        min-width: 0 !important;
+        height: 48px !important;
+        min-height: 48px !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        padding: 0 1rem !important;
+        margin: 0 !important;
+        border: none !important;
+        border-radius: 18px !important;
+        background: linear-gradient(145deg, #38BDF8 0%, #0EA5E9 55%, #1E3A8A 100%) !important;
+        color: #FFFFFF !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.35px !important;
+        line-height: 1 !important;
+        box-shadow:
+            8px 8px 18px rgba(30,58,138,0.20),
+            -5px -5px 14px rgba(255,255,255,0.95),
+            inset 2px 2px 4px rgba(255,255,255,0.35),
+            inset -3px -3px 7px rgba(30,58,138,0.24) !important;
+        transition:
+            transform 0.18s cubic-bezier(0.175,0.885,0.32,1.275),
+            box-shadow 0.18s ease,
+            filter 0.18s ease !important;
+        position: relative !important;
+        overflow: hidden !important;
     }
-    .stButton > button:hover::after, .stDownloadButton > button:hover::after {
-        opacity: 1; animation: cardSheen 0.9s ease forwards;
+    .stButton > button::after, .stDownloadButton > button::after,
+    div[data-testid="stButton"] > button::after,
+    div[data-testid="stDownloadButton"] > button::after {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 -45%;
+        width: 45%;
+        background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.48) 48%, transparent 100%);
+        transform: skewX(-18deg);
+        opacity: 0;
+        pointer-events: none;
     }
-    .stButton > button:hover, .stDownloadButton > button:hover {
-        transform: translateY(-2px); box-shadow: 0 8px 18px rgba(14, 165, 233, 0.18) !important;
-        background: linear-gradient(135deg, var(--c-navy), #1E40AF);
+    .stButton > button:hover, .stDownloadButton > button:hover,
+    div[data-testid="stButton"] > button:hover,
+    div[data-testid="stDownloadButton"] > button:hover {
+        transform: translateY(-3px) !important;
+        filter: saturate(1.08) brightness(1.03) !important;
+        box-shadow:
+            10px 12px 24px rgba(30,58,138,0.24),
+            -6px -6px 16px rgba(255,255,255,1),
+            inset 2px 2px 5px rgba(255,255,255,0.42),
+            inset -4px -4px 9px rgba(30,58,138,0.28) !important;
     }
-    .stButton > button:active, .stDownloadButton > button:active {
-        transform: translateY(0); transition: transform 0.08s ease !important;
+    .stButton > button:hover::after, .stDownloadButton > button:hover::after,
+    div[data-testid="stButton"] > button:hover::after,
+    div[data-testid="stDownloadButton"] > button:hover::after {
+        opacity: 1;
+        animation: cardSheen 0.9s ease forwards;
+    }
+    .stButton > button:active, .stDownloadButton > button:active,
+    div[data-testid="stButton"] > button:active,
+    div[data-testid="stDownloadButton"] > button:active {
+        transform: translateY(1px) scale(0.985) !important;
+        box-shadow:
+            inset 4px 4px 9px rgba(30,58,138,0.22),
+            inset -3px -3px 7px rgba(255,255,255,0.45) !important;
+    }
+
+    /* ---------- Stronger claymorphism across interactive surfaces ---------- */
+    div[data-testid="stTabs"] [data-baseweb="tab-list"] {
+        padding: 6px !important;
+        gap: 10px !important;
+        border-radius: 20px !important;
+        box-shadow:
+            10px 10px 22px rgba(15,23,42,0.10),
+            -6px -6px 16px rgba(255,255,255,0.98),
+            inset 1px 1px 3px rgba(255,255,255,0.75) !important;
+    }
+    div[data-testid="stTabs"] [data-baseweb="tab"] {
+        min-height: 46px !important;
+        height: 46px !important;
+        padding: 0 16px !important;
+        border-radius: 15px !important;
+        box-sizing: border-box !important;
+        box-shadow: 2px 3px 8px rgba(15,23,42,0.06), inset 1px 1px 2px rgba(255,255,255,0.7) !important;
+    }
+    div[data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"] {
+        box-shadow:
+            5px 6px 12px rgba(30,58,138,0.14),
+            -3px -3px 8px rgba(255,255,255,0.95),
+            inset 1px 1px 3px rgba(255,255,255,0.8),
+            inset -2px -2px 4px rgba(30,58,138,0.08) !important;
+    }
+    [data-baseweb="select"] > div,
+    [data-baseweb="input"],
+    div[data-testid="stTextInput"] input,
+    div[data-testid="stNumberInput"] input,
+    textarea {
+        min-height: 46px !important;
+        border-radius: 16px !important;
+        border: 1px solid rgba(226,232,240,0.95) !important;
+        background: linear-gradient(145deg, #FFFFFF 0%, #F8FAFC 100%) !important;
+        box-shadow:
+            5px 6px 13px rgba(15,23,42,0.08),
+            -4px -4px 10px rgba(255,255,255,0.95),
+            inset 1px 1px 2px rgba(255,255,255,0.85),
+            inset -2px -2px 5px rgba(15,23,42,0.045) !important;
+    }
+    [data-baseweb="select"] > div:focus-within,
+    [data-baseweb="input"]:focus-within,
+    div[data-testid="stTextInput"] input:focus,
+    div[data-testid="stNumberInput"] input:focus,
+    textarea:focus {
+        box-shadow:
+            0 0 0 2px rgba(14,165,233,0.18),
+            5px 6px 14px rgba(15,23,42,0.08),
+            -4px -4px 10px rgba(255,255,255,0.98),
+            inset 1px 1px 2px rgba(255,255,255,0.9) !important;
+    }
+    div[data-testid="stExpander"] {
+        border: none !important;
+        border-radius: 20px !important;
+        background: linear-gradient(145deg, #FFFFFF 0%, #F8FAFC 100%) !important;
+        box-shadow:
+            9px 10px 22px rgba(15,23,42,0.09),
+            -6px -6px 15px rgba(255,255,255,0.98),
+            inset 1px 1px 3px rgba(255,255,255,0.85),
+            inset -2px -2px 5px rgba(15,23,42,0.035) !important;
+        overflow: hidden !important;
+    }
+    div[data-testid="stDataFrame"] {
+        border-radius: 20px !important;
+        box-shadow:
+            9px 10px 22px rgba(15,23,42,0.10),
+            -6px -6px 15px rgba(255,255,255,0.96),
+            inset 1px 1px 2px rgba(255,255,255,0.8) !important;
+    }
+    [data-testid="stPlotlyChart"], .stPlotlyChart {
+        border-radius: 20px !important;
+        box-shadow:
+            9px 10px 22px rgba(15,23,42,0.10),
+            -6px -6px 15px rgba(255,255,255,0.96),
+            inset 1px 1px 2px rgba(255,255,255,0.8) !important;
+    }
+    div[data-testid="stAlert"] {
+        border-radius: 18px !important;
+        box-shadow:
+            7px 8px 18px rgba(15,23,42,0.08),
+            -5px -5px 12px rgba(255,255,255,0.95),
+            inset 1px 1px 2px rgba(255,255,255,0.85) !important;
+    }
+    .source-tag, .badge {
+        box-shadow:
+            2px 3px 6px rgba(15,23,42,0.07),
+            -2px -2px 5px rgba(255,255,255,0.9),
+            inset 1px 1px 2px rgba(255,255,255,0.7),
+            inset -1px -1px 2px rgba(15,23,42,0.05) !important;
     }
 
     /* ---------- Tabs: cinematic active-state glow ---------- */
