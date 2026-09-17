@@ -960,8 +960,11 @@ st.markdown("""
     .square-metric:hover .square-metric-value { transform: none; }
     .square-metric-label { font-size: 0.92rem; color: var(--c-slate-600); font-weight: 800; margin-bottom: 0.35rem;
         line-height: 1.25; overflow-wrap: break-word; hyphens: auto; }
-    .square-metric-value { font-size: 1.7rem; color: var(--c-navy); font-weight: 900; line-height: 1.25; text-shadow: 0 1px 0 rgba(255,255,255,0.5);
-        display: inline-block; transition: transform var(--dur-med) var(--ease-spring); }
+    .square-metric-value { font-size: 2.05rem; color: var(--c-navy); font-weight: 950; line-height: 1.15; text-shadow: 0 1px 0 rgba(255,255,255,0.75);
+        display: inline-flex; align-items: center; justify-content: center; padding: 0.04rem 0.26rem 0.08rem; border-radius: 9px;
+        background: linear-gradient(145deg, rgba(255,255,255,0.98), rgba(224,242,254,0.90));
+        box-shadow: inset 1px 1px 3px rgba(255,255,255,0.98), inset -2px -2px 4px rgba(15,23,42,0.04), 3px 4px 9px rgba(14,165,233,0.09);
+        transition: transform var(--dur-med) var(--ease-spring), box-shadow var(--dur-med) ease; }
     .square-metric-delta { font-size: 0.8rem; color: var(--c-slate-500); margin-top: 0.4rem; line-height: 1.4; overflow-wrap: break-word; }
 
     /* ---------- Status card (advisor / diagnostic recommendations — one class, data-status modifier) ---------- */
@@ -1457,16 +1460,42 @@ st.markdown("""
     }
     .metric-card-value {
         flex: 0 0 auto !important;
-        font-size: 1.38rem !important;
-        margin-bottom: 0.18rem !important;
-        line-height: 1.1 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        align-self: flex-start !important;
+        width: fit-content !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        padding: 0.02rem 0.42rem 0.08rem !important;
+        border-radius: 10px !important;
+        font-size: 2.35rem !important;
+        font-weight: 950 !important;
+        color: var(--c-navy-dark) !important;
+        margin-bottom: 0.14rem !important;
+        line-height: 1.0 !important;
+        letter-spacing: 0.1px !important;
         overflow-wrap: anywhere !important;
+        background: linear-gradient(145deg, rgba(255,255,255,0.98), rgba(224,242,254,0.92)) !important;
+        box-shadow:
+            inset 2px 2px 5px rgba(255,255,255,0.99),
+            inset -3px -3px 6px rgba(15,23,42,0.055),
+            0 5px 14px rgba(14,165,233,0.14),
+            0 0 18px rgba(14,165,233,0.07) !important;
+        text-shadow: 0 1px 0 rgba(255,255,255,0.85) !important;
     }
     .metric-card-subtitle {
         margin-top: auto !important;
         font-size: 0.68rem !important;
         line-height: 1.25 !important;
         overflow-wrap: anywhere !important;
+    }
+    @media (max-width: 900px) {
+        .metric-card-value { font-size: 2.05rem !important; }
+        .square-metric-value { font-size: 1.85rem !important; }
+    }
+    @media (max-width: 640px) {
+        .metric-card-value { font-size: 1.85rem !important; }
+        .square-metric-value { font-size: 1.65rem !important; }
     }
 
     /* Strong clay treatment for the smaller analytical tiles */
@@ -1589,10 +1618,14 @@ st.markdown("""
     }
 
     @media (max-width: 900px) {
+        .metric-card-value { font-size: 1.64rem !important; }
+        .square-metric-value { font-size: 1.52rem !important; }
         div[data-testid="stTabs"] [data-baseweb="tab"] { font-size: 0.82rem !important; padding: 0 7px !important; }
         div[data-testid="column"] .metric-card, .metric-card { height: 112px !important; min-height: 112px !important; max-height: 112px !important; flex-basis: 112px !important; }
     }
     @media (max-width: 640px) {
+        .metric-card-value { font-size: 1.52rem !important; }
+        .square-metric-value { font-size: 1.44rem !important; }
         div[data-testid="stHorizontalBlock"] { gap: 0.7rem !important; }
         div[data-testid="stTabs"] [data-baseweb="tab-list"] { gap: 5px !important; }
         div[data-testid="stTabs"] [data-baseweb="tab"] { height: 44px !important; min-height: 44px !important; font-size: 0.70rem !important; }
