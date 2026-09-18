@@ -62,6 +62,126 @@ if "_sidebar_bootstrap_done" not in st.session_state:
             }
         }, 150);
     </script>""", unsafe_allow_javascript=True)
+    # Animated KPI count-up: purely presentational. Watches metric-card-value / square-metric-value
+    # nodes and, on any text change (e.g. after a filter rerun), tweens the displayed number from its
+    # previous value to the new one instead of an abrupt swap. Values that aren't parseable as a plain
+    # number (e.g. "N/A") are left untouched. Attached once to document.body, which React/Streamlit
+    # never replaces wholesale, so it keeps working across every future rerun without re-injection.
+    st.html("""<script>
+        (function() {
+            const root = window.parent?.document || document;
+            if (root.__kpiCountUpInstalled) return;
+            root.__kpiCountUpInstalled = true;
+            const prefersReduced = window.parent
+                ? window.parent.matchMedia('(prefers-reduced-motion: reduce)').matches
+                : window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const lastValues = new Map();
+            const DURATION = 500;
+            function parseValue(text) {
+                const m = String(text).trim().match(/^([^\\d.-]*)(-?[\\d,]*\\.?\\d+)([^\\d]*)$/);
+                if (!m) return null;
+                const num = parseFloat(m[2].replace(/,/g, ''));
+                if (Number.isNaN(num)) return null;
+                const decimals = (m[2].split('.')[1] || '').length;
+                return { prefix: m[1], suffix: m[3], num, decimals, usesComma: m[2].includes(',') };
+            }
+            function formatValue(num, parsed) {
+                const fixed = num.toFixed(parsed.decimals);
+                const [intPart, decPart] = fixed.split('.');
+                const withCommas = parsed.usesComma
+                    ? intPart.replace(/\\B(?=(\\d{3})+(?!\\d))/g, ',')
+                    : intPart;
+                return parsed.prefix + withCommas + (decPart ? '.' + decPart : '') + parsed.suffix;
+            }
+            function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+            function animateNode(node, fromNum, toParsed) {
+                const start = performance.now();
+                function tick(now) {
+                    const elapsed = now - start;
+                    const t = Math.min(1, elapsed / DURATION);
+                    const eased = easeOutCubic(t);
+                    const current = fromNum + (toParsed.num - fromNum) * eased;
+                    node.textContent = formatValue(current, toParsed);
+                    if (t < 1) requestAnimationFrame(tick);
+                    else node.textContent = formatValue(toParsed.num, toParsed);
+                }
+                requestAnimationFrame(tick);
+            }
+            function keyFor(node) {
+                const card = node.closest('.metric-card, .square-metric');
+                const title = card?.querySelector('.metric-card-title, .square-metric-label')?.textContent?.trim() || '';
+                let idx = 0, sib = card;
+                while ((sib = sib?.previousElementSibling)) idx++;
+                return title + '::' + idx;
+            }
+            function handleNode(node) {
+                const text = node.textContent;
+                const parsed = parseValue(text);
+                const key = keyFor(node);
+                if (!parsed) { lastValues.delete(key); return; }
+                const prev = lastValues.get(key);
+                lastValues.set(key, parsed.num);
+                if (prev === undefined || prev === parsed.num || prefersReduced) {
+                    node.classList.add('value-counting');
+                    requestAnimationFrame(() => node.classList.remove('value-counting'));
+                    return;
+                }
+                animateNode(node, prev, parsed);
+            }
+            function scan(container) {
+                container.querySelectorAll?.('.metric-card-value, .square-metric-value').forEach(handleNode);
+            }
+            scan(root);
+            const observer = new MutationObserver((mutations) => {
+                for (const mut of mutations) {
+                    if (mut.type === 'characterData') {
+                        const el = mut.target.parentElement;
+                        if (el && (el.classList.contains('metric-card-value') || el.classList.contains('square-metric-value'))) {
+                            handleNode(el);
+                        }
+                    } else if (mut.type === 'childList') {
+                        mut.addedNodes.forEach((n) => {
+                            if (n.nodeType === 1) {
+                                if (n.matches?.('.metric-card-value, .square-metric-value')) handleNode(n);
+                                scan(n);
+                            }
+                        });
+                    }
+                }
+            });
+            observer.observe(root.body, { childList: true, subtree: true, characterData: true });
+        })();
+    </script>""", unsafe_allow_javascript=True)
+    # Skeleton shimmer on rerun: toggles a body class for the brief window Streamlit's own native
+    # "running" status widget is present in the DOM (this happens on every filter/control change,
+    # since Streamlit reruns the script). A short show-delay avoids flicker on reruns that finish
+    # almost instantly; nothing here affects when or how the rerun itself happens.
+    st.html("""<script>
+        (function() {
+            const root = window.parent?.document || document;
+            if (root.__kpiRerunWatcherInstalled) return;
+            root.__kpiRerunWatcherInstalled = true;
+            let showTimer = null;
+            function isRunning() {
+                return !!root.querySelector('[data-testid="stStatusWidget"]');
+            }
+            function tick() {
+                const running = isRunning();
+                if (running && !showTimer && !root.body.classList.contains('kpi-rerunning')) {
+                    showTimer = setTimeout(() => {
+                        if (isRunning()) root.body.classList.add('kpi-rerunning');
+                        showTimer = null;
+                    }, 120);
+                } else if (!running) {
+                    if (showTimer) { clearTimeout(showTimer); showTimer = null; }
+                    root.body.classList.remove('kpi-rerunning');
+                }
+            }
+            const observer = new MutationObserver(tick);
+            observer.observe(root.body, { childList: true, subtree: true });
+            tick();
+        })();
+    </script>""", unsafe_allow_javascript=True)
 _ORIGINAL_PLOTLY_CHART = st.plotly_chart
 def _cinematic_plotly_chart(fig, *args, **kwargs):
     try:
@@ -488,6 +608,17 @@ st.markdown("""
         70% { box-shadow: 0 0 0 8px rgba(153, 27, 27, 0); }
         100% { box-shadow: 0 0 0 0 rgba(153, 27, 27, 0); }
     }
+    @keyframes skeletonShimmer {
+        0% { background-position: -180% 0; }
+        100% { background-position: 180% 0; }
+    }
+    @keyframes shimmerFadeIn {
+        to { opacity: 1; }
+    }
+    @keyframes valueSettle {
+        0% { opacity: 0.55; filter: blur(2px); }
+        100% { opacity: 1; filter: blur(0); }
+    }
     @keyframes fadeInUp {
         from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
@@ -842,6 +973,90 @@ st.markdown("""
         .metric-card::after, .square-metric::after, .flow-card::after, .decision-card::after,
         .stButton > button::after, .stDownloadButton > button::after { display: none !important; }
         .square-metric:hover .square-metric-value { transform: none !important; }
+        .metric-card-value.value-counting { animation: none !important; opacity: 1 !important; filter: none !important; }
+        .skeleton-shimmer { animation: none !important; background: var(--c-slate-100) !important; }
+        [data-baseweb="select"] > div, div[data-testid="stDateInput"] input,
+        div[data-testid="stTabs"] [data-baseweb="tab"] { transition: none !important; }
+        div[data-testid="stTabs"] [data-baseweb="tab"]:active { transform: none !important; }
+    }
+    /* ---- Enhancement layer: micro-interactions for KPI counters, dropdowns, skeletons ---- */
+    .metric-card-value.value-counting {
+        animation: valueSettle var(--dur-fast) var(--ease-standard) both;
+        font-variant-numeric: tabular-nums;
+    }
+    .skeleton-shimmer {
+        position: relative !important;
+        color: transparent !important;
+        pointer-events: none !important;
+        border-radius: 8px !important;
+        background: linear-gradient(90deg, var(--c-slate-100) 25%, var(--c-slate-200) 45%, var(--c-slate-100) 65%) !important;
+        background-size: 250% 100% !important;
+        animation: skeletonShimmer 1.3s ease-in-out infinite !important;
+        box-shadow: none !important;
+    }
+    .skeleton-shimmer * { visibility: hidden !important; }
+    /* Brief in-place shimmer on KPI cards + charts while Streamlit is actively rerunning (e.g. a
+       filter just changed). Toggled by a JS class on <body> tied to Streamlit's own native
+       data-testid="stStatusWidget" running indicator — no change to data flow or timing. Card/chart
+       dimensions are untouched (already fixed-size), so nothing shifts when the shimmer appears
+       or clears. A short delay before showing avoids flicker on reruns that resolve almost instantly. */
+    body.kpi-rerunning .metric-card,
+    body.kpi-rerunning .square-metric {
+        position: relative !important;
+    }
+    body.kpi-rerunning .metric-card::before,
+    body.kpi-rerunning .square-metric::before {
+        content: "" !important;
+        position: absolute !important;
+        inset: 0 !important;
+        z-index: 2 !important;
+        border-radius: inherit !important;
+        background: linear-gradient(90deg, rgba(241,245,249,0.0) 0%, rgba(241,245,249,0.85) 25%, rgba(226,232,240,0.95) 45%, rgba(241,245,249,0.85) 65%, rgba(241,245,249,0.0) 100%) !important;
+        background-size: 250% 100% !important;
+        opacity: 0 !important;
+        animation: skeletonShimmer 1.1s ease-in-out 0.12s infinite, shimmerFadeIn 0.001s linear 0.12s forwards !important;
+        pointer-events: none !important;
+    }
+    body.kpi-rerunning [data-testid="stPlotlyChart"] {
+        opacity: 0.45 !important;
+        filter: saturate(0.7) !important;
+        transition: opacity 0.15s ease 0.12s, filter 0.15s ease 0.12s !important;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        body.kpi-rerunning .metric-card::before,
+        body.kpi-rerunning .square-metric::before { display: none !important; }
+        body.kpi-rerunning [data-testid="stPlotlyChart"] { opacity: 1 !important; filter: none !important; transition: none !important; }
+    }
+    /* Dropdown / select / multiselect / date input: smooth focus + open feedback, no layout changes.
+       Selectors below reuse [data-baseweb="select"] and [data-testid="stTabs"]/[data-baseweb="tab"],
+       which this stylesheet already targets successfully elsewhere in this file. */
+    [data-baseweb="select"] > div,
+    div[data-testid="stDateInput"] input {
+        transition: box-shadow var(--dur-fast) ease, border-color var(--dur-fast) ease !important;
+    }
+    [data-baseweb="select"]:hover > div {
+        box-shadow:
+            8px 9px 19px rgba(15,23,42,0.12),
+            -6px -6px 14px rgba(255,255,255,0.98),
+            inset 2px 2px 4px rgba(255,255,255,0.9),
+            inset -3px -3px 6px rgba(15,23,42,0.06) !important;
+    }
+    [data-baseweb="select"]:focus-within > div {
+        box-shadow: 0 0 0 2px rgba(14,165,233,0.28), var(--clay-shadow-hover) !important;
+    }
+    div[data-testid="stTabs"] [data-baseweb="tab"] {
+        transition:
+            color var(--dur-fast) ease,
+            background var(--dur-med) var(--ease-standard),
+            box-shadow var(--dur-med) var(--ease-standard),
+            transform var(--dur-fast) ease !important;
+    }
+    div[data-testid="stTabs"] [data-baseweb="tab"]:active {
+        transform: scale(0.98) !important;
+    }
+    /* Chart container: soften the swap between old/new figure to avoid an abrupt pop */
+    [data-testid="stPlotlyChart"] {
+        transition: opacity 0.18s ease !important;
     }
     div[data-testid="stHorizontalBlock"] {
         display: flex !important;
