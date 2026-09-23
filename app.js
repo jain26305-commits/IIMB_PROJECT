@@ -1,7 +1,7 @@
-﻿/**
+/**
  * Enterprise Demand Forecasting & Inventory Decision Support System
- * Using Time Series Analytics â€” Premium Edition (v2)
- * Master Browser Engine: Phase 3 Full Functional & Interaction Parity
+ * Using Time Series Analytics  —  Premium Edition (v2)
+ * Master Browser Engine: Phase 3 Full Functional & Interaction Parity (Optimized)
  * Data Source of Truth: dashboard-data.json (Executive_Summary sheet)
  */
 
@@ -154,7 +154,7 @@ function showToast(message) {
     toast.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#1E3A8A;color:#fff;padding:12px 20px;border-radius:12px;box-shadow:0 10px 25px rgba(15,23,42,0.25);font-size:0.88rem;font-weight:700;z-index:999999;transition:opacity 0.25s ease,transform 0.25s ease;opacity:0;transform:translateY(12px);pointer-events:none;max-width:400px;line-height:1.4;border:1px solid rgba(255,255,255,0.2);';
     document.body.appendChild(toast);
   }
-  toast.innerHTML = `ðŸŽ¯ ${escapeHtml(message)}`;
+  toast.innerHTML = `🎯 ${escapeHtml(message)}`;
   toast.style.opacity = '1';
   toast.style.transform = 'translateY(0)';
   clearTimeout(toast._timeout);
@@ -545,7 +545,7 @@ function jumpToSKU(targetSku) {
     });
     renderTab1();
   }
-  showToast(`Loaded ${targetSku} â€” see 'Decision Intelligence' below, or Tabs 2/3 for full diagnostics.`);
+  showToast(`Loaded ${targetSku}  —  see 'Decision Intelligence' below, or Tabs 2/3 for full diagnostics.`);
   const heading = document.getElementById('decision-intelligence-heading');
   if (heading) {
     heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -642,7 +642,7 @@ function renderTab1() {
   const fhSub = document.getElementById('kpi-forecast-health-sub');
   if (fhSub) {
     const fhStatus = scoreToStatus(avgForecastHealth);
-    fhSub.innerHTML = `Mean Master Audit Forecast Health â€¢ Dashboard presentation band ${badgeHtml(fhStatus, fhStatus.charAt(0).toUpperCase() + fhStatus.slice(1))}`;
+    fhSub.innerHTML = `Mean Master Audit Forecast Health  •  Dashboard presentation band ${badgeHtml(fhStatus, fhStatus.charAt(0).toUpperCase() + fhStatus.slice(1))}`;
   }
 
   const hrCard = document.getElementById('kpi-high-risk-card');
@@ -651,7 +651,7 @@ function renderTab1() {
     else hrCard.classList.remove('pulse-critical');
   }
 
-  // Portfolio Composition â€” ABC
+  // Portfolio Composition  —  ABC
   const abcCounts = { A: 0, B: 0, C: 0 };
   records.forEach(r => {
     const c = String(r.ABC_Class || '').trim();
@@ -666,7 +666,7 @@ function renderTab1() {
     marker: { colors: [ABC_COLOR_MAP.A, ABC_COLOR_MAP.B, ABC_COLOR_MAP.C], line: { color: '#ffffff', width: 2.5 } },
     textinfo: 'label+percent'
   }], {
-    title: { text: 'SKU Count Share by ABC â€” Demand Volume Classification', font: { size: 13, family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }, y: 0.98 },
+    title: { text: 'SKU Count Share by ABC  —  Demand Volume Classification', font: { size: 13, family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }, y: 0.98 },
     margin: { l: 20, r: 20, t: 50, b: 15 },
     hoverlabel: CYBER_HOVERLABEL,
     plot_bgcolor: 'white',
@@ -674,7 +674,7 @@ function renderTab1() {
     transition: { duration: 450, easing: 'cubic-in-out' }
   }, { displayModeBar: false, responsive: true });
 
-  // Portfolio Composition â€” XYZ
+  // Portfolio Composition  —  XYZ
   const xyzCounts = { X: 0, Y: 0, Z: 0 };
   records.forEach(r => {
     const c = String(r.XYZ_Class || '').trim();
@@ -689,7 +689,7 @@ function renderTab1() {
     marker: { colors: [XYZ_COLOR_MAP.X, XYZ_COLOR_MAP.Y, XYZ_COLOR_MAP.Z], line: { color: '#ffffff', width: 2.5 } },
     textinfo: 'label+percent'
   }], {
-    title: { text: 'SKU Count Share by XYZ â€” Demand Variability Classification', font: { size: 13, family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }, y: 0.98 },
+    title: { text: 'SKU Count Share by XYZ  —  Demand Variability Classification', font: { size: 13, family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }, y: 0.98 },
     margin: { l: 20, r: 20, t: 50, b: 15 },
     hoverlabel: CYBER_HOVERLABEL,
     plot_bgcolor: 'white',
@@ -697,7 +697,7 @@ function renderTab1() {
     transition: { duration: 450, easing: 'cubic-in-out' }
   }, { displayModeBar: false, responsive: true });
 
-  // ABCâ€“XYZ Segmentation Matrix
+  // ABC – XYZ Segmentation Matrix
   const matrix = { A: {X:0, Y:0, Z:0}, B: {X:0, Y:0, Z:0}, C: {X:0, Y:0, Z:0} };
   records.forEach(r => {
     const code = String(r.ABC_XYZ_Class || '').trim();
@@ -725,9 +725,9 @@ function renderTab1() {
     showscale: true,
     colorbar: { len: 0.85, thickness: 14, title: { text: 'SKU Count', font: { size: 11 } } }
   }], {
-    title: 'ABCâ€“XYZ Segmentation Matrix â€” SKU Count',
-    xaxis: { title: { text: 'XYZ â€” Demand Variability', standoff: 15 }, automargin: true },
-    yaxis: { title: { text: 'ABC â€” Demand Volume Classification', standoff: 15 }, automargin: true },
+    title: 'ABC – XYZ Segmentation Matrix  —  SKU Count',
+    xaxis: { title: { text: 'XYZ  —  Demand Variability', standoff: 15 }, automargin: true },
+    yaxis: { title: { text: 'ABC  —  Demand Volume Classification', standoff: 15 }, automargin: true },
     margin: { l: 60, r: 40, t: 45, b: 55 },
     hoverlabel: CYBER_HOVERLABEL,
     font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
@@ -838,11 +838,11 @@ function renderTab1() {
           <span class="status-card-desc">${escapeHtml(rec)}</span><br>
           <div style="margin-top:0.5rem; display: flex; flex-wrap: wrap; gap: 4px;">${chips}</div>
           <div style="margin-top: 0.8rem; display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;">
-            <input type="text" id="jump-select-${idx}" class="st-select" list="jump-datalist-${idx}" value="${escapeHtml(matchingSkus[0] || '')}" placeholder="ðŸ”Ž Search or select SKU..." style="width: 280px; max-width: 100%;" autocomplete="off">
+            <input type="text" id="jump-select-${idx}" class="st-select" list="jump-datalist-${idx}" value="${escapeHtml(matchingSkus[0] || '')}" placeholder="🔎 Search or select SKU..." style="width: 280px; max-width: 100%;" autocomplete="off">
             <datalist id="jump-datalist-${idx}">
               ${matchingSkus.map(s => `<option value="${escapeHtml(s)}">`).join('')}
             </datalist>
-            <button class="stButton" style="width: auto; height: 38px !important; min-height: 38px !important; padding: 0 1.2rem !important;" onclick="jumpToSKUFromTop('jump-select-${idx}')">ðŸŽ¯ Jump to SKU</button>
+            <button class="stButton" style="width: auto; height: 38px !important; min-height: 38px !important; padding: 0 1.2rem !important;" onclick="jumpToSKUFromTop('jump-select-${idx}')">🎯 Jump to SKU</button>
           </div>
         `;
         topDecContainer.appendChild(card);
@@ -861,12 +861,12 @@ function renderDecisionIntelligenceForSelectedSKU() {
   container.innerHTML = '';
 
   if (!sku) {
-    if (heading) heading.textContent = 'ðŸ§­ Decision Intelligence â€” No SKU Selected';
-    container.innerHTML = '<div class="empty-state-card" style="grid-column: 1 / -1;"><strong>ðŸ§­ No SKU Selected</strong><br><span style="font-size: 0.85rem; color: var(--c-slate-500);">Select a SKU from the Control Panel or the selector above to view tailored Decision Intelligence recommendations.</span></div>';
+    if (heading) heading.textContent = '🧭 Decision Intelligence  —  No SKU Selected';
+    container.innerHTML = '<div class="empty-state-card" style="grid-column: 1 / -1;"><strong>🧭 No SKU Selected</strong><br><span style="font-size: 0.85rem; color: var(--c-slate-500);">Select a SKU from the Control Panel or the selector above to view tailored Decision Intelligence recommendations.</span></div>';
     return;
   }
 
-  if (heading) heading.textContent = `ðŸ§­ Decision Intelligence â€” ${sku}`;
+  if (heading) heading.textContent = `🧭 Decision Intelligence  —  ${sku}`;
   const row = AppState.rawRecords.find(r => String(r.SKU).trim() === String(sku).trim());
   if (!row) {
     container.innerHTML = '<div style="color: var(--c-danger-text); grid-column: 1 / -1;">Selected SKU data not found in current records.</div>';
@@ -875,15 +875,15 @@ function renderDecisionIntelligenceForSelectedSKU() {
 
   container.innerHTML = `
     <div>
-      ${renderDecisionCard("ðŸŽ¯", "Executive Recommendation", row.Executive_Recommendation || 'N/A')}
-      ${renderDecisionCard("ðŸ“¦", "Inventory Recommendation", row.Inventory_Recommendation || 'N/A')}
-      ${renderDecisionCard("ðŸšš", "Procurement Recommendation", row.Procurement_Recommendation || 'N/A')}
-      ${renderDecisionCard("ðŸ­", "Warehouse Recommendation", row.Warehouse_Recommendation || 'N/A')}
+      ${renderDecisionCard("🎯", "Executive Recommendation", row.Executive_Recommendation || 'N/A')}
+      ${renderDecisionCard("📦", "Inventory Recommendation", row.Inventory_Recommendation || 'N/A')}
+      ${renderDecisionCard("🚚", "Procurement Recommendation", row.Procurement_Recommendation || 'N/A')}
+      ${renderDecisionCard("🏭", "Warehouse Recommendation", row.Warehouse_Recommendation || 'N/A')}
     </div>
     <div>
-      ${renderDecisionCard("ðŸ’°", "Financial Recommendation", row.Financial_Recommendation || 'N/A')}
-      ${renderDecisionCard("ðŸ“", "Business Explanation", row.Business_Explanation || 'N/A')}
-      ${renderDecisionCard("ðŸ“ˆ", "Expected Impact", row.Expected_Impact || 'N/A')}
+      ${renderDecisionCard("💰", "Financial Recommendation", row.Financial_Recommendation || 'N/A')}
+      ${renderDecisionCard("📋", "Business Explanation", row.Business_Explanation || 'N/A')}
+      ${renderDecisionCard("📈", "Expected Impact", row.Expected_Impact || 'N/A')}
     </div>
   `;
 }
@@ -927,16 +927,16 @@ function renderTab2() {
     }
     if (!isNaN(bullwhip)) {
       if (bullwhip > 1.5) {
-        insight += `The Bullwhip Ratio â€” model-derived replenishment signal amplification metric is ${fmtNum(bullwhip, 2)} relative to the reference level. `;
+        insight += `The Bullwhip Ratio  —  model-derived replenishment signal amplification metric is ${fmtNum(bullwhip, 2)} relative to the reference level. `;
       } else {
-        insight += `The Bullwhip Ratio â€” model-derived replenishment signal amplification metric is ${fmtNum(bullwhip, 2)} and is near the reference level. `;
+        insight += `The Bullwhip Ratio  —  model-derived replenishment signal amplification metric is ${fmtNum(bullwhip, 2)} and is near the reference level. `;
       }
     }
     if (!isNaN(pVal)) {
       const healthStatus = pVal > 0.05
-        ? "Acceptable â€” no significant residual autocorrelation detected at the tested lag"
-        : "Review â€” significant residual autocorrelation detected at the tested lag";
-      insight += `<br><br><strong>Residual Diagnostic:</strong> ${healthStatus} â€” Ljung-Box p-value ${fmtNum(pVal, 3)}.`;
+        ? "Acceptable  —  no significant residual autocorrelation detected at the tested lag"
+        : "Review  —  significant residual autocorrelation detected at the tested lag";
+      insight += `<br><br><strong>Residual Diagnostic:</strong> ${healthStatus}  —  Ljung-Box p-value ${fmtNum(pVal, 3)}.`;
     }
     if (briefEl) briefEl.innerHTML = insight;
 
@@ -944,7 +944,7 @@ function renderTab2() {
     const meanM = Number(row.Mean_Monthly_Demand);
     const fcNext = Number(row.Forecast_Next_Month);
     Plotly.react('chart-forecast-snapshot', [{
-      x: ['Mean Monthly Demand (Historical Avg)', 'Forecast â€” Next Month'],
+      x: ['Mean Monthly Demand (Historical Avg)', 'Forecast  —  Next Month'],
       y: [isNaN(meanM) ? 0 : meanM, isNaN(fcNext) ? 0 : fcNext],
       type: 'bar',
       marker: { color: ['#64748B', '#3B82F6'], line: { color: '#ffffff', width: 1.5 } }
@@ -972,7 +972,7 @@ function renderTab2() {
         <div class="square-metric">
           <div class="square-metric-label">Bullwhip Ratio</div>
           <div class="square-metric-value" id="t2-kpi-bw-val">${fmtNum(bullwhip, 2)}</div>
-          <div class="square-metric-delta">Model-Derived Replenishment Signal Â· Amplification</div>
+          <div class="square-metric-delta">Model-Derived Replenishment Signal · Amplification</div>
         </div>
         <div class="square-metric">
           <div class="square-metric-label">Forecast Accuracy</div>
@@ -994,7 +994,7 @@ function renderTab2() {
       type: 'bar',
       marker: { color: ['#64748B', '#0EA5E9'], line: { color: '#ffffff', width: 1.5 } }
     }], {
-      title: 'Demand Snapshot â€” Historical Average vs Next-Month Forecast',
+      title: 'Demand Snapshot  —  Historical Average vs Next-Month Forecast',
       height: 255,
       margin: { l: 65, r: 24, t: 48, b: 55 },
       hoverlabel: CYBER_HOVERLABEL,
@@ -1142,9 +1142,9 @@ function renderTab2() {
     ],
     texttemplate: "%{text}"
   }], {
-    title: 'Forecast Risk by ABC Class â€” SKU Count',
+    title: 'Forecast Risk by ABC Class  —  SKU Count',
     xaxis: { title: { text: 'Forecast Risk', standoff: 15 }, automargin: true },
-    yaxis: { title: { text: 'ABC â€” Demand Volume Classification', standoff: 15 }, automargin: true },
+    yaxis: { title: { text: 'ABC  —  Demand Volume Classification', standoff: 15 }, automargin: true },
     margin: { l: 60, r: 40, t: 40, b: 55 },
     hoverlabel: CYBER_HOVERLABEL,
     font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
@@ -1154,7 +1154,7 @@ function renderTab2() {
   }, { displayModeBar: false, responsive: true });
 
   if (evidenceEl) {
-    evidenceEl.textContent = `${fmtNum(avgAcc, 2, "%")} average validation accuracy across ${records.length.toLocaleString('en-US')} SKUs in the current filter â€” this is holdout validation performance, not an improvement figure versus any prior forecasting process.`;
+    evidenceEl.textContent = `${fmtNum(avgAcc, 2, "%")} average validation accuracy across ${records.length.toLocaleString('en-US')} SKUs in the current filter  —  this is holdout validation performance, not an improvement figure versus any prior forecasting process.`;
   }
 }
 
@@ -1247,15 +1247,15 @@ function renderTab3() {
     if (mathAuditContent) {
       let zeroNote = '';
       if (maSS === 0 && ssOk) {
-        zeroNote = `<div class="status-card" data-status="green" style="margin-top:0.8rem; font-size:0.84rem;">A Safety Stock of 0 is mathematically correct here â€” not a data-quality defect. It occurs when the SKU has zero historical demand variance (dead stock / constant demand) or when the forecast model achieved a near-zero RMSE on a very low-volume, intermittent-demand SKU, so the computed buffer legitimately rounds to zero.</div>`;
+        zeroNote = `<div class="status-card" data-status="green" style="margin-top:0.8rem; font-size:0.84rem;">A Safety Stock of 0 is mathematically correct here  —  not a data-quality defect. It occurs when the SKU has zero historical demand variance (dead stock / constant demand) or when the forecast model achieved a near-zero RMSE on a very low-volume, intermittent-demand SKU, so the computed buffer legitimately rounds to zero.</div>`;
       }
       mathAuditContent.innerHTML = `
         <table class="math-audit-table">
           <tr><th></th><th>Master Audit</th><th>Independent Validation</th><th>Variance</th><th>Status</th></tr>
-          <tr><td><strong>Safety Stock</strong></td><td>${fmtNum(maSS, 0)}</td><td>${fmtNum(indSS, 0)}</td><td>${ssVar !== null ? fmtNum(ssVar, 0) : 'N/A'}</td><td class="${ssOk ? 'math-status-ok' : 'math-status-review'}">${ssOk ? 'âœ“ Confirmed' : (ssVar !== null ? 'âš  Review' : 'N/A')}</td></tr>
-          <tr><td><strong>Reorder Point</strong></td><td>${fmtNum(maROP, 0)}</td><td>${fmtNum(indROP, 0)}</td><td>${ropVar !== null ? fmtNum(ropVar, 0) : 'N/A'}</td><td class="${ropOk ? 'math-status-ok' : 'math-status-review'}">${ropOk ? 'âœ“ Confirmed' : (ropVar !== null ? 'âš  Review' : 'N/A')}</td></tr>
+          <tr><td><strong>Safety Stock</strong></td><td>${fmtNum(maSS, 0)}</td><td>${fmtNum(indSS, 0)}</td><td>${ssVar !== null ? fmtNum(ssVar, 0) : 'N/A'}</td><td class="${ssOk ? 'math-status-ok' : 'math-status-review'}">${ssOk ? '✓ Confirmed' : (ssVar !== null ? '⚠ Review' : 'N/A')}</td></tr>
+          <tr><td><strong>Reorder Point</strong></td><td>${fmtNum(maROP, 0)}</td><td>${fmtNum(indROP, 0)}</td><td>${ropVar !== null ? fmtNum(ropVar, 0) : 'N/A'}</td><td class="${ropOk ? 'math-status-ok' : 'math-status-review'}">${ropOk ? '✓ Confirmed' : (ropVar !== null ? '⚠ Review' : 'N/A')}</td></tr>
         </table>
-        <p class="section-caption" style="margin-top: 0.8rem;">Basis: ${valRes.basis}. Independent formula: Safety Stock = 1.645 Ã— RMSE Ã— âˆš(Lead Time Ã· 30); Reorder Point = (Forecast Next Month Ã· 30 Ã— Lead Time) + Safety Stock â€” reproduced directly from the source notebook's own implementation, not a generic textbook substitute.</p>
+        <p class="section-caption" style="margin-top: 0.8rem;">Basis: ${valRes.basis}. Independent formula: Safety Stock = 1.645 × RMSE × √(Lead Time / 30); Reorder Point = (Forecast Next Month / 30 × Lead Time) + Safety Stock  —  reproduced directly from the source notebook's own implementation, not a generic textbook substitute.</p>
         ${zeroNote}
       `;
     }
@@ -1350,7 +1350,7 @@ function renderTab3() {
   }, { displayModeBar: false, responsive: true });
 
   const invValSum = safeSum(records, 'Inventory_Value');
-  document.getElementById('tab3-model-implied-pos-text').innerHTML = `Model-Implied Inventory Value across the current filter is <strong>${fmtMonetary(invValSum)}</strong> â€” the analytical figure implied by applying this policy to Master Audit fields, not an observed accounting balance. No actual/observed on-hand inventory column is present in this data source, so it is not shown as if it were.`;
+  document.getElementById('tab3-model-implied-pos-text').innerHTML = `Model-Implied Inventory Value across the current filter is <strong>${fmtMonetary(invValSum)}</strong>  —  the analytical figure implied by applying this policy to Master Audit fields, not an observed accounting balance. No actual/observed on-hand inventory column is present in this data source, so it is not shown as if it were.`;
 }
 
 // ==========================================================================
@@ -1422,8 +1422,8 @@ function renderTab4() {
     });
 
     Plotly.react('chart-bullwhip-rmse-scatter', Object.values(traces), {
-      title: 'Bullwhip Ratio vs. Forecast Error â€” Dashboard-Derived Review Lens',
-      xaxis: { title: { text: 'Bullwhip Ratio â€” Model-Derived Replenishment Signal Amplification', standoff: 15 }, zeroline: false, automargin: true },
+      title: 'Bullwhip Ratio vs. Forecast Error  —  Dashboard-Derived Review Lens',
+      xaxis: { title: { text: 'Bullwhip Ratio  —  Model-Derived Replenishment Signal Amplification', standoff: 15 }, zeroline: false, automargin: true },
       yaxis: { title: { text: 'RMSE', standoff: 15 }, zeroline: false, automargin: true },
       shapes: [
         { type: 'line', x0: medBw, x1: medBw, y0: 0, y1: Math.max(...rmseVals) * 1.1, line: { dash: 'dot', color: '#94A3B8' } },
@@ -1448,7 +1448,7 @@ function renderTab4() {
     type: 'bar',
     marker: { color: [ABC_COLOR_MAP.A, ABC_COLOR_MAP.B, ABC_COLOR_MAP.C], line: { color: '#ffffff', width: 1.5 } }
   }], {
-    title: 'ABC â€” Demand Volume Classification',
+    title: 'ABC  —  Demand Volume Classification',
     xaxis: { title: { text: 'Class', standoff: 15 }, automargin: true },
     yaxis: { title: { text: 'SKU Count', standoff: 15 }, automargin: true },
     margin: { l: 60, r: 15, t: 40, b: 50 },
@@ -1467,7 +1467,7 @@ function renderTab4() {
     type: 'bar',
     marker: { color: [XYZ_COLOR_MAP.X, XYZ_COLOR_MAP.Y, XYZ_COLOR_MAP.Z], line: { color: '#ffffff', width: 1.5 } }
   }], {
-    title: 'XYZ â€” Demand Variability Classification',
+    title: 'XYZ  —  Demand Variability Classification',
     xaxis: { title: { text: 'Class', standoff: 15 }, automargin: true },
     yaxis: { title: { text: 'SKU Count', standoff: 15 }, automargin: true },
     margin: { l: 60, r: 15, t: 40, b: 50 },
@@ -1479,7 +1479,7 @@ function renderTab4() {
     transition: { duration: 450, easing: 'cubic-in-out' }
   }, { displayModeBar: false, responsive: true });
 
-  // ABCâ€“XYZ Risk Intensity Matrix (preserves empty/missing cells as null)
+  // ABC – XYZ Risk Intensity Matrix (preserves empty/missing cells as null)
   const meanRiskZ = ['A', 'B', 'C'].map(a => {
     return ['X', 'Y', 'Z'].map(x => {
       const code = a + x;
@@ -1500,9 +1500,9 @@ function renderTab4() {
     showscale: true,
     colorbar: { len: 0.85, thickness: 14, title: { text: 'Avg RMSE', font: { size: 11 } } }
   }], {
-    title: 'ABCâ€“XYZ Risk Intensity â€” Mean RMSE',
-    xaxis: { title: { text: 'XYZ â€” Demand Variability', standoff: 15 }, automargin: true },
-    yaxis: { title: { text: 'ABC â€” Demand Volume', standoff: 15 }, automargin: true },
+    title: 'ABC – XYZ Risk Intensity  —  Mean RMSE',
+    xaxis: { title: { text: 'XYZ  —  Demand Variability', standoff: 15 }, automargin: true },
+    yaxis: { title: { text: 'ABC  —  Demand Volume', standoff: 15 }, automargin: true },
     margin: { l: 60, r: 40, t: 40, b: 55 },
     hoverlabel: CYBER_HOVERLABEL,
     font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
@@ -1520,22 +1520,20 @@ function renderTab4() {
     if (sortedHr.length === 0) {
       hrTbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 1.5rem;">No high-risk SKUs in current filter.</td></tr>';
     } else {
-      sortedHr.forEach(r => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${escapeHtml(r.SKU || 'N/A')}</td>
-          <td>${escapeHtml(r.ABC_XYZ_Class || 'N/A')}</td>
-          <td>${fmtNum(r.RMSE, 2)}</td>
+      hrTbody.innerHTML = sortedHr.map(r => `
+        <tr>
+          <td><strong>${escapeHtml(r.SKU || 'N/A')}</strong></td>
+          <td><span class="matrix-badge">${escapeHtml(r.ABC_XYZ_Class || 'N/A')}</span></td>
+          <td style="font-weight:750;">${fmtNum(r.RMSE, 2)}</td>
           <td>${fmtNum(r.Bullwhip_Ratio, 2)}</td>
           <td>${fmtNum(r.CV, 2)}</td>
-          <td>${escapeHtml(r.Forecast_Risk || 'N/A')}</td>
+          <td><span class="status-pill status-high">${escapeHtml(r.Forecast_Risk || 'N/A')}</span></td>
           <td>${escapeHtml(r.Business_Risk || r['Business Risk'] || 'N/A')}</td>
           <td>${escapeHtml(r.Priority_Level || 'N/A')}</td>
           <td>${escapeHtml(r.Supply_Chain_Priority || r['Supply Chain Priority'] || 'N/A')}</td>
           <td>${escapeHtml(r.Model_Reliability || 'N/A')}</td>
-        `;
-        hrTbody.appendChild(tr);
-      });
+        </tr>
+      `).join('');
     }
   }
   const hrCaption = document.getElementById('high-risk-caption');
@@ -1570,7 +1568,7 @@ function renderTab4() {
     { x: top30Pareto.map(d => d.sku), y: top30Pareto.map(d => d.annual), type: 'bar', name: 'Annualised Demand', marker: { color: '#3B82F6', line: { color: '#2563EB', width: 1 } }, yaxis: 'y' },
     { x: top30Pareto.map(d => d.sku), y: paretoCum, type: 'scatter', mode: 'lines+markers', name: 'Cumulative %', line: { color: '#EC4899', width: 3.5 }, yaxis: 'y2' }
   ], {
-    title: 'Top 30 SKUs â€” Pareto (Annualised Demand, Master Audit)',
+    title: 'Top 30 SKUs  —  Pareto (Annualised Demand, Master Audit)',
     margin: { l: 70, r: 65, t: 45, b: 85 },
     hoverlabel: CYBER_HOVERLABEL,
     font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
@@ -1614,25 +1612,23 @@ function renderTab4() {
     if (trapList.length === 0) {
       trapTbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 1.5rem;">No candidates flagged in current filter.</td></tr>';
     } else {
-      trapList.forEach(r => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${escapeHtml(r.SKU || 'N/A')}</td>
-          <td>${escapeHtml(r.ABC_XYZ_Class || 'N/A')}</td>
+      trapTbody.innerHTML = trapList.map(r => `
+        <tr>
+          <td><strong>${escapeHtml(r.SKU || 'N/A')}</strong></td>
+          <td><span class="matrix-badge">${escapeHtml(r.ABC_XYZ_Class || 'N/A')}</span></td>
           <td>${fmtNum(r.Mean_Monthly_Demand, 1)}</td>
           <td>${fmtNum(r.Inventory_Days, 0)}</td>
-          <td>${fmtMonetary(r.Inventory_Value)}</td>
-          <td>${escapeHtml(r.Forecast_Risk || 'N/A')}</td>
+          <td style="font-weight:750;">${fmtMonetary(r.Inventory_Value)}</td>
+          <td><span class="status-pill status-high">${escapeHtml(r.Forecast_Risk || 'N/A')}</span></td>
           <td>${escapeHtml(r.Inventory_Recommendation || 'N/A')}</td>
-        `;
-        trapTbody.appendChild(tr);
-      });
+        </tr>
+      `).join('');
     }
   }
 
   const trapCaption = document.getElementById('capital-trap-caption');
   if (trapCaption) {
-    trapCaption.textContent = `${trapList.length.toLocaleString('en-US')} SKU(s) flagged as dashboard-derived candidates for inventory review â€” requires validation. These are dashboard-derived candidates for review, not confirmed excess inventory.`;
+    trapCaption.textContent = `${trapList.length.toLocaleString('en-US')} SKU(s) flagged as dashboard-derived candidates for inventory review  —  requires validation. These are dashboard-derived candidates for review, not confirmed excess inventory.`;
   }
 
   // Business Risk & SC Priority Categories
@@ -1743,16 +1739,11 @@ function renderTab5() {
       'C': '#0D9488'
     };
 
-    // === PERF OPTIMIZATION: Cap each ABC class to top-30 SKUs by Inventory Value ===
-    // Groups remaining SKUs into a single "Other (N SKUs)" node per class
-    // Reduces leaf nodes from ~1400 to ~93, dramatically speeding up Tab 5
-    const MAX_SKU_PER_CLASS = 30;
+    // All individual SKUs in each segmentation (No "Other" buckets in Class A, B, or C)
     ['A', 'B', 'C'].forEach(c => {
       const classRows = treeRows.filter(r => String(r.ABC_Class).trim() === c)
         .sort((a, b) => (Number(b.Inventory_Value) || 0) - (Number(a.Inventory_Value) || 0));
-      const topRows = classRows.slice(0, MAX_SKU_PER_CLASS);
-      const restRows = classRows.slice(MAX_SKU_PER_CLASS);
-      topRows.forEach(r => {
+      classRows.forEach(r => {
         const val = Number(r.Inventory_Value) || 0;
         ids.push(`Portfolio-${c}-${r.SKU}`);
         labels.push(r.SKU);
@@ -1760,14 +1751,6 @@ function renderTab5() {
         values.push(val);
         colors.push(SKU_COLOR_TINTS[c] || '#64748B');
       });
-      if (restRows.length > 0) {
-        const otherVal = restRows.reduce((s, r) => s + (Number(r.Inventory_Value) || 0), 0);
-        ids.push(`Portfolio-${c}-Other`);
-        labels.push(`Other (${restRows.length} SKUs)`);
-        parents.push(`Portfolio-${c}`);
-        values.push(otherVal);
-        colors.push(c === 'A' ? '#93C5FD' : c === 'B' ? '#7DD3FC' : '#5EEAD4');
-      }
     });
 
     Plotly.react('chart-financial-treemap', [{
@@ -1779,10 +1762,9 @@ function renderTab5() {
       branchvalues: 'total',
       marker: {
         colors: colors,
-        line: { color: '#FFFFFF', width: 1.2 }
+        line: { color: '#FFFFFF', width: 0.8 }
       },
-      texttemplate: '<b>%{label}</b><br>%{value:$,.2s}',
-      textinfo: 'label+value',
+      textinfo: 'label',
       hovertemplate: '<b>%{label}</b><br>Class: <b>%{parent}</b><br>Inventory Value: <b>%{value:$,.0f}</b><br>Share of Class: <b>%{percentParent:.1%}</b><br>Share of Portfolio: <b>%{percentRoot:.1%}</b><extra></extra>',
       insidetextfont: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', size: 10, color: '#FFFFFF' },
       outsidetextfont: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', size: 10, color: '#0F172A' },
@@ -1796,7 +1778,7 @@ function renderTab5() {
       hoverlabel: CYBER_HOVERLABEL,
       paper_bgcolor: 'rgba(0,0,0,0)',
       plot_bgcolor: 'rgba(0,0,0,0)',
-      transition: { duration: 400, easing: 'cubic-in-out' }
+      transition: { duration: 0 }
     }, { displayModeBar: false, responsive: true });
   }
 
@@ -1858,17 +1840,17 @@ function renderTab5() {
   if (qaSumEl) {
     qaSumEl.innerHTML = `
       <div>
-        <strong>Safety Stock â€” ${sum.n.toLocaleString('en-US')} SKUs tested</strong><br>
+        <strong>Safety Stock  —  ${sum.n.toLocaleString('en-US')} SKUs tested</strong><br>
         - Zero in Master Audit: <strong>${sum.ss_zero_in_master.toLocaleString('en-US')}</strong><br>
         - Exact match to independent calculation: <strong>${sum.ss_exact_match.toLocaleString('en-US')}</strong><br>
-        - Match within Â±1 unit (rounding tolerance): <strong>${sum.ss_tolerance_match.toLocaleString('en-US')}</strong><br>
+        - Match within ±1 unit (rounding tolerance): <strong>${sum.ss_tolerance_match.toLocaleString('en-US')}</strong><br>
         - Material mismatch (>1 unit): <strong>${sum.ss_material_mismatch.toLocaleString('en-US')}</strong>
       </div>
       <div>
-        <strong>Reorder Point â€” ${sum.n.toLocaleString('en-US')} SKUs tested</strong><br>
+        <strong>Reorder Point  —  ${sum.n.toLocaleString('en-US')} SKUs tested</strong><br>
         - Zero in Master Audit: <strong>${sum.rop_zero_in_master.toLocaleString('en-US')}</strong><br>
         - Exact match to independent calculation: <strong>${sum.rop_exact_match.toLocaleString('en-US')}</strong><br>
-        - Match within Â±1 unit (rounding tolerance): <strong>${sum.rop_tolerance_match.toLocaleString('en-US')}</strong><br>
+        - Match within ±1 unit (rounding tolerance): <strong>${sum.rop_tolerance_match.toLocaleString('en-US')}</strong><br>
         - Material mismatch (>1 unit): <strong>${sum.rop_material_mismatch.toLocaleString('en-US')}</strong>
       </div>
     `;
@@ -1879,11 +1861,11 @@ function renderTab5() {
     if (sum.ss_material_mismatch === 0 && sum.rop_material_mismatch === 0) {
       qaDetailsEl.innerHTML = `
         <div style="color:var(--c-success-text); font-weight:800; background:var(--c-success-bg); padding:1rem; border-radius:var(--clay-radius-sm); margin-bottom: 0.8rem;">
-          âœ“ Formula integrity confirmed. Every Safety Stock / Reorder Point value in the Master Audit matches the independently recomputed value within a Â±1 unit rounding tolerance across the full SKU population. Zero values are concentrated in SKUs with zero demand variance (dead stock / constant demand) or near-zero forecast RMSE on very low-volume SKUs â€” both are mathematically correct outcomes of the model's own formula, not data-quality defects.
+          ✓ Formula integrity confirmed. Every Safety Stock / Reorder Point value in the Master Audit matches the independently recomputed value within a ±1 unit rounding tolerance across the full SKU population. Zero values are concentrated in SKUs with zero demand variance (dead stock / constant demand) or near-zero forecast RMSE on very low-volume SKUs  —  both are mathematically correct outcomes of the model's own formula, not data-quality defects.
         </div>
         <div style="font-size:0.86rem; line-height:1.5; color:var(--c-slate-700);">
-          <strong>Root Cause (established, not assumed):</strong> the notebook's Safety Stock formula is <code>1.645 Ã— RMSE Ã— âˆš(7/30)</code> and Reorder Point is <code>(Forecast_Next_Month/30 Ã— 7) + Safety Stock</code>. Both terms scale with forecast error and forecast level â€” when a SKU has zero historical demand variance, the model's own guard clause sets Safety Stock to exactly 0 by design (Guard: zero-variance / dead stock). When a SKU has extremely low, near-deterministic demand, RMSE rounds to a value small enough that the computed buffer also rounds to 0. Both are legitimate outputs of the implemented formula, verified by direct recomputation from RMSE and Forecast_Next_Month across the entire population â€” this is not a broken pipeline or a lost calculation.<br><br>
-          <strong>Disposition:</strong> CONFIRMED VALID â€” no data issue found.
+          <strong>Root Cause (established, not assumed):</strong> the notebook's Safety Stock formula is <code>1.645 × RMSE × √(7/30)</code> and Reorder Point is <code>(Forecast_Next_Month/30 × 7) + Safety Stock</code>. Both terms scale with forecast error and forecast level  —  when a SKU has zero historical demand variance, the model's own guard clause sets Safety Stock to exactly 0 by design (Guard: zero-variance / dead stock). When a SKU has extremely low, near-deterministic demand, RMSE rounds to a value small enough that the computed buffer also rounds to 0. Both are legitimate outputs of the implemented formula, verified by direct recomputation from RMSE and Forecast_Next_Month across the entire population  —  this is not a broken pipeline or a lost calculation.<br><br>
+          <strong>Disposition:</strong> CONFIRMED VALID  —  no data issue found.
         </div>
       `;
     } else {
@@ -1917,11 +1899,11 @@ function renderTab5() {
       }
       qaDetailsEl.innerHTML = `
         <div style="color:var(--c-warning-text); font-weight:800; background:var(--c-warning-bg); padding:1rem; border-radius:var(--clay-radius-sm);">
-          âš  ${sum.ss_material_mismatch} Safety Stock and ${sum.rop_material_mismatch} Reorder Point value(s) differ from the independent recalculation by more than 1 unit. See the detail table below for the specific SKUs â€” these are flagged for review, not silently corrected.
+          ⚠ ${sum.ss_material_mismatch} Safety Stock and ${sum.rop_material_mismatch} Reorder Point value(s) differ from the independent recalculation by more than 1 unit. See the detail table below for the specific SKUs  —  these are flagged for review, not silently corrected.
         </div>
         ${mismatchRowsHtml}
         <div style="font-size:0.86rem; line-height:1.5; color:var(--c-slate-700); margin-top: 0.8rem;">
-          <strong>Root Cause:</strong> The notebook implements Safety Stock = 1.645 Ã— RMSE Ã— âˆš(7/30) and Reorder Point = (Forecast_Next_Month/30 Ã— 7) + Safety Stock.<br>
+          <strong>Root Cause:</strong> The notebook implements Safety Stock = 1.645 × RMSE × √(7/30) and Reorder Point = (Forecast_Next_Month/30 × 7) + Safety Stock.<br>
           <strong>Disposition:</strong> REQUIRES REVIEW for the flagged SKUs above.
         </div>
       `;
