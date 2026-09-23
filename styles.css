@@ -270,6 +270,7 @@ html, body {
   color: #1E3A8A;
   background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 50%, #0284C7 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   font-weight: 850;
   font-size: clamp(1.8rem, 3.2vw, 2.8rem);
@@ -817,10 +818,14 @@ h4 {
 
 .metric-card-value,
 .square-metric-value {
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  max-width: 100% !important;
+  font-size: clamp(1.2rem, 1.6vw, 1.85rem) !important;
+  font-weight: 900 !important;
+  color: #0F172A !important;
+  letter-spacing: -0.5px !important;
+  font-variant-numeric: tabular-nums !important;
+  font-feature-settings: "tnum" 1 !important;
+  line-height: 1.15 !important;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.08) !important;
 }
 
 .badge,
@@ -999,26 +1004,21 @@ h4 {
 }
 
 .metric-card-value {
-  font-size: clamp(1.4rem, 1.8vw, 2.1rem) !important;
-  font-weight: 850 !important;
-  background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 60%, #0EA5E9 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-size: clamp(1.4rem, 1.8vw, 2.2rem) !important;
+  font-weight: 900 !important;
+  color: #0F172A !important;
+  letter-spacing: -0.5px !important;
+  font-variant-numeric: tabular-nums !important;
+  font-feature-settings: "tnum" 1 !important;
+  margin: 0 !important;
   line-height: 1.15 !important;
-  margin: 0.15rem 0 !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  display: block !important;
-  box-shadow: none !important;
-  text-shadow: none !important;
-  padding: 0 !important;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.08) !important;
 }
 
 #kpi-high-risk-card .metric-card-value {
-  background: linear-gradient(135deg, #DC2626 0%, #EF4444 60%, #F87171 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #DC2626 !important;
+  font-weight: 900 !important;
+  text-shadow: 0 0 14px rgba(220, 38, 38, 0.28) !important;
 }
 
 .metric-card-subtitle {
@@ -1081,17 +1081,14 @@ h4 {
 }
 
 .square-metric-value {
-  font-size: clamp(1.2rem, 1.6vw, 1.8rem) !important;
-  font-weight: 850 !important;
-  background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 60%, #0EA5E9 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  line-height: 1.2 !important;
-  margin: 0.15rem 0 !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  text-align: center !important;
+  font-size: clamp(1.2rem, 1.6vw, 1.85rem) !important;
+  font-weight: 900 !important;
+  color: #0F172A !important;
+  letter-spacing: -0.5px !important;
+  font-variant-numeric: tabular-nums !important;
+  font-feature-settings: "tnum" 1 !important;
+  line-height: 1.15 !important;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.08) !important;
 }
 
 .square-metric-label {
@@ -1869,8 +1866,15 @@ details.st-expander > div {
 
   .metric-card-value,
   .square-metric-value {
-    font-size: 1.6rem !important;
-  }
+  font-size: clamp(1.2rem, 1.6vw, 1.85rem) !important;
+  font-weight: 900 !important;
+  color: #0F172A !important;
+  letter-spacing: -0.5px !important;
+  font-variant-numeric: tabular-nums !important;
+  font-feature-settings: "tnum" 1 !important;
+  line-height: 1.15 !important;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.08) !important;
+}
 }
 
 /* Narrow Mobile (360px - 400px) */
@@ -1885,8 +1889,15 @@ details.st-expander > div {
 @media (max-width: 390px) {
   .metric-card-value,
   .square-metric-value {
-    font-size: 1.45rem !important;
-  }
+  font-size: clamp(1.2rem, 1.6vw, 1.85rem) !important;
+  font-weight: 900 !important;
+  color: #0F172A !important;
+  letter-spacing: -0.5px !important;
+  font-variant-numeric: tabular-nums !important;
+  font-feature-settings: "tnum" 1 !important;
+  line-height: 1.15 !important;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.08) !important;
+}
 
   .main-dashboard-title {
     font-size: 1.25rem !important;
@@ -1896,8 +1907,15 @@ details.st-expander > div {
 @media (max-width: 360px) {
   .metric-card-value,
   .square-metric-value {
-    font-size: 1.35rem !important;
-  }
+  font-size: clamp(1.2rem, 1.6vw, 1.85rem) !important;
+  font-weight: 900 !important;
+  color: #0F172A !important;
+  letter-spacing: -0.5px !important;
+  font-variant-numeric: tabular-nums !important;
+  font-feature-settings: "tnum" 1 !important;
+  line-height: 1.15 !important;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.08) !important;
+}
 
   .main-dashboard-title {
     font-size: 1.18rem !important;
@@ -1962,4 +1980,80 @@ details.st-expander > div {
   .tab-button[data-tab="tab3"]:active { background: #D1FAE5 !important; }
   .tab-button[data-tab="tab4"]:active { background: #FEF3C7 !important; }
   .tab-button[data-tab="tab5"]:active { background: #CFFAFE !important; }
+}
+/* ==========================================================================
+   Cinematic Enhancements & High-Contrast Typography Additions
+   ========================================================================== */
+
+/* Cinematic Story Strip Glow Pulse */
+.story-strip {
+  box-shadow: 0 4px 20px -2px rgba(99, 102, 241, 0.15), 0 2px 6px rgba(15, 23, 42, 0.04) !important;
+  border: 1px solid rgba(99, 102, 241, 0.25) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.story-node {
+  font-weight: 850 !important;
+  letter-spacing: 0.8px !important;
+  transition: all 0.3s ease !important;
+}
+
+.story-node:hover {
+  transform: translateY(-2px) scale(1.04) !important;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.45) !important;
+}
+
+.story-arrow {
+  color: #38BDF8 !important;
+  font-weight: 900 !important;
+  animation: storyArrowPulse 2s infinite ease-in-out;
+}
+
+@keyframes storyArrowPulse {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.25); opacity: 1; text-shadow: 0 0 10px rgba(56, 189, 248, 0.8); }
+}
+
+/* Cinematic Cards Hover Elevation & Border Glow */
+.metric-card, .square-metric, .chart-card, .st-expander {
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease !important;
+}
+
+.metric-card:hover, .square-metric:hover {
+  transform: translateY(-4px) scale(1.012) !important;
+  box-shadow: 0 14px 32px -4px rgba(99, 102, 241, 0.22), 0 6px 14px -2px rgba(15, 23, 42, 0.08) !important;
+  border-left-color: #6366F1 !important;
+}
+
+.chart-card:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 16px 36px -4px rgba(15, 23, 42, 0.12), 0 4px 12px rgba(99, 102, 241, 0.12) !important;
+}
+
+/* Bold & High-Contrast Table Cells & Headers */
+.math-audit-table th {
+  font-weight: 850 !important;
+  color: #0F172A !important;
+  letter-spacing: 0.4px !important;
+}
+
+.math-audit-table td {
+  font-variant-numeric: tabular-nums !important;
+  font-feature-settings: "tnum" 1 !important;
+  color: #0F172A !important;
+}
+
+.math-audit-table td strong {
+  font-weight: 850 !important;
+}
+
+/* Smooth Tab Reveal */
+.tab-panel.active {
+  animation: cinematicTabReveal 0.32s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+}
+
+@keyframes cinematicTabReveal {
+  0% { opacity: 0; transform: translateY(8px) scale(0.995); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
