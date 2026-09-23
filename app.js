@@ -908,7 +908,7 @@ function renderTab2() {
     const abc = row.ABC_Class || 'N/A';
     const xyz = row.XYZ_Class || 'N/A';
     if (headerEl) {
-      headerEl.innerHTML = `Target SKU: <strong>${escapeHtml(sku)}</strong> &nbsp; (ABC: <strong>${escapeHtml(abc)}</strong> &nbsp;|&nbsp; XYZ: <strong>${escapeHtml(xyz)}</strong>)`;
+      headerEl.innerHTML = `Target SKU: <strong>${escapeHtml(sku)}</strong> <span class="sku-header-badges" style="display:inline-block; font-size: 0.88rem; color: #475569; margin-top: 4px;">(ABC: <strong>${escapeHtml(abc)}</strong> &nbsp;|&nbsp; XYZ: <strong>${escapeHtml(xyz)}</strong>)</span>`;
     }
 
     const rmse = Number(row.RMSE);
@@ -1172,7 +1172,7 @@ function renderTab3() {
     const xyz = row.XYZ_Class || 'N/A';
     const comb = row.ABC_XYZ_Class || 'N/A';
     if (headerEl) {
-      headerEl.innerHTML = `Target SKU: <strong>${escapeHtml(sku)}</strong> &nbsp; (ABC: <strong>${escapeHtml(abc)}</strong> &nbsp;|&nbsp; XYZ: <strong>${escapeHtml(xyz)}</strong> &nbsp;|&nbsp; Combined: <strong>${escapeHtml(comb)}</strong>)`;
+      headerEl.innerHTML = `Target SKU: <strong>${escapeHtml(sku)}</strong> <span class="sku-header-badges" style="display:inline-block; font-size: 0.88rem; color: #475569; margin-top: 4px;">(ABC: <strong>${escapeHtml(abc)}</strong> &nbsp;|&nbsp; XYZ: <strong>${escapeHtml(xyz)}</strong> &nbsp;|&nbsp; Combined: <strong>${escapeHtml(comb)}</strong>)</span>`;
     }
 
     updateKpiValueWithAnimation('tab3-kpi-ss', fmtInt(row.Safety_Stock));
@@ -2173,6 +2173,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       const targetTab = btn.getAttribute('data-tab');
       btn.classList.add('active');
       btn.setAttribute('aria-selected', 'true');
+      try {
+        btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      } catch (e) {}
       const panel = document.getElementById(targetTab);
       if (panel) panel.classList.add('active');
       AppState.activeTab = targetTab;
@@ -2268,7 +2271,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // 8. Window Resize Event for Plotly
-  window.addEventListener('resize', debounce(resizeActiveTabCharts, 150));
+  window.addEventListener('resize', debounce(resizeActiveTabCharts, 120));
+  window.addEventListener('orientationchange', () => {
+    setTimeout(resizeActiveTabCharts, 100);
+    setTimeout(resizeActiveTabCharts, 350);
+  });
 
   // Expose navigation functions and state globally
   window.jumpToSKU = jumpToSKU;
