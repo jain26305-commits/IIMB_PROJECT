@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Enterprise Demand Forecasting</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><text y=%2220%22 font-size=%2220%22></text></svg>">
-  <link rel="stylesheet" href="./styles.css?v=20260924_nocache">
+  <link rel="stylesheet" href="./styles.css?v=20260924_footer">
   <link rel="preload" href="./dashboard-data.json" as="fetch" crossorigin="anonymous">
   <!-- Plotly.js CDN for visual rendering -->
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
@@ -113,7 +113,11 @@
 
         <!-- Dashboard-Derived Portfolio Signal Banner -->
         <div id="executive-portfolio-signal" class="illustrative-banner" style="border-color: var(--c-blue); background: var(--c-blue-pale); color: var(--c-navy);">
-          Dashboard-Derived Portfolio Signal: <strong id="signal-status">Calculating...</strong> &nbsp;|&nbsp; Data Source: <strong id="signal-source">Master Audit</strong> &nbsp;|&nbsp; SKUs in View: <strong id="signal-sku-count">0</strong>
+          <span class="signal-item">Dashboard-Derived Portfolio Signal: <strong id="signal-status">Calculating...</strong></span>
+          <span class="signal-divider">|</span>
+          <span class="signal-item">Data Source: <strong id="signal-source">Master Audit</strong></span>
+          <span class="signal-divider">|</span>
+          <span class="signal-item">SKUs in View: <strong id="signal-sku-count">0</strong></span>
         </div>
 
         <!-- Executive KPI Grid Row 1 -->
@@ -834,14 +838,32 @@
         </div>
       </section>
 
-      <!-- Footer Note -->
-      <footer class="app-footer" style="text-align:center; color:#64748B; font-size:0.85rem; padding-bottom:1rem; margin-top:3rem;">
-        Enterprise Demand Forecasting &amp; Inventory Decision Support System Using Time Series Analytics<br>
-        All rights reserved by <strong>Kaushik Jain</strong>
+      <!-- Minimalist Visual Executive Footer -->
+      <footer class="app-footer">
+        <div class="footer-glow-bar"></div>
+        <div class="footer-container">
+          <div class="footer-content-minimal">
+            <div class="footer-info">
+              <div class="footer-title">
+                <span class="footer-status-dot" title="Authoritative Audit Synchronized"></span>
+                <span>Enterprise Demand Forecasting &amp; Inventory Decision Support System</span>
+              </div>
+              <div class="footer-byline">
+                <div>Designed &amp; Developed by <strong>Kaushik Jain</strong></div>
+                <div class="footer-org">IIM BANGALORE</div>
+              </div>
+            </div>
+            <div class="footer-actions">
+              <button type="button" class="footer-top-btn" onclick="window.scrollTo({top:0, behavior:'smooth'})" aria-label="Scroll to top">
+                Back to Top &#8593;
+              </button>
+            </div>
+          </div>
+        </div>
       </footer>
     </main>
   </div>
 
-  <script src="./app.js?v=20260924_nocache" charset="UTF-8"></script>
+  <script src="./app.js?v=20260924_footer_min" charset="UTF-8"></script>
 </body>
 </html>
