@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Enterprise Demand Forecasting</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><text y=%2220%22 font-size=%2220%22>🧊</text></svg>">
-  <link rel="stylesheet" href="./styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><text y=%2220%22 font-size=%2220%22></text></svg>">
+  <link rel="stylesheet" href="./styles.css?v=20260924_nocache">
   <link rel="preload" href="./dashboard-data.json" as="fetch" crossorigin="anonymous">
   <!-- Plotly.js CDN for visual rendering -->
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
@@ -27,17 +28,17 @@
     <!-- Sidebar / Control Centre Drawer -->
     <aside class="sidebar control-centre" id="control-centre" aria-label="Control Panel" role="dialog" aria-modal="true" aria-hidden="true">
       <div class="sidebar-header" style="display: flex; justify-content: space-between; align-items: center;">
-        <h2 style="color: #38BDF8; margin: 0;">🎛️ ➔ Control Panel</h2>
-        <button id="control-centre-close" class="control-centre-close" aria-label="Close Control Panel" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--c-slate-400); line-height: 1;">&times;</button>
+        <h2 style="color: #38BDF8; margin: 0;">Control Panel</h2>
+        <button id="control-centre-close" class="control-centre-close" aria-label="Close Control Panel" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--c-slate-400); line-height: 1;">x</button>
       </div>
       <hr class="sidebar-divider">
       
       <div class="sidebar-section">
-        <h3>📁 Model / Source Data Controls</h3>
+        <h3>Model / Source Data Controls</h3>
         <p class="sidebar-caption">Drives every authoritative metric on this dashboard.</p>
         
         <div class="control-group">
-          <h4>🎯 Target Isolation</h4>
+          <h4>Target Isolation</h4>
           
           <label class="control-label">Select ABC Classes</label>
           <div class="checkbox-group" id="abc-filter-group">
@@ -55,8 +56,8 @@
         </div>
 
         <div class="control-group" style="margin-top: 1.2rem;">
-          <label class="control-label" for="global-sku-select">🎯 Global SKU Selector</label>
-          <input type="text" id="global-sku-select" class="st-select" list="global-sku-datalist" placeholder="🔎 Search or select SKU..." autocomplete="off">
+          <label class="control-label" for="global-sku-select">Global SKU Selector</label>
+          <input type="text" id="global-sku-select" class="st-select" list="global-sku-datalist" placeholder="Search or select SKU..." autocomplete="off">
           <datalist id="global-sku-datalist"></datalist>
         </div>
       </div>
@@ -67,7 +68,7 @@
       <!-- Control Centre Compact Trigger Button -->
       <div class="control-centre-trigger-bar">
         <button id="control-centre-trigger" class="control-centre-trigger stButton" aria-controls="control-centre" aria-expanded="false" aria-haspopup="dialog" type="button">
-          🎛️ ➔ Control Panel
+          Control Panel
         </button>
       </div>
 
@@ -80,11 +81,11 @@
 
       <!-- Navigation Tabs (Exact 5 Tabs) -->
       <nav class="tab-list" role="tablist">
-        <button class="tab-button active" role="tab" aria-selected="true" data-tab="tab1">🏠 Executive Control Tower</button>
-        <button class="tab-button" role="tab" aria-selected="false" data-tab="tab2">📈 Demand &amp; Forecast Intelligence</button>
-        <button class="tab-button" role="tab" aria-selected="false" data-tab="tab3">📦 Inventory Optimisation</button>
-        <button class="tab-button" role="tab" aria-selected="false" data-tab="tab4">⚠️ Risk, Segmentation &amp; Diagnostics</button>
-        <button class="tab-button" role="tab" aria-selected="false" data-tab="tab5">💰 Financial Impact, Methodology &amp; Audit</button>
+        <button class="tab-button active" role="tab" aria-selected="true" data-tab="tab1">Executive Control Tower</button>
+        <button class="tab-button" role="tab" aria-selected="false" data-tab="tab2">Demand &amp; Forecast Intelligence</button>
+        <button class="tab-button" role="tab" aria-selected="false" data-tab="tab3">Inventory Optimisation</button>
+        <button class="tab-button" role="tab" aria-selected="false" data-tab="tab4">Risk, Segmentation &amp; Diagnostics</button>
+        <button class="tab-button" role="tab" aria-selected="false" data-tab="tab5">Financial Impact, Methodology &amp; Audit</button>
       </nav>
 
       <!-- ==================================================== -->
@@ -93,26 +94,26 @@
       <section id="tab1" class="tab-panel active" role="tabpanel">
         <!-- Story Strip -->
         <div class="story-strip">
-          <div class="story-node">📥 DATA</div>
-          <div class="story-arrow">→</div>
-          <div class="story-node">📊 DEMAND</div>
-          <div class="story-arrow">→</div>
-          <div class="story-node">🔮 FORECAST</div>
-          <div class="story-arrow">→</div>
-          <div class="story-node">📐 UNCERTAINTY</div>
-          <div class="story-arrow">→</div>
-          <div class="story-node">📦 INVENTORY</div>
-          <div class="story-arrow">→</div>
-          <div class="story-node">⚠️ RISK</div>
-          <div class="story-arrow">→</div>
-          <div class="story-node">💰 FINANCE</div>
-          <div class="story-arrow">→</div>
-          <div class="story-node">🧭 DECISION</div>
+          <div class="story-node">DATA</div>
+          <div class="story-arrow">&rarr;</div>
+          <div class="story-node">DEMAND</div>
+          <div class="story-arrow">&rarr;</div>
+          <div class="story-node">FORECAST</div>
+          <div class="story-arrow">&rarr;</div>
+          <div class="story-node">UNCERTAINTY</div>
+          <div class="story-arrow">&rarr;</div>
+          <div class="story-node">INVENTORY</div>
+          <div class="story-arrow">&rarr;</div>
+          <div class="story-node">RISK</div>
+          <div class="story-arrow">&rarr;</div>
+          <div class="story-node">FINANCE</div>
+          <div class="story-arrow">&rarr;</div>
+          <div class="story-node">DECISION</div>
         </div>
 
         <!-- Dashboard-Derived Portfolio Signal Banner -->
         <div id="executive-portfolio-signal" class="illustrative-banner" style="border-color: var(--c-blue); background: var(--c-blue-pale); color: var(--c-navy);">
-          🧭 Dashboard-Derived Portfolio Signal: <strong id="signal-status">Calculating...</strong> &nbsp;|&nbsp; Data Source: <strong id="signal-source">Master Audit</strong> &nbsp;|&nbsp; SKUs in View: <strong id="signal-sku-count">0</strong>
+          Dashboard-Derived Portfolio Signal: <strong id="signal-status">Calculating...</strong> &nbsp;|&nbsp; Data Source: <strong id="signal-source">Master Audit</strong> &nbsp;|&nbsp; SKUs in View: <strong id="signal-sku-count">0</strong>
         </div>
 
         <!-- Executive KPI Grid Row 1 -->
@@ -125,17 +126,17 @@
           <div class="metric-card metric-card--ribbon executive-kpi">
             <div class="metric-card-title">Forecast Accuracy</div>
             <div class="metric-card-value" id="kpi-forecast-accuracy">0.0%</div>
-            <div class="metric-card-subtitle">Portfolio mean • Master Audit Accuracy_Pct</div>
+            <div class="metric-card-subtitle">Portfolio mean - Master Audit Accuracy_Pct</div>
           </div>
           <div class="metric-card metric-card--ribbon executive-kpi">
             <div class="metric-card-title">Forecast Health Score</div>
             <div class="metric-card-value" id="kpi-forecast-health">0%</div>
-            <div class="metric-card-subtitle" id="kpi-forecast-health-sub">Mean Master Audit Forecast Health • Dashboard presentation band <span class="badge" data-status="good">Good</span></div>
+            <div class="metric-card-subtitle" id="kpi-forecast-health-sub">Mean Master Audit Forecast Health - Dashboard presentation band <span class="badge" data-status="good">Good</span></div>
           </div>
           <div class="metric-card metric-card--ribbon executive-kpi" id="kpi-high-risk-card">
             <div class="metric-card-title">High-Risk SKUs</div>
             <div class="metric-card-value" id="kpi-high-risk">0</div>
-            <div class="metric-card-subtitle">High Forecast_Risk count • Master Audit</div>
+            <div class="metric-card-subtitle">High Forecast_Risk count - Master Audit</div>
           </div>
         </div>
 
@@ -144,45 +145,45 @@
           <div class="metric-card metric-card--ribbon">
             <div class="metric-card-title">Model-Implied Inventory Value</div>
             <div class="metric-card-value" id="kpi-inv-value">0</div>
-            <div class="metric-card-subtitle">Portfolio sum • Master Audit Inventory_Value</div>
+            <div class="metric-card-subtitle">Portfolio sum - Master Audit Inventory_Value</div>
           </div>
           <div class="metric-card metric-card--ribbon">
             <div class="metric-card-title">Model-Implied Working Capital</div>
             <div class="metric-card-value" id="kpi-working-capital">0</div>
-            <div class="metric-card-subtitle">Portfolio sum • Master Audit Working_Capital</div>
+            <div class="metric-card-subtitle">Portfolio sum - Master Audit Working_Capital</div>
           </div>
           <div class="metric-card metric-card--ribbon">
             <div class="metric-card-title">Portfolio Mean Financial Health</div>
             <div class="metric-card-value" id="kpi-fin-health">0%</div>
-            <div class="metric-card-subtitle">Mean of SKU Financial Health Scores • Master Audit KPI_Financial_Health_Score</div>
+            <div class="metric-card-subtitle">Mean of SKU Financial Health Scores - Master Audit KPI_Financial_Health_Score</div>
           </div>
         </div>
 
         <hr class="section-divider">
 
-        <!-- Portfolio Composition — ABC & XYZ -->
+        <!-- Portfolio Composition - ABC & XYZ -->
         <div class="grid-2col" style="margin-bottom: 1.5rem;">
           <div>
-            <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;">📦 Portfolio Composition — ABC</h3>
+            <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;">Portfolio Composition - ABC</h3>
             <div id="chart-abc-pie" style="width: 100%; height: 350px;"></div>
           </div>
           <div>
-            <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;">🌡️ Portfolio Composition — XYZ</h3>
+            <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;">Portfolio Composition - XYZ</h3>
             <div id="chart-xyz-pie" style="width: 100%; height: 350px;"></div>
           </div>
         </div>
 
-        <!-- ABC–XYZ Segmentation Matrix -->
+        <!-- ABC-XYZ Segmentation Matrix -->
         <div style="margin-bottom: 1.5rem;">
-          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.2rem;">🧩 ABC–XYZ Segmentation Matrix</h3>
-          <p class="section-caption">Count of SKUs by combined ABC — Demand Volume Classification × XYZ — Demand Variability classification.</p>
+          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.2rem;">ABC-XYZ Segmentation Matrix</h3>
+          <p class="section-caption">Count of SKUs by combined ABC - Demand Volume Classification x XYZ - Demand Variability classification.</p>
           <div id="chart-abc-xyz-matrix" style="width: 100%; height: 360px;"></div>
         </div>
 
         <!-- Annualised Demand by ABC Class -->
         <div style="margin-bottom: 1.5rem;">
-          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.2rem;">📊 Annualised Demand by ABC Class</h3>
-          <p class="section-caption">Annualised Demand = full-period mean monthly demand × 12; it is not necessarily trailing-12-month actual demand.</p>
+          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.2rem;">Annualised Demand by ABC Class</h3>
+          <p class="section-caption">Annualised Demand = full-period mean monthly demand x 12; it is not necessarily trailing-12-month actual demand.</p>
           <p class="section-caption">Portfolio demand snapshot from Master Audit Annual_Demand. Note: month-by-month historical time series is not part of the Master Audit export, so this is an aggregate view rather than a monthly trend line.</p>
           <div id="chart-annual-demand-abc" style="width: 100%; height: 340px;"></div>
         </div>
@@ -191,7 +192,7 @@
 
         <!-- Immediate Risk & Priority Exceptions -->
         <div style="margin-bottom: 1.5rem;">
-          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;">🚨 Immediate Risk &amp; Priority Exceptions</h3>
+          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;">Immediate Risk &amp; Priority Exceptions</h3>
           <div class="table-container" style="overflow-x: auto; max-height: 400px; border-radius: var(--clay-radius-sm); border: 1px solid var(--c-slate-200);">
             <table id="attention-table" class="math-audit-table" style="width: 100%; background: #fff;">
               <thead>
@@ -207,14 +208,14 @@
 
         <!-- Most Common Executive Recommendations -->
         <div style="margin-bottom: 1.5rem;">
-          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.2rem;">🧭 Most Common Executive Recommendations</h3>
-          <p class="section-caption">Recommendations are shown by frequency among flagged SKUs; this is not an objective priority ranking. Each recommendation lists the exact SKUs it applies to — click "Jump to" to open one directly in Decision Intelligence below.</p>
+          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.2rem;">Most Common Executive Recommendations</h3>
+          <p class="section-caption">Recommendations are shown by frequency among flagged SKUs; this is not an objective priority ranking. Each recommendation lists the exact SKUs it applies to - click "Jump to" to open one directly in Decision Intelligence below.</p>
           <div id="top-priority-decisions-container"></div>
         </div>
 
         <!-- Decision Intelligence -->
         <div style="margin-bottom: 1.5rem;">
-          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;" id="decision-intelligence-heading">🧭 Decision Intelligence — No SKU Selected</h3>
+          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;" id="decision-intelligence-heading">Decision Intelligence - No SKU Selected</h3>
           <div id="decision-intelligence-cards" class="grid-2col" style="gap: 1rem;">
             <!-- Rendered dynamically via JS -->
           </div>
@@ -224,35 +225,35 @@
 
         <!-- What This Project Enables -->
         <div>
-          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;">🧭 What This Project Enables</h3>
+          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;">What This Project Enables</h3>
           <p class="section-caption">Capabilities the analytics genuinely deliver today, drawn directly from Master Audit outputs.</p>
           <div class="matrix-grid-container" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 1.5rem;">
             <div class="flow-card" style="border-top: 5px solid var(--c-blue);">
-              <div class="flow-card-title">📈 Forecasting</div>
+              <div class="flow-card-title">Forecasting</div>
               <div class="flow-card-text">SKU-level validated forecasting and model-selection outputs.</div>
             </div>
             <div class="flow-card" style="border-top: 5px solid var(--c-blue);">
-              <div class="flow-card-title">📦 Inventory</div>
+              <div class="flow-card-title">Inventory</div>
               <div class="flow-card-text">Forecast-driven Safety Stock, ROP and EOQ recommendations.</div>
             </div>
             <div class="flow-card" style="border-top: 5px solid var(--c-blue);">
-              <div class="flow-card-title">🧩 Segmentation</div>
-              <div class="flow-card-text">ABC–XYZ differentiated inventory control.</div>
+              <div class="flow-card-title">Segmentation</div>
+              <div class="flow-card-text">ABC-XYZ differentiated inventory control.</div>
             </div>
             <div class="flow-card" style="border-top: 5px solid var(--c-blue);">
-              <div class="flow-card-title">⚠️ Risk</div>
+              <div class="flow-card-title">Risk</div>
               <div class="flow-card-text">Forecast-risk, RMSE and Bullwhip-based exception visibility.</div>
             </div>
             <div class="flow-card" style="border-top: 5px solid var(--c-blue);">
-              <div class="flow-card-title">💰 Finance</div>
+              <div class="flow-card-title">Finance</div>
               <div class="flow-card-text">Model-Implied Inventory Value, Model-Implied Working Capital, Carrying Cost and Stockout exposure visibility.</div>
             </div>
             <div class="flow-card" style="border-top: 5px solid var(--c-blue);">
-              <div class="flow-card-title">🧭 Decision Support</div>
+              <div class="flow-card-title">Decision Support</div>
               <div class="flow-card-text">Rule-based recommendations linked directly to the analytical outputs above.</div>
             </div>
           </div>
-          <p class="section-caption" style="margin-top: 0.5rem; font-style: italic;">Realised business impact (savings, inventory reduction, forecast improvement) requires post-deployment measurement against an actual operating baseline — that measurement is not part of this analytical layer.</p>
+          <p class="section-caption" style="margin-top: 0.5rem; font-style: italic;">Realised business impact (savings, inventory reduction, forecast improvement) requires post-deployment measurement against an actual operating baseline - that measurement is not part of this analytical layer.</p>
         </div>
       </section>
 
@@ -263,8 +264,8 @@
         <div class="tab-header-flex" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
           <h2 style="margin: 0; color: var(--c-navy);">Forecast Diagnostics &amp; Model Performance</h2>
           <div class="isolate-sku-box" style="display: flex; align-items: center; gap: 0.6rem;">
-            <label for="tab2-sku-select" style="font-weight: 700; font-size: 0.9rem; white-space: nowrap;">🎯 Isolate SKU:</label>
-            <input type="text" id="tab2-sku-select" class="st-select tab-sku-synced" list="tab2-sku-datalist" placeholder="🔎 Search or select SKU..." style="width: 320px; max-width: 100%;" autocomplete="off">
+            <label for="tab2-sku-select" style="font-weight: 700; font-size: 0.9rem; white-space: nowrap;">Isolate SKU:</label>
+            <input type="text" id="tab2-sku-select" class="st-select tab-sku-synced" list="tab2-sku-datalist" placeholder="Search or select SKU..." style="width: 320px; max-width: 100%;" autocomplete="off">
             <datalist id="tab2-sku-datalist"></datalist>
           </div>
         </div>
@@ -273,7 +274,7 @@
         
         <!-- Model Diagnostic Brief (Dedicated Info-State Container) -->
         <div style="margin-bottom: 1.5rem;">
-          <h4 style="color: #475569; margin-bottom: 0.5rem;">📊 Model Diagnostic Brief</h4>
+          <h4 style="color: #475569; margin-bottom: 0.5rem;">Model Diagnostic Brief</h4>
           <div id="tab2-diagnostic-brief" class="diagnostic-brief-container info-state-box" style="background: var(--c-blue-pale); border: 1px solid #BAE6FD; border-radius: var(--clay-radius-sm); padding: 1.2rem; box-shadow: var(--clay-shadow); line-height: 1.6; color: var(--c-navy);">
             Select a SKU to view diagnostic brief.
           </div>
@@ -285,10 +286,10 @@
             <div id="forecast-test-chart-container" class="chart-container">
               <div id="chart-forecast-snapshot" style="width: 100%; height: 360px; background: #fff; border-radius: var(--clay-radius); box-shadow: var(--clay-shadow); padding: 0.5rem;"></div>
             </div>
-            <p id="forecast-chart-caption" class="section-caption" style="margin-top: 0.4rem;">Month-by-month actual-vs-predicted arrays are not included in this Master Audit export — only aggregate validation statistics (Accuracy, MAE, RMSE, Bias) are available per SKU.</p>
+            <p id="forecast-chart-caption" class="section-caption" style="margin-top: 0.4rem;">Month-by-month actual-vs-predicted arrays are not included in this Master Audit export - only aggregate validation statistics (Accuracy, MAE, RMSE, Bias) are available per SKU.</p>
           </div>
           <div>
-            <h4 style="color: #475569; text-align: center; margin-bottom: 0.6rem;">⚡ Forecast KPIs</h4>
+            <h4 style="color: #475569; text-align: center; margin-bottom: 0.6rem;">Forecast KPIs</h4>
             <div id="tab2-forecast-kpis" class="metrics-grid metrics-grid--3">
               <!-- Rendered via JS -->
             </div>
@@ -301,7 +302,7 @@
 
         <!-- Full Diagnostic Panel -->
         <div style="margin-bottom: 1.5rem;">
-          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.8rem;">🔬 Full Diagnostic Panel</h3>
+          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.8rem;">Full Diagnostic Panel</h3>
           <div id="tab2-full-diagnostic-metrics" class="grid-6col" style="margin-bottom: 1rem;">
             <!-- Rendered via JS: Accuracy, MAE, RMSE, Bias, CV, Mean Monthly Demand -->
           </div>
@@ -314,8 +315,8 @@
 
         <!-- Portfolio Forecast Quality -->
         <div style="margin-bottom: 1.5rem;">
-          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.2rem;">🎯 Portfolio Forecast Quality</h3>
-          <p class="section-caption">Computed from authoritative per-SKU RMSE / MAE / Bias / Accuracy_Pct values in the Master Audit — not recomputed from raw arrays.</p>
+          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.2rem;">Portfolio Forecast Quality</h3>
+          <p class="section-caption">Computed from authoritative per-SKU RMSE / MAE / Bias / Accuracy_Pct values in the Master Audit - not recomputed from raw arrays.</p>
           <div class="grid-3col" style="margin-bottom: 1.5rem;">
             <div id="chart-portfolio-rmse" style="height: 280px; background: #fff; border-radius: var(--clay-radius); box-shadow: var(--clay-shadow); padding: 0.5rem;"></div>
             <div id="chart-portfolio-mae" style="height: 280px; background: #fff; border-radius: var(--clay-radius); box-shadow: var(--clay-shadow); padding: 0.5rem;"></div>
@@ -329,7 +330,7 @@
 
         <!-- Portfolio-Level Demand Statistics -->
         <div style="margin-bottom: 1.5rem;">
-          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.2rem;">📐 Portfolio-Level Demand Statistics</h3>
+          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.2rem;">Portfolio-Level Demand Statistics</h3>
           <p class="section-caption">Distribution of <em>Mean_Monthly_Demand</em> across all SKUs in view (portfolio spread, not a single SKU's month-to-month variability).</p>
           <div id="portfolio-demand-summary-metrics" class="grid-5col" style="margin-bottom: 1rem;">
             <!-- Summary stats: Mean, Median, Std Dev, Skewness, Kurtosis -->
@@ -339,20 +340,20 @@
 
         <!-- Forecast Risk by ABC Class -->
         <div style="margin-bottom: 1.5rem;">
-          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.2rem;">🗺️ Forecast Risk by ABC Class</h3>
+          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.2rem;">Forecast Risk by ABC Class</h3>
           <p class="section-caption">Substitutes the original 24-month heatmap, which required a monthly historical series not present in this Master Audit export.</p>
           <div id="chart-forecast-risk-abc" style="height: 340px; background: #fff; border-radius: var(--clay-radius); box-shadow: var(--clay-shadow); padding: 0.5rem;"></div>
         </div>
 
         <!-- What the Forecasting Layer Enables -->
         <div style="margin-bottom: 1.5rem;">
-          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;">🔁 What the Forecasting Layer Enables</h3>
+          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;">What the Forecasting Layer Enables</h3>
           <div class="decision-card" style="margin-bottom: 1rem;">
-            <div class="decision-card-title">📏 Validation-Driven Forecasting</div>
+            <div class="decision-card-title">Validation-Driven Forecasting</div>
             <div class="decision-card-text">Historical demand diagnostics feed a SKU-level model competition (AutoARIMA, Naive, Seasonal Naive, 3-Month Moving Average); the winning model is selected by lowest validation sMAPE on unseen holdout data, producing the per-SKU forecast, accuracy and risk outputs shown above.</div>
           </div>
           <div class="decision-card">
-            <div class="decision-card-title">📊 Current Portfolio Evidence</div>
+            <div class="decision-card-title">Current Portfolio Evidence</div>
             <div class="decision-card-text" id="tab2-portfolio-evidence-text">Loading portfolio evidence...</div>
           </div>
         </div>
@@ -365,8 +366,8 @@
         <div class="tab-header-flex" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
           <h2 style="margin: 0; color: var(--c-navy);">Inventory Parameters &amp; Replenishment</h2>
           <div class="isolate-sku-box" style="display: flex; align-items: center; gap: 0.6rem;">
-            <label for="tab3-sku-select" style="font-weight: 700; font-size: 0.9rem; white-space: nowrap;">🎯 Isolate SKU:</label>
-            <input type="text" id="tab3-sku-select" class="st-select tab-sku-synced" list="tab3-sku-datalist" placeholder="🔎 Search or select SKU..." style="width: 320px; max-width: 100%;" autocomplete="off">
+            <label for="tab3-sku-select" style="font-weight: 700; font-size: 0.9rem; white-space: nowrap;">Isolate SKU:</label>
+            <input type="text" id="tab3-sku-select" class="st-select tab-sku-synced" list="tab3-sku-datalist" placeholder="Search or select SKU..." style="width: 320px; max-width: 100%;" autocomplete="off">
             <datalist id="tab3-sku-datalist"></datalist>
           </div>
         </div>
@@ -438,9 +439,9 @@
 
         <hr class="section-divider">
 
-        <!-- Inventory Mathematics Integrity — Selected SKU (Expandable Structure) -->
+        <!-- Inventory Mathematics Integrity - Selected SKU (Expandable Structure) -->
         <div style="margin-bottom: 1.5rem;">
-          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;">🧮 Inventory Mathematics Integrity — Selected SKU</h3>
+          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;">Inventory Mathematics Integrity - Selected SKU</h3>
           <details class="st-expander" id="math-integrity-expander" style="background: #fff; border-radius: var(--clay-radius-sm); box-shadow: var(--clay-shadow); padding: 1.2rem;">
             <summary class="st-expander-summary" style="font-weight: 700; cursor: pointer; color: var(--c-navy); padding: 0.2rem 0;">Master Audit vs. Independent Validation (click to expand)</summary>
             <div id="tab3-math-audit-content" class="st-expander-content" style="margin-top: 1rem;">
@@ -453,7 +454,7 @@
 
         <!-- Portfolio Replenishment View -->
         <div style="margin-bottom: 1.5rem;">
-          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;">🔁 Portfolio Replenishment View</h3>
+          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;">Portfolio Replenishment View</h3>
           <div class="table-container" style="overflow-x: auto; max-height: 400px; border-radius: var(--clay-radius-sm); border: 1px solid var(--c-slate-200);">
             <table id="portfolio-replenishment-table" class="math-audit-table" style="width: 100%; background: #fff;">
               <thead>
@@ -475,16 +476,16 @@
 
         <!-- What the Inventory Layer Enables -->
         <div style="margin-bottom: 1.5rem;">
-          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;">🔁 What the Inventory Layer Enables</h3>
+          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;">What the Inventory Layer Enables</h3>
           <div class="decision-card" style="margin-bottom: 1rem;">
-            <div class="decision-card-title">📦 Forecast-Driven Inventory Policy</div>
-            <div class="decision-card-text">Forecast + RMSE-based Safety Stock, Lead-Time Demand, Reorder Point, EOQ and ABC–XYZ segmentation are computed per SKU (SS = 1.645 × RMSE × √(7/30); ROP = LTD + SS; EOQ = √(2 × Annual Demand × Ordering Cost ÷ Holding Cost per Unit)), providing Safety Stock, Reorder Point, EOQ, Model-Implied Inventory Days, Inventory Turnover, Model-Implied Service Level, Model-Implied Fill Rate and Inventory Health figures above.</div>
+            <div class="decision-card-title">Forecast-Driven Inventory Policy</div>
+            <div class="decision-card-text">Forecast + RMSE-based Safety Stock, Lead-Time Demand, Reorder Point, EOQ and ABC-XYZ segmentation are computed per SKU (SS = 1.645 x RMSE x sqrt(7/30); ROP = LTD + SS; EOQ = sqrt(2 x Annual Demand x Ordering Cost / Holding Cost per Unit)), providing Safety Stock, Reorder Point, EOQ, Model-Implied Inventory Days, Inventory Turnover, Model-Implied Service Level, Model-Implied Fill Rate and Inventory Health figures above.</div>
           </div>
           <div class="decision-card">
-            <div class="decision-card-title">📊 Model-Implied Inventory Position</div>
+            <div class="decision-card-title">Model-Implied Inventory Position</div>
             <div class="decision-card-text" id="tab3-model-implied-pos-text">Loading model-implied position...</div>
           </div>
-          <p class="section-caption" style="margin-top: 0.5rem; font-style: italic;">Any inventory reduction or working-capital release is a modelled implication of this policy, not a measured outcome — realising it requires comparison against an actual physical inventory baseline.</p>
+          <p class="section-caption" style="margin-top: 0.5rem; font-style: italic;">Any inventory reduction or working-capital release is a modelled implication of this policy, not a measured outcome - realising it requires comparison against an actual physical inventory baseline.</p>
         </div>
       </section>
 
@@ -493,24 +494,24 @@
       <!-- ==================================================== -->
       <section id="tab4" class="tab-panel" role="tabpanel">
         <!-- Bullwhip Ratio vs. Forecast Error -->
-        <h2 style="color: var(--c-navy); margin-bottom: 0.2rem;">⚠️ Bullwhip Ratio vs. Forecast Error</h2>
-        <p class="section-caption">Quadrant boundaries below are median-split cut points computed on the current filter — a <span class="source-tag tag-derived">Dashboard Derived</span> diagnostic classification, not an official Master Audit threshold.</p>
+        <h2 style="color: var(--c-navy); margin-bottom: 0.2rem;">Bullwhip Ratio vs. Forecast Error</h2>
+        <p class="section-caption">Quadrant boundaries below are median-split cut points computed on the current filter - a <span class="source-tag tag-derived">Dashboard Derived</span> diagnostic classification, not an official Master Audit threshold.</p>
         
         <div id="chart-bullwhip-rmse-scatter" style="height: 420px; background: #fff; border-radius: var(--clay-radius); box-shadow: var(--clay-shadow); padding: 0.5rem; margin-bottom: 2rem;"></div>
 
         <hr class="section-divider">
 
         <!-- Segmentation Overview -->
-        <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.8rem;">📊 Segmentation Overview</h3>
+        <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.8rem;">Segmentation Overview</h3>
         <div class="grid-2col" style="margin-bottom: 1.5rem;">
           <div id="chart-segmentation-abc-bar" style="height: 320px; background: #fff; border-radius: var(--clay-radius); box-shadow: var(--clay-shadow); padding: 0.5rem;"></div>
           <div id="chart-segmentation-xyz-bar" style="height: 320px; background: #fff; border-radius: var(--clay-radius); box-shadow: var(--clay-shadow); padding: 0.5rem;"></div>
         </div>
 
-        <!-- ABC–XYZ Risk Intensity Matrix -->
+        <!-- ABC-XYZ Risk Intensity Matrix -->
         <div style="margin-bottom: 2rem;">
-          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.2rem;">🧩 ABC–XYZ Risk Intensity Matrix</h3>
-          <p class="section-caption">Average RMSE per ABC × XYZ cell — a different lens on the same segmentation shown in Tab 1 (which shows SKU counts). <span class="source-tag tag-derived">Dashboard Derived</span></p>
+          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.2rem;">ABC-XYZ Risk Intensity Matrix</h3>
+          <p class="section-caption">Average RMSE per ABC x XYZ cell - a different lens on the same segmentation shown in Tab 1 (which shows SKU counts). <span class="source-tag tag-derived">Dashboard Derived</span></p>
           <div id="chart-risk-intensity-matrix" style="height: 360px; background: #fff; border-radius: var(--clay-radius); box-shadow: var(--clay-shadow); padding: 0.5rem;"></div>
         </div>
 
@@ -518,7 +519,7 @@
 
         <!-- High-Risk SKU Register -->
         <div style="margin-bottom: 2rem;">
-          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.2rem;">🔴 High-Risk SKU Register</h3>
+          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.2rem;">High-Risk SKU Register</h3>
           <div class="table-container" style="overflow-x: auto; max-height: 400px; border-radius: var(--clay-radius-sm); border: 1px solid var(--c-slate-200);">
             <table id="high-risk-register-table" class="math-audit-table" style="width: 100%; background: #fff;">
               <thead>
@@ -536,7 +537,7 @@
 
         <!-- Pareto Analysis -->
         <div style="margin-bottom: 2rem;">
-          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.2rem;">📉 Pareto Analysis</h3>
+          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.2rem;">Pareto Analysis</h3>
           <p class="section-caption">Based on Annualised Demand from the Master Audit. The current source export does not contain per-SKU monthly history, so this is an aggregate demand-volume Pareto view rather than a reconstructed monthly series.</p>
           <div id="chart-pareto-analysis" style="height: 380px; background: #fff; border-radius: var(--clay-radius); box-shadow: var(--clay-shadow); padding: 0.5rem;"></div>
           <p id="pareto-caption" class="section-caption" style="margin-top: 0.4rem;">Approximately 280 of 1,401 SKUs (by Annualised Demand) reach 80% of cumulative demand.</p>
@@ -546,7 +547,7 @@
 
         <!-- High Inventory Days & Lower Demand Diagnostic -->
         <div style="margin-bottom: 2rem;">
-          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.2rem;">🪤 High Inventory Days &amp; Lower Demand Diagnostic</h3>
+          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.2rem;">High Inventory Days &amp; Lower Demand Diagnostic</h3>
           <p class="section-caption">Flags SKUs with model-implied Inventory Days in the upper quartile and Mean Monthly Demand in the lower quartile of the current filter as candidates for further inventory review. This does not establish obsolescence, inactivity, trapped capital or liquidity loss. <span class="source-tag tag-derived">Dashboard Derived</span></p>
           <div class="table-container" style="overflow-x: auto; max-height: 380px; border-radius: var(--clay-radius-sm); border: 1px solid var(--c-slate-200);">
             <table id="capital-trap-table" class="math-audit-table" style="width: 100%; background: #fff;">
@@ -558,14 +559,14 @@
               </tbody>
             </table>
           </div>
-          <p id="capital-trap-caption" class="section-caption" style="margin-top: 0.4rem;">SKU(s) flagged as dashboard-derived candidates for inventory review — requires validation. These are dashboard-derived candidates for review, not confirmed excess inventory.</p>
+          <p id="capital-trap-caption" class="section-caption" style="margin-top: 0.4rem;">SKU(s) flagged as dashboard-derived candidates for inventory review - requires validation. These are dashboard-derived candidates for review, not confirmed excess inventory.</p>
         </div>
 
         <hr class="section-divider">
 
         <!-- Business Risk & Supply Chain Priority Breakdown -->
         <div style="margin-bottom: 2rem;">
-          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.8rem;">🏷️ Business Risk &amp; Supply Chain Priority Breakdown</h3>
+          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.8rem;">Business Risk &amp; Supply Chain Priority Breakdown</h3>
           <div class="grid-2col" style="margin-bottom: 1.5rem;">
             <div id="chart-business-risk-bar" style="height: 320px; background: #fff; border-radius: var(--clay-radius); box-shadow: var(--clay-shadow); padding: 0.5rem;"></div>
             <div id="chart-sc-priority-bar" style="height: 320px; background: #fff; border-radius: var(--clay-radius); box-shadow: var(--clay-shadow); padding: 0.5rem;"></div>
@@ -576,27 +577,27 @@
 
         <!-- Where Should Management Investigate First? (Exact 4 Blocks) -->
         <div style="margin-bottom: 2rem;">
-          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.2rem;">🧭 Where Should Management Investigate First?</h3>
-          <p class="section-caption">Dashboard-Derived Review Lens — combinations built from existing ABC, XYZ, Forecast Risk, Bullwhip, RMSE, Inventory Health and Business Risk fields already shown on this tab. <span class="source-tag tag-derived">Dashboard Derived</span></p>
+          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.2rem;">Where Should Management Investigate First?</h3>
+          <p class="section-caption">Dashboard-Derived Review Lens - combinations built from existing ABC, XYZ, Forecast Risk, Bullwhip, RMSE, Inventory Health and Business Risk fields already shown on this tab. <span class="source-tag tag-derived">Dashboard Derived</span></p>
           <div class="grid-2col" style="gap: 1rem; margin-top: 1rem;">
             <div class="status-card" data-status="red">
               <strong>1. High Demand Volume + High Variability</strong><br>
-              <span class="status-card-desc">A-class SKUs combined with Z-class demand variability — immediate analytical attention.</span><br>
-              <span class="status-card-action">Action: Review AZ-segment SKUs in Tab 1 ABC–XYZ matrix</span>
+              <span class="status-card-desc">A-class SKUs combined with Z-class demand variability - immediate analytical attention.</span><br>
+              <span class="status-card-action">Action: Review AZ-segment SKUs in Tab 1 ABC-XYZ matrix</span>
             </div>
             <div class="status-card" data-status="amber">
               <strong>2. High Forecast Error + High Replenishment-Signal Amplification</strong><br>
-              <span class="status-card-desc">Elevated RMSE alongside high Bullwhip Ratio — Model-Derived Replenishment Signal Amplification — forecast / replenishment-signal diagnostic review.</span><br>
+              <span class="status-card-desc">Elevated RMSE alongside high Bullwhip Ratio - Model-Derived Replenishment Signal Amplification - forecast / replenishment-signal diagnostic review.</span><br>
               <span class="status-card-action">Action: See Bullwhip Ratio vs. Forecast Error quadrant above</span>
             </div>
             <div class="status-card" data-status="amber">
               <strong>3. High Inventory Days + Low Demand</strong><br>
-              <span class="status-card-desc">SKUs with high model-implied Inventory Days and lower demand — further inventory review.</span><br>
+              <span class="status-card-desc">SKUs with high model-implied Inventory Days and lower demand - further inventory review.</span><br>
               <span class="status-card-action">Action: See High Inventory Days & Lower Demand Diagnostic above</span>
             </div>
             <div class="status-card" data-status="red">
               <strong>4. High Business Risk + Lower Service Indicators</strong><br>
-              <span class="status-card-desc">Elevated business risk combined with lower model-implied service/fill-rate indicators — service protection review.</span><br>
+              <span class="status-card-desc">Elevated business risk combined with lower model-implied service/fill-rate indicators - service protection review.</span><br>
               <span class="status-card-action">Action: Cross-reference with Tab 3 Model-Implied Service Level / Fill Rate</span>
             </div>
           </div>
@@ -607,9 +608,9 @@
       <!-- TAB 5: Financial Impact, Methodology & Audit -->
       <!-- ==================================================== -->
       <section id="tab5" class="tab-panel" role="tabpanel">
-        <p class="section-caption">Analytical baseline — Master Audit. Figures below are model-implied financial exposure computed from this project's inventory policy, not observed accounting balances.</p>
+        <p class="section-caption">Analytical baseline - Master Audit. Figures below are model-implied financial exposure computed from this project's inventory policy, not observed accounting balances.</p>
         
-        <h2 style="color: var(--c-navy); margin-bottom: 0.2rem;">💰 Master Audit Financial Measures</h2>
+        <h2 style="color: var(--c-navy); margin-bottom: 0.2rem;">Master Audit Financial Measures</h2>
         <p class="section-caption">Portfolio aggregations of authoritative Master Audit financial fields. The underlying fields remain Master Audit; the portfolio aggregation is Dashboard Derived.</p>
         
         <div class="kpi-grid kpi-grid-4" style="margin-bottom: 1.5rem;">
@@ -635,7 +636,7 @@
           </div>
         </div>
 
-        <h2 style="color: var(--c-navy); margin-bottom: 0.2rem;">📊 Dashboard-Derived Portfolio Indicators</h2>
+        <h2 style="color: var(--c-navy); margin-bottom: 0.2rem;">Dashboard-Derived Portfolio Indicators</h2>
         <p class="section-caption">Aggregations or transformations calculated by the dashboard from authoritative Master Audit fields; these are not separate source columns.</p>
         
         <div class="kpi-grid kpi-grid-4" style="margin-bottom: 2rem;">
@@ -647,7 +648,7 @@
           <div class="metric-card metric-card--ribbon">
             <div class="metric-card-title">Portfolio-Implied Inventory Days</div>
             <div class="metric-card-value" id="tab5-kpi-days">0</div>
-            <div class="metric-card-subtitle">365 ÷ portfolio mean Inventory Turnover</div>
+            <div class="metric-card-subtitle">365 / portfolio mean Inventory Turnover</div>
           </div>
           <div class="metric-card metric-card--ribbon">
             <div class="metric-card-title">Portfolio Mean Financial Health</div>
@@ -655,9 +656,9 @@
             <div class="metric-card-subtitle">Mean of SKU Financial Health Scores</div>
           </div>
           <div class="metric-card metric-card--ribbon">
-            <div class="metric-card-title">Portfolio Working Capital Efficiency — Derived</div>
+            <div class="metric-card-title">Portfolio Working Capital Efficiency - Derived</div>
             <div class="metric-card-value" id="tab5-kpi-wce">0%</div>
-            <div class="metric-card-subtitle">Portfolio mean Inventory Turnover ÷ 6 × 100; clipped 0–100</div>
+            <div class="metric-card-subtitle">Portfolio mean Inventory Turnover / 6 x 100; clipped 0-100</div>
           </div>
         </div>
 
@@ -666,28 +667,28 @@
         <!-- Inventory Capital Allocation & Financial Composition -->
         <div class="grid-2col" style="margin-bottom: 1.5rem;">
           <div>
-            <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;">🗺️ Inventory Capital Allocation by ABC Hierarchy</h3>
+            <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;">Inventory Capital Allocation by ABC Hierarchy</h3>
             <div id="chart-financial-treemap" style="height: 360px; background: #fff; border-radius: var(--clay-radius); box-shadow: var(--clay-shadow); padding: 0.5rem;"></div>
             <p class="section-caption" style="margin-top: 0.3rem;">Tile size = Inventory_Value (Master Audit).</p>
           </div>
           <div>
-            <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;">💰 Financial Composition</h3>
+            <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;">Financial Composition</h3>
             <p class="section-caption">Portfolio comparison of Master Audit financial components; not a hypothetical reduction scenario.</p>
             <div id="chart-financial-composition" style="height: 360px; background: #fff; border-radius: var(--clay-radius); box-shadow: var(--clay-shadow); padding: 0.5rem;"></div>
           </div>
         </div>
 
         <div class="illustrative-banner" style="margin-bottom: 2rem;">
-          These are the financial dimensions the project enables management to monitor (Inventory Value, Model-Implied Working Capital, Carrying Cost, Stockout Exposure, Turnover, Financial Health, Portfolio Working Capital Efficiency Efficiency). <strong>Realised financial impact requires post-deployment measurement and finance validation</strong> — it is not calculated here.
+          These are the financial dimensions the project enables management to monitor (Inventory Value, Model-Implied Working Capital, Carrying Cost, Stockout Exposure, Turnover, Financial Health, Portfolio Working Capital Efficiency Efficiency). <strong>Realised financial impact requires post-deployment measurement and finance validation</strong> - it is not calculated here.
         </div>
 
         <hr class="section-divider">
 
         <!-- Illustrative Inventory Reduction Scenario -->
         <div style="margin-bottom: 2rem; background: #fff; border-radius: var(--clay-radius); box-shadow: var(--clay-shadow); padding: 1.5rem;">
-          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;">🧪 Illustrative Inventory Reduction Scenario</h3>
+          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;">Illustrative Inventory Reduction Scenario</h3>
           <div class="illustrative-banner" style="margin-bottom: 1rem;">
-            ⚠️ ILLUSTRATIVE SCENARIO — NOT A MODEL OUTPUT, NOT A REALISED SAVING, NOT A FEASIBILITY RESULT. A simple linear what-if slider for exploration only.
+            ILLUSTRATIVE SCENARIO - NOT A MODEL OUTPUT, NOT A REALISED SAVING, NOT A FEASIBILITY RESULT. A simple linear what-if slider for exploration only.
           </div>
           <div style="margin-bottom: 1rem;">
             <label for="illustrative-slider" style="font-weight: 700; font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Illustrative inventory reduction (%): <span id="slider-val-display" style="color: var(--c-blue);">10</span>%</label>
@@ -712,9 +713,9 @@
 
         <hr class="section-divider">
 
-        <!-- Operational Value Chain — Conceptual Process Architecture -->
+        <!-- Operational Value Chain - Conceptual Process Architecture -->
         <div style="margin-bottom: 2rem;">
-          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.2rem;">🔗 Operational Value Chain — Conceptual Process Architecture</h3>
+          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.2rem;">Operational Value Chain - Conceptual Process Architecture</h3>
           <p class="section-caption">Illustrative process sequence only - link thickness is uniform and does NOT represent measured throughput volume.</p>
           <div id="chart-sankey-diagram" style="height: 360px; background: #fff; border-radius: var(--clay-radius); box-shadow: var(--clay-shadow); padding: 0.5rem; margin-bottom: 1.5rem;"></div>
           
@@ -766,20 +767,20 @@
 
         <!-- Methodology & Traceability (Expandable Structure) -->
         <div style="margin-bottom: 2rem;">
-          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;">📚 Methodology &amp; Traceability</h3>
+          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;">Methodology &amp; Traceability</h3>
           <details class="st-expander" id="methodology-expander" style="background: #fff; border-radius: var(--clay-radius); box-shadow: var(--clay-shadow); padding: 1.5rem;">
-            <summary class="st-expander-summary" style="font-weight: 700; cursor: pointer; color: var(--c-navy); padding: 0.2rem 0;">How this dashboard is built — read before presenting</summary>
+            <summary class="st-expander-summary" style="font-weight: 700; cursor: pointer; color: var(--c-navy); padding: 0.2rem 0;">How this dashboard is built - read before presenting</summary>
             <div class="st-expander-content" style="font-size: 0.88rem; line-height: 1.6; color: var(--c-slate-700); margin-top: 1rem;">
               <p><strong>Traceability:</strong> Master Audit = direct source field; Dashboard Derived = calculated from filtered source data; Illustrative Scenario = hypothetical what-if.</p>
-              <p><strong>Data:</strong> Master Audit export (Enterprise_Supply_Chain_Master_Audit.xlsx, Executive_Summary sheet), 1,401 SKUs. Methodology uses 24 calendar months, 1,401 true SKUs, Grand Total excluded, missing Outwards = 0 and negative Outwards retained. Annualised Demand = full-period mean monthly demand × 12; it is not necessarily trailing-12-month actual demand. Month-level historical raw data was not part of this export, so demand statistics here are either per-SKU aggregates or portfolio-level distributions of those aggregates.</p>
+              <p><strong>Data:</strong> Master Audit export (Enterprise_Supply_Chain_Master_Audit.xlsx, Executive_Summary sheet), 1,401 SKUs. Methodology uses 24 calendar months, 1,401 true SKUs, Grand Total excluded, missing Outwards = 0 and negative Outwards retained. Annualised Demand = full-period mean monthly demand x 12; it is not necessarily trailing-12-month actual demand. Month-level historical raw data was not part of this export, so demand statistics here are either per-SKU aggregates or portfolio-level distributions of those aggregates.</p>
               <p><strong>Forecasting:</strong> Forecast outputs (Forecast_Next_Month, Accuracy_Pct, MAE, RMSE, Bias, CV, Health_P_Value) are taken directly from the Master Audit. Accuracy_Pct is the project-defined sMAPE-derived accuracy metric, not probabilistic confidence. This dashboard does not re-run, re-fit or retrain any forecasting model; final SKU model selection is based on the lowest validation sMAPE.</p>
               <p><strong>Validation:</strong> Where per-SKU test-period arrays are present in the source file, an actual-vs-predicted trajectory with an uncertainty band is shown. Where they are not (the case for the current Master Audit export), only the aggregate validation statistics are shown, and this is stated explicitly on-screen.</p>
-              <p><strong>Inventory Optimisation:</strong> Safety Stock, Reorder Point and EOQ are read directly from the Master Audit. No inventory numbers are invented — where an actual/observed on-hand figure isn't available, only the model recommendation is shown. The underlying formula (reverse-engineered from the source notebook and verified against all SKUs — see the Inventory Mathematics QA Report below) is: Safety Stock = 1.645 × RMSE × √(Lead Time ÷ 30); Reorder Point = (Forecast Next Month ÷ 30 × Lead Time) + Safety Stock. <strong>Note:</strong> this is a single-uncertainty-term model driven by forecast error (RMSE); lead time itself is treated as a fixed 7-day constant, not a random variable with its own standard deviation. A fuller two-term formulation (combining separate demand-variance and lead-time-variance terms) is sometimes used as a reference methodology, but it is not what this specific pipeline computes — the dashboard validates against what the model actually implements, not against an assumption of what it should implement.</p>
-              <p><strong>Segmentation:</strong> ABC — Demand Volume Classification and XYZ — Demand Variability Classification, and their combination, come directly from the Master Audit. ABC is based on cumulative demand volume.</p>
-              <p><strong>Presentation Bands:</strong> Forecast Health Score badges use dashboard presentation bands of Excellent (≥80), Good (60–79), Attention (40–59) and Poor (&lt;40). These are display rules, not source-model thresholds.</p>
+              <p><strong>Inventory Optimisation:</strong> Safety Stock, Reorder Point and EOQ are read directly from the Master Audit. No inventory numbers are invented - where an actual/observed on-hand figure isn't available, only the model recommendation is shown. The underlying formula (reverse-engineered from the source notebook and verified against all SKUs - see the Inventory Mathematics QA Report below) is: Safety Stock = 1.645 x RMSE x sqrt(Lead Time / 30); Reorder Point = (Forecast Next Month / 30 x Lead Time) + Safety Stock. <strong>Note:</strong> this is a single-uncertainty-term model driven by forecast error (RMSE); lead time itself is treated as a fixed 7-day constant, not a random variable with its own standard deviation. A fuller two-term formulation (combining separate demand-variance and lead-time-variance terms) is sometimes used as a reference methodology, but it is not what this specific pipeline computes - the dashboard validates against what the model actually implements, not against an assumption of what it should implement.</p>
+              <p><strong>Segmentation:</strong> ABC - Demand Volume Classification and XYZ - Demand Variability Classification, and their combination, come directly from the Master Audit. ABC is based on cumulative demand volume.</p>
+              <p><strong>Presentation Bands:</strong> Forecast Health Score badges use dashboard presentation bands of Excellent (>=80), Good (60-79), Attention (40-59) and Poor (&lt;40). These are display rules, not source-model thresholds.</p>
               <p><strong>Risk:</strong> RMSE, Bullwhip Ratio, Business Risk and Priority Level come from the Master Audit. In the diagnostic view, Bullwhip Ratio is interpreted as model-derived replenishment signal amplification relative to the reference level. The Bullwhip Ratio vs. Forecast Error chart and High Inventory Days &amp; Lower Demand Diagnostic are Dashboard-Derived Review Lenses.</p>
               <p><strong>Financial Layer:</strong> Inventory_Value, Working_Capital, Estimated_Carrying_Cost and Stockout_Cost are Master Audit fields; dashboard portfolio aggregates of these fields are explicitly labelled Dashboard Derived. The only hypothetical figure on this dashboard is the clearly labelled Illustrative Inventory Value Reduction scenario.</p>
-              <p><strong>Decision Layer:</strong> Recommendations shown below are the Master Audit's rule-based, model-informed outputs — presented as Decision Support / Decision Intelligence, not as autonomous actions or operational execution. The executive recommendation panel groups flagged SKUs by recommendation frequency; it is not a priority ranking.</p>
+              <p><strong>Decision Layer:</strong> Recommendations shown below are the Master Audit's rule-based, model-informed outputs - presented as Decision Support / Decision Intelligence, not as autonomous actions or operational execution. The executive recommendation panel groups flagged SKUs by recommendation frequency; it is not a priority ranking.</p>
               <p id="field-completeness-check" style="margin-top: 1rem; font-weight: 700;">Field Completeness Check: All authoritative fields expected by this dashboard are present in the current data source.</p>
             </div>
           </details>
@@ -789,7 +790,7 @@
 
         <!-- Inventory Mathematics QA Report (Expandable Structure) -->
         <div style="margin-bottom: 2rem;">
-          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;">🧮 Inventory Mathematics QA Report</h3>
+          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.5rem;">Inventory Mathematics QA Report</h3>
           <details class="st-expander" id="qa-report-expander" style="background: #fff; border-radius: var(--clay-radius); box-shadow: var(--clay-shadow); padding: 1.5rem;">
             <summary class="st-expander-summary" style="font-weight: 700; cursor: pointer; color: var(--c-navy); padding: 0.2rem 0;">Full forensic audit: Safety Stock &amp; Reorder Point across all SKUs</summary>
             <div class="st-expander-content" style="margin-top: 1rem;">
@@ -808,10 +809,10 @@
 
         <!-- Full Audit Table & Section Order (Search -> Table -> Download) -->
         <div style="margin-bottom: 2rem;">
-          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.8rem;">🔍 Full Audit Table</h3>
+          <h3 style="color: var(--c-navy); font-size: 1.1rem; margin-bottom: 0.8rem;">Full Audit Table</h3>
           
           <div class="audit-search-container" style="margin-bottom: 1rem;">
-            <label for="audit-search-input" style="font-weight: 700; font-size: 0.88rem; display: block; margin-bottom: 0.4rem;">🔎 Search SKU</label>
+            <label for="audit-search-input" style="font-weight: 700; font-size: 0.88rem; display: block; margin-bottom: 0.4rem;">Search SKU</label>
             <input type="text" id="audit-search-input" placeholder="Search SKU..." class="st-select" style="max-width: 320px;">
           </div>
 
@@ -828,7 +829,7 @@
           <p id="full-audit-caption" class="section-caption" style="margin-top: 0.5rem;">Showing filtered audit records.</p>
 
           <div class="audit-download-container" style="margin-top: 1.2rem;">
-            <button id="download-excel-btn" class="stButton stDownloadButton" style="width: auto; display: inline-flex; align-items: center; justify-content: center; padding: 0 1.8rem;">⬇️ Download Filtered Audit Report (.xlsx)</button>
+            <button id="download-excel-btn" class="stButton stDownloadButton" style="width: auto; display: inline-flex; align-items: center; justify-content: center; padding: 0 1.8rem;">Download Filtered Audit Report (.xlsx)</button>
           </div>
         </div>
       </section>
@@ -841,6 +842,6 @@
     </main>
   </div>
 
-  <script src="./app.js" charset="UTF-8"></script></script>
+  <script src="./app.js?v=20260924_nocache" charset="UTF-8"></script>
 </body>
 </html>
