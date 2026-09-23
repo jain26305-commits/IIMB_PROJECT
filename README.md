@@ -4,10 +4,10 @@ A static, browser-based dashboard for enterprise demand forecasting, inventory d
 
 ## Runtime files
 
-- `index.html` — dashboard structure and content
-- `styles.css` — visual styling and responsive behavior
-- `app.js` — dashboard interactions, filtering, charts, and client-side logic
-- `dashboard-data.json` — runtime data source loaded by the dashboard
+- `index.html` - dashboard structure and content
+- `styles.css` - visual styling and responsive behavior
+- `app.js` - dashboard interactions, filtering, charts, and client-side logic
+- `dashboard-data.json` - runtime data source loaded by the dashboard
 
 ## Run locally
 
@@ -27,7 +27,7 @@ Then open:
 
 This repository includes a GitHub Actions workflow that deploys the root directory to GitHub Pages whenever changes are pushed to `main`.
 
-In GitHub, go to **Settings → Pages → Build and deployment → Source → GitHub Actions**.
+In GitHub, go to **Settings -> Pages -> Build and deployment -> Source -> GitHub Actions**.
 
 ## Important data note
 
