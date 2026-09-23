@@ -1,6 +1,6 @@
 /* ==========================================================================
    Enterprise Demand Forecasting & Inventory Decision Support System
-   Using Time Series Analytics — Static Dashboard Parity Implementation
+   Using Time Series Analytics - Static Dashboard Parity Implementation
    Master Clean, Flatter, Professional Design System
    ========================================================================== */
 
@@ -1110,7 +1110,7 @@ h4 {
 }
 
 /* ==========================================================================
-   Story Strip System — Glowing Pipeline Chips (Non-Interactive)
+   Story Strip System - Glowing Pipeline Chips (Non-Interactive)
    ========================================================================== */
 
 .story-strip {
@@ -1128,7 +1128,7 @@ h4 {
   position: relative;
 }
 
-/* NO ::before line — removed. Background gradient is the effect. */
+/* NO ::before line - removed. Background gradient is the effect. */
 
 .story-node {
   flex: 1;
@@ -1198,7 +1198,7 @@ h4 {
 }
 
 /* ==========================================================================
-   Chart Containers (Plotly System — Glassmorphic & Depth)
+   Chart Containers (Plotly System - Glassmorphic & Depth)
    ========================================================================== */
 
 [data-testid="stPlotlyChart"],
@@ -1935,7 +1935,7 @@ details.st-expander > div {
 }
 
 /* ==========================================================================
-   Stagger Animation Delays — KPI Cards & Charts (Cinematic Entrance)
+   Stagger Animation Delays - KPI Cards & Charts (Cinematic Entrance)
    ========================================================================== */
 
 /* Stagger KPI cards in a grid */
